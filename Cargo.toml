@@ -5,7 +5,7 @@ edition = '2018'
 homepage = 'https://litentry.com'
 license = 'Unlicense'
 name = 'pallet-account-linker'
-repository = 'https://github.com/litentry/litentry-node'
+repository = 'https://github.com/litentry/litentry-account-linker'
 version = '0.0.1'
 
 [package.metadata.docs.rs]
