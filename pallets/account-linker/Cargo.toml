@@ -30,6 +30,8 @@ sp-runtime = { git = "https://github.com/paritytech/substrate", default-features
 frame-benchmarking = { git = "https://github.com/paritytech/substrate", default-features = false, branch = "rococo-v1", optional = true }
 sp-core = { git = "https://github.com/paritytech/substrate", default-features = false, branch = "rococo-v1", optional = true }
 
+log = { version = "0.4.14", default-features = false }
+
 [dev-dependencies]
 sp-runtime = { git = "https://github.com/paritytech/substrate", default-features = false, branch = "rococo-v1" }
 sp-core = { git = "https://github.com/paritytech/substrate", default-features = false, branch = "rococo-v1"}

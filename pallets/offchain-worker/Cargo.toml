@@ -25,8 +25,10 @@ sp-runtime = { git = "https://github.com/paritytech/substrate", default-features
 frame-support = { git = "https://github.com/paritytech/substrate", default-features = false, branch = "rococo-v1" }
 frame-system = { git = "https://github.com/paritytech/substrate", default-features = false, branch = "rococo-v1" }
 sp-arithmetic = { git = "https://github.com/paritytech/substrate", default-features = false, branch = "rococo-v1" }
-account-linker = {git = "https://github.com/litentry/litentry-account-linker", package = "pallet-account-linker", default-features = false, branch = "rococo"}
 frame-benchmarking = { git = "https://github.com/paritytech/substrate", default-features = false, branch = "rococo-v1", optional = true }
+log = { version = "0.4.14", default-features = false }
+
+account-linker = {path = "../account-linker", package = "pallet-account-linker", default-features = false}
 
 [dev-dependencies]
 pallet-balances = { git = "https://github.com/paritytech/substrate", default-features = false, branch = "rococo-v1" }
