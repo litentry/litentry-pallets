@@ -1,4 +1,8 @@
-# litentry-account-linker
-[![Actions Status](https://github.com/litentry/litentry-account-linker/workflows/Rust/badge.svg)](https://github.com/litentry/litentry-account-linker/actions)
+# litentry-pallets
+[![Actions Status](https://github.com/litentry/litentry-pallets/workflows/Rust/badge.svg)](https://github.com/litentry/litentry-pallets/actions)
 
-The Litentry account linker pallet.
+This repository collets all Litentry pallets. Currently it includes:
+
+* account-linker
+* offchain-worker
+
