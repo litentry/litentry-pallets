@@ -3,8 +3,6 @@ name: Remote Dispatch Action Initiator
 on:
   push:
     branches: [ dev, rococo ]
-  pull_request:
-    branches: [ dev, rococo ]
  
 jobs:
   integration-test-trigger:
