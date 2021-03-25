@@ -3,6 +3,8 @@ name: Remote Dispatch Action Initiator
 on:
   push:
     branches: [ dev, rococo ]
+  pull_request:
+    branches: [ dev, rococo ]
  
 jobs:
   integration-test-trigger:
@@ -18,4 +20,4 @@ jobs:
           curl -X POST https://api.github.com/repos/litentry/litentry-parachain/dispatches \
           -H 'Accept: application/vnd.github.everest-preview+json' \
           -u ${{ secrets.ACCESS_TOKEN }} \
-          --data '{"event_type": "integration-test-trigger", "client_payload": { "repository": "'"$GITHUB_REPOSITORY"'" }}'
+          --data '{"event_type": "integration-test-trigger", "client_payload": { "repository": "'"$GITHUB_REPOSITORY"'", "ref": "${{ github.ref }}", "sha": "${{ github.sha }}" }}'
