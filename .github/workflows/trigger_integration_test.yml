@@ -3,15 +3,12 @@ name: Remote Dispatch Action Initiator
 on:
   push:
     branches: [ dev, rococo ]
-  pull_request:
-    branches: [ dev, rococo ]
  
 jobs:
-  integration-test-trigger:
+  pull-request-trigger:
     runs-on: ubuntu-latest
     steps:
-      - name: Dispatch integration test trigger event
-        if: github.event.action != 'pong'
+      - name: Dispatch pull request trigger event
         run: |
           curl -X POST https://api.github.com/repos/litentry/litentry-node/dispatches \
           -H 'Accept: application/vnd.github.everest-preview+json' \
