@@ -1,11 +1,11 @@
-name: Remote Dispatch Action Initiator
+name: Remote PR Action Initiator Litentry Node
  
 on:
   push:
-    branches: [ dev, rococo ]
+    branches: dev
  
 jobs:
-  pull-request-trigger:
+  pull-request-trigger-node:
     runs-on: ubuntu-latest
     steps:
       - name: Dispatch pull request trigger event
@@ -14,7 +14,3 @@ jobs:
           -H 'Accept: application/vnd.github.everest-preview+json' \
           -u ${{ secrets.ACCESS_TOKEN }} \
           --data '{"event_type": "integration-test-trigger", "client_payload": { "repository": "'"$GITHUB_REPOSITORY"'", "ref": "${{ github.ref }}", "sha": "${{ github.sha }}"  }}'
-          curl -X POST https://api.github.com/repos/litentry/litentry-parachain/dispatches \
-          -H 'Accept: application/vnd.github.everest-preview+json' \
-          -u ${{ secrets.ACCESS_TOKEN }} \
-          --data '{"event_type": "integration-test-trigger", "client_payload": { "repository": "'"$GITHUB_REPOSITORY"'", "ref": "${{ github.ref }}", "sha": "${{ github.sha }}" }}'
