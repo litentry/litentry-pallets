@@ -37,10 +37,10 @@ frame_support::construct_runtime!(
 		NodeBlock = Block,
 		UncheckedExtrinsic = UncheckedExtrinsic,
 	{
-		System: frame_system::{Module, Call, Config, Storage, Event<T>},
-		Balances: pallet_balances::{Module, Call, Storage, Event<T>},
-		AccountLinker: account_linker::{Module, Call, Storage, Event<T>},
-		OffchainWorker: offchain_worker::{Module, Call, Storage, Event<T>,},
+		System: frame_system::{Pallet, Call, Config, Storage, Event<T>},
+		Balances: pallet_balances::{Pallet, Call, Storage, Event<T>},
+		AccountLinker: account_linker::{Pallet, Call, Storage, Event<T>},
+		OffchainWorker: offchain_worker::{Pallet, Call, Storage, Event<T>,},
 	}
 );
 
@@ -264,7 +264,7 @@ fn test_parse_infura_balances_2() {
 // 	accounts.push(test_account_byte_array);
 
 // 	sp_io::TestExternalities::default().execute_with(|| {
-// 		match <Module<Test>>::fetch_balances(accounts, urls::HttpRequest::GET(get), &urls::parse_etherscan_balances) {
+// 		match <Pallet<Test>>::fetch_balances(accounts, urls::HttpRequest::GET(get), &urls::parse_etherscan_balances) {
 // 			Ok(b) => assert_eq!(500000000000000000_u128, b),
 // 			Err(_) => panic!("Error occurs in test_fetch_balance!!"),
 // 		};
