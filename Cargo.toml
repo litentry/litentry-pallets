@@ -3,6 +3,7 @@ members = [
     'pallets/account-linker',
     'pallets/identity',
     'pallets/offchain-worker',
+    'pallets/xrecovery',
 ]
 
 [profile.dev]
