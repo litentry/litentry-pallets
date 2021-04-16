@@ -175,7 +175,7 @@ pub mod pallet {
 	use frame_support::{pallet_prelude::*,
 		Parameter, RuntimeDebug, weights::GetDispatchInfo,
 		traits::{Currency, ReservableCurrency, Get, BalanceStatus},
-		dispatch::DispatchResultWithPostInfo,
+		dispatch::DispatchResultWithPostInfo, dispatch::PostDispatchInfo,
 	};
 	use frame_system::{self as system, ensure_signed, ensure_root};
 
@@ -352,7 +352,7 @@ pub mod pallet {
 			// Check `who` is allowed to make a call on behalf of `account`
 			let target = Self::proxy(&who).ok_or(Error::<T>::NotAllowed)?;
 			ensure!(&target == &account, Error::<T>::NotAllowed);
-			call.dispatch(frame_system::RawOrigin::Signed(account).into())
+			let _ = call.dispatch(frame_system::RawOrigin::Signed(account).into())
 				.map(|_| ()).map_err(|e| e.error);
 
 			Ok(().into())
