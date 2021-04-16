@@ -17,14 +17,14 @@
 
 //! Test utilities
 
-use super::*;
+use crate::*;
+use crate as xrecovery;
 
 use frame_support::{parameter_types, traits::{OnInitialize, OnFinalize}};
 use sp_core::H256;
 use sp_runtime::{
 	traits::{BlakeTwo256, IdentityLookup}, testing::Header,
 };
-use crate as recovery;
 
 type UncheckedExtrinsic = frame_system::mocking::MockUncheckedExtrinsic<Test>;
 type Block = frame_system::mocking::MockBlock<Test>;
@@ -35,9 +35,9 @@ frame_support::construct_runtime!(
 		NodeBlock = Block,
 		UncheckedExtrinsic = UncheckedExtrinsic,
 	{
-		System: frame_system::{Pallet, Call, Config, Storage, Event<T>},
-		Balances: pallet_balances::{Pallet, Call, Storage, Config<T>, Event<T>},
-		Recovery: recovery::{Pallet, Call, Storage, Event<T>},
+		System: frame_system::{Module, Call, Config, Storage, Event<T>},
+		Balances: pallet_balances::{Module, Call, Storage, Config<T>, Event<T>},
+		Recovery: xrecovery::{Module, Call, Storage, Event<T>},
 	}
 );
 
@@ -70,7 +70,6 @@ impl frame_system::Config for Test {
 	type OnKilledAccount = ();
 	type SystemWeightInfo = ();
 	type SS58Prefix = ();
-	type OnSetCode = ();
 }
 
 parameter_types! {
@@ -102,6 +101,7 @@ impl Config for Test {
 	type FriendDepositFactor = FriendDepositFactor;
 	type MaxFriends = MaxFriends;
 	type RecoveryDeposit = RecoveryDeposit;
+	type WeightInfo = ();
 }
 
 pub type BalancesCall = pallet_balances::Call<Test>;

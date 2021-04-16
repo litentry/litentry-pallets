@@ -186,12 +186,12 @@ pub mod pallet {
 	#[derive(Clone, Eq, PartialEq, Encode, Decode, Default, RuntimeDebug)]
 	pub struct ActiveRecovery<BlockNumber, Balance, AccountId> {
 		/// The block number when the xrecovery process started.
-		created: BlockNumber,
+		pub created: BlockNumber,
 		/// The amount held in reserve of the `depositor`,
 		/// To be returned once this xrecovery process is closed.
-		deposit: Balance,
+		pub deposit: Balance,
 		/// The friends which have vouched so far. Always sorted.
-		friends: Vec<AccountId>,
+		pub friends: Vec<AccountId>,
 	}
 
 	/// Configuration for recovering an account.
@@ -199,14 +199,14 @@ pub mod pallet {
 	pub struct RecoveryConfig<BlockNumber, Balance, AccountId> {
 		/// The minimum number of blocks since the start of the xrecovery process before the account
 		/// can be recovered.
-		delay_period: BlockNumber,
+		pub delay_period: BlockNumber,
 		/// The amount held in reserve of the `depositor`,
 		/// to be returned once this configuration is removed.
-		deposit: Balance,
+		pub deposit: Balance,
 		/// The list of friends which can help recover an account. Always sorted.
-		friends: Vec<AccountId>,
+		pub friends: Vec<AccountId>,
 		/// The number of approving friends needed to recover an account.
-		threshold: u16,
+		pub threshold: u16,
 	}
 
 	#[pallet::config]
@@ -344,7 +344,7 @@ pub mod pallet {
 		/// - One storage lookup to check account is recovered by `who`. O(1)
 		/// # </weight>
 		#[pallet::weight(<T as pallet::Config>::WeightInfo::asset_claim())]
-		fn as_recovered(origin: OriginFor<T>,
+		pub fn as_recovered(origin: OriginFor<T>,
 			account: T::AccountId,
 			call: Box<<T as Config>::Call>
 		) -> DispatchResultWithPostInfo {
@@ -372,7 +372,7 @@ pub mod pallet {
 		/// - One event
 		/// # </weight>
 		#[pallet::weight(<T as pallet::Config>::WeightInfo::asset_claim())]
-		fn set_recovered(origin: OriginFor<T>, lost: T::AccountId, rescuer: T::AccountId) -> DispatchResultWithPostInfo {
+		pub fn set_recovered(origin: OriginFor<T>, lost: T::AccountId, rescuer: T::AccountId) -> DispatchResultWithPostInfo {
 			ensure_root(origin)?;
 			// Create the xrecovery storage item.
 			<Proxy<T>>::insert(&rescuer, Some(&lost));
@@ -409,7 +409,7 @@ pub mod pallet {
 		/// Total Complexity: O(F + X)
 		/// # </weight>
 		#[pallet::weight(<T as pallet::Config>::WeightInfo::asset_claim())]
-		fn create_recovery(origin: OriginFor<T>,
+		pub fn create_recovery(origin: OriginFor<T>,
 			friends: Vec<T::AccountId>,
 			threshold: u16,
 			delay_period: T::BlockNumber
@@ -470,7 +470,7 @@ pub mod pallet {
 		/// Total Complexity: O(F + X)
 		/// # </weight>
 		#[pallet::weight(<T as pallet::Config>::WeightInfo::asset_claim())]
-		fn initiate_recovery(origin: OriginFor<T>, account: T::AccountId) -> DispatchResultWithPostInfo {
+		pub fn initiate_recovery(origin: OriginFor<T>, account: T::AccountId) -> DispatchResultWithPostInfo {
 			let who = ensure_signed(origin)?;
 			// Check that the account is recoverable
 			ensure!(<Recoverable<T>>::contains_key(&account), Error::<T>::NotRecoverable);
@@ -517,7 +517,7 @@ pub mod pallet {
 		/// Total Complexity: O(F + logF + V + logV)
 		/// # </weight>
 		#[pallet::weight(<T as pallet::Config>::WeightInfo::asset_claim())]
-		fn vouch_recovery(origin: OriginFor<T>, lost: T::AccountId, rescuer: T::AccountId) -> DispatchResultWithPostInfo {
+		pub fn vouch_recovery(origin: OriginFor<T>, lost: T::AccountId, rescuer: T::AccountId) -> DispatchResultWithPostInfo {
 			let who = ensure_signed(origin)?;
 			// Get the xrecovery configuration for the lost account.
 			let recovery_config = Self::recovery_config(&lost).ok_or(Error::<T>::NotRecoverable)?;
@@ -557,7 +557,7 @@ pub mod pallet {
 		/// Total Complexity: O(F + V)
 		/// # </weight>
 		#[pallet::weight(<T as pallet::Config>::WeightInfo::asset_claim())]
-		fn claim_recovery(origin: OriginFor<T>, account: T::AccountId) -> DispatchResultWithPostInfo {
+		pub fn claim_recovery(origin: OriginFor<T>, account: T::AccountId) -> DispatchResultWithPostInfo {
 			let who = ensure_signed(origin)?;
 			// Get the xrecovery configuration for the lost account
 			let recovery_config = Self::recovery_config(&account).ok_or(Error::<T>::NotRecoverable)?;
@@ -603,7 +603,7 @@ pub mod pallet {
 		/// Total Complexity: O(V + X)
 		/// # </weight>
 		#[pallet::weight(<T as pallet::Config>::WeightInfo::asset_claim())]
-		fn close_recovery(origin: OriginFor<T>, rescuer: T::AccountId) -> DispatchResultWithPostInfo {
+		pub fn close_recovery(origin: OriginFor<T>, rescuer: T::AccountId) -> DispatchResultWithPostInfo {
 			let who = ensure_signed(origin)?;
 			// Take the active xrecovery process started by the rescuer for this account.
 			let active_recovery = <ActiveRecoveries<T>>::take(&who, &rescuer).ok_or(Error::<T>::NotStarted)?;
@@ -637,7 +637,7 @@ pub mod pallet {
 		/// Total Complexity: O(F + X)
 		/// # </weight>
 		#[pallet::weight(<T as pallet::Config>::WeightInfo::asset_claim())]
-		fn remove_recovery(origin: OriginFor<T>,) -> DispatchResultWithPostInfo {
+		pub fn remove_recovery(origin: OriginFor<T>,) -> DispatchResultWithPostInfo {
 			let who = ensure_signed(origin)?;
 			// Check there are no active recoveries
 			let mut active_recoveries = <ActiveRecoveries<T>>::iter_prefix_values(&who);
@@ -663,7 +663,7 @@ pub mod pallet {
 		/// - One storage mutation to check account is recovered by `who`. O(1)
 		/// # </weight>
 		#[pallet::weight(<T as pallet::Config>::WeightInfo::asset_claim())]
-		fn cancel_recovered(origin: OriginFor<T>, account: T::AccountId) -> DispatchResultWithPostInfo {
+		pub fn cancel_recovered(origin: OriginFor<T>, account: T::AccountId) -> DispatchResultWithPostInfo {
 			let who = ensure_signed(origin)?;
 			// Check `who` is allowed to make a call on behalf of `account`
 			ensure!(Self::proxy(&who) == Some(account), Error::<T>::NotAllowed);
