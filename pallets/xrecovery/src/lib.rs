@@ -250,25 +250,25 @@ pub mod pallet {
 
 
 	#[pallet::event]
-	// #[pallet::generate_deposit(pub(super) fn deposit_event)]
+	#[pallet::generate_deposit(pub(super) fn deposit_event)]
 	#[pallet::metadata(T::AccountId = "AccountId")]
 	pub enum Event<T: Config> {
 		/// A xrecovery process has been set up for an \[account\].
-		RecoveryCreated(AccountId),
+		RecoveryCreated(T::AccountId),
 		/// A xrecovery process has been initiated for lost account by rescuer account.
 		/// \[lost, rescuer\]
-		RecoveryInitiated(AccountId, AccountId),
+		RecoveryInitiated(T::AccountId, T::AccountId),
 		/// A xrecovery process for lost account by rescuer account has been vouched for by sender.
 		/// \[lost, rescuer, sender\]
-		RecoveryVouched(AccountId, AccountId, AccountId),
+		RecoveryVouched(T::AccountId, T::AccountId, T::AccountId),
 		/// A xrecovery process for lost account by rescuer account has been closed.
 		/// \[lost, rescuer\]
-		RecoveryClosed(AccountId, AccountId),
+		RecoveryClosed(T::AccountId, T::AccountId),
 		/// Lost account has been successfully recovered by rescuer account.
 		/// \[lost, rescuer\]
-		AccountRecovered(AccountId, AccountId),
+		AccountRecovered(T::AccountId, T::AccountId),
 		/// A xrecovery process has been removed for an \[account\].
-		RecoveryRemoved(AccountId),
+		RecoveryRemoved(T::AccountId),
 	}
 
 	#[pallet::error]
@@ -322,7 +322,7 @@ pub mod pallet {
 
 	#[pallet::storage]
 	#[pallet::getter(fn active_recovery)]
-	pub(super) type ActiveRecoveries<T: Config> =  StorageMap<_, Blake2_128Concat, T::AccountId, Option<ActiveRecovery<T::BlockNumber, BalanceOf<T>, T::AccountId>>, ValueQuery>;
+	pub(super) type ActiveRecoveries<T: Config> =  StorageDoubleMap<_, Blake2_128Concat, T::AccountId, Blake2_128Concat, T::AccountId, Option<ActiveRecovery<T::BlockNumber, BalanceOf<T>, T::AccountId>>, ValueQuery>;
 
 	#[pallet::storage]
 	#[pallet::getter(fn proxy)]
@@ -375,7 +375,7 @@ pub mod pallet {
 		fn set_recovered(origin: OriginFor<T>, lost: T::AccountId, rescuer: T::AccountId) -> DispatchResultWithPostInfo {
 			ensure_root(origin)?;
 			// Create the xrecovery storage item.
-			<Proxy<T>>::insert(&rescuer, &lost);
+			<Proxy<T>>::insert(&rescuer, Some(&lost));
 			Self::deposit_event(Event::AccountRecovered(lost, rescuer));
 
 			Ok(().into())
@@ -441,7 +441,7 @@ pub mod pallet {
 				threshold,
 			};
 			// Create the xrecovery configuration storage item
-			<Recoverable<T>>::insert(&who, recovery_config);
+			<Recoverable<T>>::insert(&who, Some(recovery_config));
 
 			Self::deposit_event(Event::RecoveryCreated(who));
 			Ok(().into())
@@ -486,7 +486,7 @@ pub mod pallet {
 				friends: vec![],
 			};
 			// Create the active xrecovery storage item
-			<ActiveRecoveries<T>>::insert(&account, &who, recovery_status);
+			<ActiveRecoveries<T>>::insert(&account, &who, Some(recovery_status));
 			Self::deposit_event(Event::RecoveryInitiated(account, who));
 			Ok(().into())
 		}
@@ -531,7 +531,7 @@ pub mod pallet {
 				Err(pos) => active_recovery.friends.insert(pos, who.clone()),
 			}
 			// Update storage with the latest details
-			<ActiveRecoveries<T>>::insert(&lost, &rescuer, active_recovery);
+			<ActiveRecoveries<T>>::insert(&lost, &rescuer, Some(active_recovery));
 			Self::deposit_event(Event::RecoveryVouched(lost, rescuer, who));
 			Ok(().into())
 		}
@@ -577,7 +577,7 @@ pub mod pallet {
 			);
 			system::Pallet::<T>::inc_consumers(&who).map_err(|_| Error::<T>::BadState)?;
 			// Create the xrecovery storage item
-			Proxy::<T>::insert(&who, &account);
+			Proxy::<T>::insert(&who, Some(&account));
 			Self::deposit_event(Event::AccountRecovered(account, who));
 			Ok(().into())
 		}
