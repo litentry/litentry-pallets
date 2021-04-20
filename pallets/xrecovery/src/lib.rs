@@ -167,6 +167,8 @@ use xcm::v0::{
 	Xcm::{self, *},
 };
 
+
+
 #[frame_support::pallet]
 pub mod pallet {
 	use crate::*;
@@ -177,6 +179,7 @@ pub mod pallet {
 	};
 	use codec::{Encode, Decode};
 	use weights::WeightInfo;
+	use cumulus_primitives_core::{ParaId};
 
 	use frame_support::{pallet_prelude::*,
 		Parameter, RuntimeDebug, weights::GetDispatchInfo,
@@ -252,6 +255,12 @@ pub mod pallet {
 		/// `sizeof(BlockNumber, Balance + T * AccountId)` bytes. Where T is a configurable
 		/// threshold.
 		type RecoveryDeposit: Get<BalanceOf<Self>>;
+
+		/// Litentry Parachain's parachain ID
+		type LitentryParachainId: Get<ParaId>;
+
+		/// Xrecovery Pallet ID in Litentry parachain runtime
+		type XrecoveryPalletID: Get<u8>;
 	}
 
 
@@ -687,8 +696,8 @@ pub mod pallet {
 		fn send_to_litentry(origin: OriginFor<T>, account: T::AccountId) {
 
 			// let call = <pallet::Pallet<T> as Trait>::Call::cancel_recovered(origin, account);
-			let xcm_call = Call::as_recovered(origin, Box::new(account));
-			let call = T::Call::from(xcm_call.into());
+			// let xcm_call = Call::as_recovered(origin, Box::new(account));
+			// let call = T::Call::from(xcm_call.into());
 
 
 		}
