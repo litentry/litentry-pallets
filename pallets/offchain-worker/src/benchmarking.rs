@@ -5,6 +5,7 @@ use super::*;
 use frame_benchmarking::{benchmarks, account};
 use frame_system::RawOrigin;
 use sp_std::prelude::*;
+use mock::Call;
 
 benchmarks!{
 

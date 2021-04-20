@@ -160,6 +160,12 @@ mod mock;
 mod tests;
 
 pub mod weights;
+use xcm::v0::{
+	Junction::*,
+	MultiAsset, MultiLocation, Order,
+	Order::*,
+	Xcm::{self, *},
+};
 
 #[frame_support::pallet]
 pub mod pallet {
@@ -330,7 +336,7 @@ pub mod pallet {
 
 	#[pallet::call]
 	impl<T:Config> Pallet<T> {
-/// Send a call through a recovered account.
+		/// Send a call through a recovered account.
 		///
 		/// The dispatch origin for this call must be _Signed_ and registered to
 		/// be able to make calls on behalf of the recovered account.
@@ -410,9 +416,10 @@ pub mod pallet {
 		/// # </weight>
 		#[pallet::weight(<T as pallet::Config>::WeightInfo::asset_claim())]
 		pub fn create_recovery(origin: OriginFor<T>,
+			// friends: Vec<T::MultiLocation>,
 			friends: Vec<T::AccountId>,
 			threshold: u16,
-			delay_period: T::BlockNumber
+			delay_period: T::BlockNumber,
 		) -> DispatchResultWithPostInfo {
 			let who = ensure_signed(origin)?;
 			// Check account is not already set up for xrecovery
@@ -440,8 +447,10 @@ pub mod pallet {
 				friends,
 				threshold,
 			};
+			// Send the xmc message to Litentry xrecovery pallet.
+
 			// Create the xrecovery configuration storage item
-			<Recoverable<T>>::insert(&who, Some(recovery_config));
+			let call = <Recoverable<T>>::insert(&who, Some(recovery_config));
 
 			Self::deposit_event(Event::RecoveryCreated(who));
 			Ok(().into())
@@ -674,6 +683,16 @@ pub mod pallet {
 	}
 
 	impl<T: Config> Pallet<T> {
+		// fn send_to_litentry() -> Xcm {
+		fn send_to_litentry(origin: OriginFor<T>, account: T::AccountId) {
+
+			// let call = <pallet::Pallet<T> as Trait>::Call::cancel_recovered(origin, account);
+			let xcm_call = Call::as_recovered(origin, Box::new(account));
+			let call = T::Call::from(xcm_call.into());
+
+
+		}
+
 		/// Check that friends list is sorted and has no duplicates.
 		fn is_sorted_and_unique(friends: &Vec<T::AccountId>) -> bool {
 			friends.windows(2).all(|w| w[0] < w[1])
