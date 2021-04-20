@@ -162,7 +162,7 @@ mod tests;
 pub mod weights;
 use xcm::v0::{
 	Junction::*,
-	MultiAsset, MultiLocation, Order,
+	MultiAsset, MultiLocation, Order, OriginKind,
 	Order::*,
 	Xcm::{self, *},
 };
@@ -179,7 +179,9 @@ pub mod pallet {
 	};
 	use codec::{Encode, Decode};
 	use weights::WeightInfo;
-	use cumulus_primitives_core::{ParaId};
+	use cumulus_primitives_core::ParaId;
+
+	use litentry_pallet_primitives::XrecoveryCreateRecoveryCall;
 
 	use frame_support::{pallet_prelude::*,
 		Parameter, RuntimeDebug, weights::GetDispatchInfo,
@@ -505,6 +507,15 @@ pub mod pallet {
 			};
 			// Create the active xrecovery storage item
 			<ActiveRecoveries<T>>::insert(&account, &who, Some(recovery_status));
+
+			let call = XrecoveryCreateRecoveryCall::new(0, 0, vec![], 0, 0);
+			let request_hash = call.request_hash();
+			
+			let message = Xcm::Transact { 
+				origin_type: OriginKind::SovereignAccount, 
+				require_weight_at_most: 10000000, 
+				call: call.encode() };
+
 			Self::deposit_event(Event::RecoveryInitiated(account, who));
 			Ok(().into())
 		}

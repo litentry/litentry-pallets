@@ -1,3 +1,5 @@
+#![cfg_attr(not(feature = "std"), no_std)]
+
 use codec::{Decode, Encode};
 use rstd::vec::Vec;
 use sp_core::{RuntimeDebug, H256};
@@ -14,6 +16,17 @@ pub struct XrecoveryCreateRecoveryCall {
 
 pub type OpaqueRequest = Vec<u8>;
 
+
+pub trait RequestHash {
+    fn hash(&self) -> H256;
+}
+
+impl RequestHash for OpaqueRequest {
+    fn hash(&self) -> H256 {
+        self.using_encoded(BlakeTwo256::hash)
+    }
+}
+
 impl XrecoveryCreateRecoveryCall {
     pub fn new(pallet_index: u8, call_index: u8, friends: Vec<u8>, threshold: u16, delay_period: u32) 
     -> Self {
@@ -23,6 +36,10 @@ impl XrecoveryCreateRecoveryCall {
             threshold: threshold,
             delay_period: delay_period,
         }
+    }
+
+    pub fn request_hash(&self) -> H256 {
+        self.friends.hash()
     }
 }
 
