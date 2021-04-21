@@ -161,8 +161,8 @@ mod tests;
 
 pub mod weights;
 use xcm::v0::{
-	Junction::*,
-	MultiAsset, MultiLocation, Order, OriginKind,
+	Junction::{self, *},
+	MultiAsset, MultiLocation, Order, OriginKind, SendXcm,
 	Order::*,
 	Xcm::{self, *},
 };
@@ -263,6 +263,9 @@ pub mod pallet {
 
 		/// Xrecovery Pallet ID in Litentry parachain runtime
 		type XrecoveryPalletID: Get<u8>;
+
+		/// The XCM sender module.
+		type XcmSender: SendXcm;
 	}
 
 
@@ -510,11 +513,13 @@ pub mod pallet {
 
 			let call = XrecoveryCreateRecoveryCall::new(0, 0, vec![], 0, 0);
 			let request_hash = call.request_hash();
-			
+
 			let message = Xcm::Transact { 
 				origin_type: OriginKind::SovereignAccount, 
 				require_weight_at_most: 10000000, 
-				call: call.encode() };
+				call: call.encode().into() };
+			
+			T::XcmSender::send_xcm((Junction::Parent, Junction::Parachain { id: 0 }).into(), message);
 
 			Self::deposit_event(Event::RecoveryInitiated(account, who));
 			Ok(().into())
