@@ -35,7 +35,7 @@ frame-benchmarking = {version = '3.0.0' }
 sp-runtime = { version = "3.0.0" }
 
 [features]
-default = ["std"]
+default = ["std", "litentry-server"]
 std = [
 	"serde",
 	"codec/std",
@@ -47,5 +47,6 @@ std = [
 	"xcm/std",
 	"cumulus-primitives-core/std",
 ]
+litentry-server = []
 runtime-benchmarks = ["sp-runtime", "frame-benchmarking", "sp-core"]
 

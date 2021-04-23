@@ -174,6 +174,7 @@ pub mod pallet {
 	use crate::*;
 	use frame_system::pallet_prelude::*;
 	use sp_std::prelude::*;
+	use core::{convert::TryInto,};
 	use sp_runtime::{
 		traits::{Dispatchable, SaturatedConversion, CheckedAdd, CheckedMul},
 	};
@@ -458,10 +459,28 @@ pub mod pallet {
 			let recovery_config = RecoveryConfig {
 				delay_period,
 				deposit: total_deposit,
-				friends,
+				friends: friends.clone(),
 				threshold,
 			};
 			// Send the xmc message to Litentry xrecovery pallet.
+			// Send the xmc message to Litentry xrecovery pallet.
+			let LitentryParaId = T::LitentryParachainId::get();
+			let XrecoveryPalletId = T::XrecoveryPalletID::get();
+			let friends_u8: Vec<u8> = friends.iter().map(|friend| friend.encode()).collect::<Vec<_>>().encode();
+
+
+			let block_number_u32 = TryInto::<u32>::try_into(delay_period).map_or(100000, |a| a);
+			let call = XrecoveryCreateRecoveryCall::new(XrecoveryPalletId, 2, friends_u8, threshold, block_number_u32);
+			let request_hash = call.request_hash();
+
+			let message = Xcm::Transact { 
+				origin_type: OriginKind::Native, 
+				require_weight_at_most: 10000000, 
+				call: call.encode().into() };
+			
+			
+			T::XcmSender::send_xcm((Junction::Parent, Junction::Parachain { id: LitentryParaId.into() }).into(), message);
+
 
 			// Create the xrecovery configuration storage item
 			let call = <Recoverable<T>>::insert(&who, Some(recovery_config));
