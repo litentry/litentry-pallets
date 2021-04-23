@@ -25,7 +25,7 @@ use sp_core::H256;
 use sp_runtime::{
 	traits::{BlakeTwo256, IdentityLookup}, testing::Header,
 };
-
+use cumulus_primitives_core::ParaId;
 type UncheckedExtrinsic = frame_system::mocking::MockUncheckedExtrinsic<Test>;
 type Block = frame_system::mocking::MockBlock<Test>;
 
@@ -91,6 +91,9 @@ parameter_types! {
 	pub const FriendDepositFactor: u64 = 1;
 	pub const MaxFriends: u16 = 3;
 	pub const RecoveryDeposit: u64 = 10;
+	pub const LitentryParachainId: u32 = 1984;
+	pub const XrecoveryPalletID: u8 = 88;
+
 }
 
 impl Config for Test {
@@ -102,6 +105,9 @@ impl Config for Test {
 	type MaxFriends = MaxFriends;
 	type RecoveryDeposit = RecoveryDeposit;
 	type WeightInfo = ();
+	type LitentryParachainId = LitentryParachainId;
+	type XrecoveryPalletID = XrecoveryPalletID;
+	type XcmSender = ();
 }
 
 pub type BalancesCall = pallet_balances::Call<Test>;
