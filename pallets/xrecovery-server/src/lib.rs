@@ -438,8 +438,7 @@ pub mod pallet {
 		) -> DispatchResultWithPostInfo {
 			let who = ensure_signed(origin)?;
 			// Check account is not already set up for xrecovery
-			// we can create a new one to repalce old one.
-			// ensure!(!<Recoverable<T>>::contains_key(&who), Error::<T>::AlreadyRecoverable);
+			ensure!(!<Recoverable<T>>::contains_key(&who), Error::<T>::AlreadyRecoverable);
 			// Check user input is valid
 			ensure!(threshold >= 1, Error::<T>::ZeroThreshold);
 			ensure!(!friends.is_empty(), Error::<T>::NotEnoughFriends);
@@ -483,7 +482,7 @@ pub mod pallet {
 
 
 			// Create the xrecovery configuration storage item
-			// let call = <Recoverable<T>>::insert(&who, Some(recovery_config));
+			let call = <Recoverable<T>>::insert(&who, Some(recovery_config));
 
 			Self::deposit_event(Event::RecoveryCreated(who));
 			Ok(().into())
@@ -515,12 +514,9 @@ pub mod pallet {
 		pub fn initiate_recovery(origin: OriginFor<T>, account: T::AccountId) -> DispatchResultWithPostInfo {
 			let who = ensure_signed(origin)?;
 			// Check that the account is recoverable
-			// not check it, the sender should know if the recovery already set.
 			ensure!(<Recoverable<T>>::contains_key(&account), Error::<T>::NotRecoverable);
 			// Check that the xrecovery process has not already been started
-			// not check it. the new one will replace old one
 			ensure!(!<ActiveRecoveries<T>>::contains_key(&account, &who), Error::<T>::AlreadyStarted);
-
 			// Take xrecovery deposit
 			let recovery_deposit = T::RecoveryDeposit::get();
 			T::Currency::reserve(&who, recovery_deposit)?;
@@ -587,7 +583,7 @@ pub mod pallet {
 				Err(pos) => active_recovery.friends.insert(pos, who.clone()),
 			}
 			// Update storage with the latest details
-			// <ActiveRecoveries<T>>::insert(&lost, &rescuer, Some(active_recovery));
+			<ActiveRecoveries<T>>::insert(&lost, &rescuer, Some(active_recovery));
 			Self::deposit_event(Event::RecoveryVouched(lost, rescuer, who));
 			Ok(().into())
 		}

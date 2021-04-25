@@ -4,6 +4,7 @@ members = [
     'pallets/identity',
     'pallets/offchain-worker',
     'pallets/xrecovery',
+    'pallets/xrecovery-server',
     'primitives',
 ]
 
