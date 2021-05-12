@@ -33,9 +33,12 @@ sp-core = { version = "3.0.0" }
 pallet-balances = { version = "3.0.0" }
 frame-benchmarking = {version = '3.0.0' }
 sp-runtime = { version = "3.0.0" }
+xcm-simulator = { git = "https://github.com/litentry/xcm-simulator", branch = "litentry" }
+orml-tokens = { git = "https://github.com/open-web3-stack/open-runtime-module-library", version = "0.4.1-dev" }
+orml-traits = { git = "https://github.com/open-web3-stack/open-runtime-module-library", version = "0.4.1-dev" }
 
 [features]
-default = ["std", "litentry-server"]
+default = ["std"]
 std = [
 	"serde",
 	"codec/std",
@@ -47,6 +50,5 @@ std = [
 	"xcm/std",
 	"cumulus-primitives-core/std",
 ]
-litentry-server = []
 runtime-benchmarks = ["sp-runtime", "frame-benchmarking", "sp-core"]
 
