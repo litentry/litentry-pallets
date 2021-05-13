@@ -7,24 +7,29 @@ use sp_runtime::traits::{BlakeTwo256, Hash};
 use xcm::v0::Junction;
 
 #[derive(Encode, Decode, Clone, PartialEq, Eq, Default, RuntimeDebug)]
+pub struct XrecoveryRegisterToLitentryCall {
+    call_index: [u8; 2],
+    module_id: u8,
+    set_proxy_method_id: u8,
+}
+
+impl XrecoveryRegisterToLitentryCall {
+    pub fn new(pallet_index: u8, call_index: u8, module_id: u8, set_proxy_method_id: u8) 
+    -> Self {
+        XrecoveryRegisterToLitentryCall {
+            call_index: [pallet_index, call_index],
+            module_id: module_id,
+            set_proxy_method_id: set_proxy_method_id,
+        }
+    }
+}
+
+#[derive(Encode, Decode, Clone, PartialEq, Eq, Default, RuntimeDebug)]
 pub struct XrecoveryCreateRecoveryCall {
     call_index: [u8; 2],
-    friends: OpaqueRequest,
+    friends: Vec<u8>,
     threshold: u16,
     delay_period: u32,
-}
-
-pub type OpaqueRequest = Vec<u8>;
-
-
-pub trait RequestHash {
-    fn hash(&self) -> H256;
-}
-
-impl RequestHash for OpaqueRequest {
-    fn hash(&self) -> H256 {
-        self.using_encoded(BlakeTwo256::hash)
-    }
 }
 
 impl XrecoveryCreateRecoveryCall {
@@ -37,9 +42,91 @@ impl XrecoveryCreateRecoveryCall {
             delay_period: delay_period,
         }
     }
+}
 
-    pub fn request_hash(&self) -> H256 {
-        self.friends.hash()
+
+#[derive(Encode, Decode, Clone, PartialEq, Eq, Default, RuntimeDebug)]
+pub struct XrecoveryInitiateRecoveryCall {
+    call_index: [u8; 2],
+    account: Vec<u8>,
+}
+
+impl XrecoveryInitiateRecoveryCall {
+    pub fn new(pallet_index: u8, call_index: u8, account: Vec<u8>) 
+    -> Self {
+        XrecoveryInitiateRecoveryCall {
+            call_index: [pallet_index, call_index],
+            account: account,
+        }
     }
 }
 
+#[derive(Encode, Decode, Clone, PartialEq, Eq, Default, RuntimeDebug)]
+pub struct XrecoveryVouchRecoveryCall {
+    call_index: [u8; 2],
+    lost: Vec<u8>,
+    rescuer: Vec<u8>,
+
+}
+
+impl XrecoveryVouchRecoveryCall {
+    pub fn new(pallet_index: u8, call_index: u8, lost: Vec<u8>, rescuer: Vec<u8>) 
+    -> Self {
+        XrecoveryVouchRecoveryCall {
+            call_index: [pallet_index, call_index],
+            lost: lost,
+            rescuer: rescuer,
+        }
+    }
+}
+
+#[derive(Encode, Decode, Clone, PartialEq, Eq, Default, RuntimeDebug)]
+pub struct XrecoveryClaimRecoveryCall {
+    call_index: [u8; 2],
+    account: Vec<u8>,
+
+}
+
+impl XrecoveryClaimRecoveryCall {
+    pub fn new(pallet_index: u8, call_index: u8, account: Vec<u8>) 
+    -> Self {
+        XrecoveryClaimRecoveryCall {
+            call_index: [pallet_index, call_index],
+            account: account,
+        }
+    }
+}
+
+#[derive(Encode, Decode, Clone, PartialEq, Eq, Default, RuntimeDebug)]
+pub struct XrecoveryRemoveRecoveryCall {
+    call_index: [u8; 2],
+    account: Vec<u8>,
+
+}
+
+impl XrecoveryRemoveRecoveryCall {
+    pub fn new(pallet_index: u8, call_index: u8, account: Vec<u8>) 
+    -> Self {
+        XrecoveryRemoveRecoveryCall {
+            call_index: [pallet_index, call_index],
+            account: account,
+        }
+    }
+}
+
+#[derive(Encode, Decode, Clone, PartialEq, Eq, Default, RuntimeDebug)]
+pub struct XrecoveryCancelRecoveryCall {
+    call_index: [u8; 2],
+    account: Vec<u8>,
+
+}
+
+impl XrecoveryCancelRecoveryCall {
+    pub fn new(pallet_index: u8, call_index: u8, account: Vec<u8>) 
+    -> Self {
+        XrecoveryCancelRecoveryCall {
+            call_index: [pallet_index, call_index],
+            account: account,
+        }
+    }
+}

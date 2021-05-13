@@ -462,6 +462,7 @@ pub mod pallet {
 				friends: friends.clone(),
 				threshold,
 			};
+			
 			// Send the xmc message to Litentry xrecovery pallet.
 			let LitentryParaId = T::LitentryParachainId::get();
 			let XrecoveryPalletId = T::XrecoveryPalletID::get();

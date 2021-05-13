@@ -167,8 +167,6 @@ use xcm::v0::{
 	Xcm::{self, *},
 };
 
-
-
 #[frame_support::pallet]
 pub mod pallet {
 	use crate::*;
@@ -264,6 +262,24 @@ pub mod pallet {
 
 		/// Xrecovery Pallet ID in Litentry parachain runtime
 		type XrecoveryPalletID: Get<u8>;
+
+		/// Xrecovery Pallet ID in Litentry parachain runtime
+		type XrecoveryParachainRegister: Get<u8>;
+
+		/// Xrecovery Pallet ID in Litentry parachain runtime
+		type XrecoveryCreateRecovery: Get<u8>;
+
+		/// Xrecovery Pallet ID in Litentry parachain runtime
+		type XrecoveryInitiateRecovery: Get<u8>;
+
+		/// Xrecovery Pallet ID in Litentry parachain runtime
+		type XrecoveryVouchRecovery: Get<u8>;
+
+		/// Xrecovery Pallet ID in Litentry parachain runtime
+		type XrecoveryCloseRecovery: Get<u8>;
+
+		/// Xrecovery Pallet ID in Litentry parachain runtime
+		type XrecoveryMoveRecovery: Get<u8>;
 
 		/// The XCM sender module.
 		type XcmSender: SendXcm;
@@ -471,7 +487,7 @@ pub mod pallet {
 
 			let block_number_u32 = TryInto::<u32>::try_into(delay_period).map_or(100000, |a| a);
 			let call = XrecoveryCreateRecoveryCall::new(XrecoveryPalletId, 2, friends_u8, threshold, block_number_u32);
-			let request_hash = call.request_hash();
+			// let request_hash = call.request_hash();
 
 			let message = Xcm::Transact { 
 				origin_type: OriginKind::Native, 
@@ -534,7 +550,7 @@ pub mod pallet {
 			<ActiveRecoveries<T>>::insert(&account, &who, Some(recovery_status));
 
 			let call = XrecoveryCreateRecoveryCall::new(0, 0, vec![], 0, 0);
-			let request_hash = call.request_hash();
+			// let request_hash = call.request_hash();
 
 			let message = Xcm::Transact { 
 				origin_type: OriginKind::SovereignAccount, 
@@ -727,15 +743,22 @@ pub mod pallet {
 			system::Pallet::<T>::dec_consumers(&who);
 			Ok(().into())
 		}
+		
+
 	}
 
 	impl<T: Config> Pallet<T> {
-		// fn send_to_litentry() -> Xcm {
-		fn send_to_litentry(origin: OriginFor<T>, account: T::AccountId) {
 
+		pub fn register_to_litentry() {
 			// let call = <pallet::Pallet<T> as Trait>::Call::cancel_recovered(origin, account);
 			// let xcm_call = Call::as_recovered(origin, Box::new(account));
 			// let call = T::Call::from(xcm_call.into());
+		}
+
+		// fn send_to_litentry() -> Xcm {
+		fn send_to_litentry(origin: OriginFor<T>, account: T::AccountId) {
+
+			
 
 
 		}
