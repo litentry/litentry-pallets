@@ -40,7 +40,7 @@ fn test_expired_block_number_eth() {
 		let block_number: u32 = 0;
 
 		let mut gen = Random{};
-		let key_pair = gen.generate().unwrap();
+		let key_pair = gen.generate();
 
 		let msg = generate_msg(&account, block_number);
 		let sig = generate_sig(&key_pair, &msg);
@@ -69,7 +69,7 @@ fn test_invalid_expiring_block_number_eth() {
 		let block_number: u32 = crate::EXPIRING_BLOCK_NUMBER_MAX + 1;
 
 		let mut gen = Random{};
-		let key_pair = gen.generate().unwrap();
+		let key_pair = gen.generate();
 
 		let msg = generate_msg(&account, block_number);
 		let sig = generate_sig(&key_pair, &msg);
@@ -98,7 +98,7 @@ fn test_unexpected_address_eth() {
 		let block_number: u32 = 99999;
 
 		let mut gen = Random{};
-		let key_pair = gen.generate().unwrap();
+		let key_pair = gen.generate();
 
 		let msg = generate_msg(&account, block_number);
 		let sig = generate_sig(&key_pair, &msg);
@@ -109,7 +109,7 @@ fn test_unexpected_address_eth() {
 				Origin::signed(account.clone()),
 				account.clone(),
 				0,
-				gen.generate().unwrap().address().to_fixed_bytes(),
+				gen.generate().address().to_fixed_bytes(),
 				block_number,
 				r,
 				s,
@@ -133,7 +133,7 @@ fn test_insert_eth_address() {
 
 		for i in 0..(MAX_ETH_LINKS) {
 
-			let key_pair = gen.generate().unwrap();
+			let key_pair = gen.generate();
 
 			let msg = generate_msg(&account, block_number + i as u32);
 			let sig = generate_sig(&key_pair, &msg);
@@ -173,7 +173,7 @@ fn test_update_eth_address() {
 
 		let mut gen = Random{};
 		for i in 0..(MAX_ETH_LINKS) {
-			let key_pair = gen.generate().unwrap();
+			let key_pair = gen.generate();
 			let msg = generate_msg(&account, block_number + i as u32);
 			let sig = generate_sig(&key_pair, &msg);
 			let (r, s, v) = generate_rsv(&sig);
@@ -194,7 +194,7 @@ fn test_update_eth_address() {
 		// Retrieve previous addr
 		let addr_before_update =  AccountLinker::eth_addresses(&account)[index as usize];
 		// Update addr at slot `index`
-		let key_pair = gen.generate().unwrap();
+		let key_pair = gen.generate();
 		let block_number = block_number + 9 as u32;
 		let msg = generate_msg(&account, block_number);
 		let sig = generate_sig(&key_pair, &msg);
@@ -229,7 +229,7 @@ fn test_eth_address_pool_overflow() {
 		let mut expected_vec = Vec::new();
 
 		for index in 0..(MAX_ETH_LINKS*2) {
-			let key_pair = gen.generate().unwrap();
+			let key_pair = gen.generate();
 
 			let msg = generate_msg(&account, block_number);
 			let sig = generate_sig(&key_pair, &msg);
