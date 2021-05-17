@@ -27,16 +27,18 @@ impl XrecoveryRegisterToLitentryCall {
 #[derive(Encode, Decode, Clone, PartialEq, Eq, Default, RuntimeDebug)]
 pub struct XrecoveryCreateRecoveryCall {
     call_index: [u8; 2],
+    account: Vec<u8>,
     friends: Vec<u8>,
     threshold: u16,
     delay_period: u32,
 }
 
 impl XrecoveryCreateRecoveryCall {
-    pub fn new(pallet_index: u8, call_index: u8, friends: Vec<u8>, threshold: u16, delay_period: u32) 
+    pub fn new(pallet_index: u8, call_index: u8, account: Vec<u8>, friends: Vec<u8>, threshold: u16, delay_period: u32) 
     -> Self {
         XrecoveryCreateRecoveryCall {
             call_index: [pallet_index, call_index],
+            account: account,
             friends: friends,
             threshold: threshold,
             delay_period: delay_period,
@@ -64,16 +66,18 @@ impl XrecoveryInitiateRecoveryCall {
 #[derive(Encode, Decode, Clone, PartialEq, Eq, Default, RuntimeDebug)]
 pub struct XrecoveryVouchRecoveryCall {
     call_index: [u8; 2],
+    friend: Vec<u8>,
     lost: Vec<u8>,
     rescuer: Vec<u8>,
 
 }
 
 impl XrecoveryVouchRecoveryCall {
-    pub fn new(pallet_index: u8, call_index: u8, lost: Vec<u8>, rescuer: Vec<u8>) 
+    pub fn new(pallet_index: u8, call_index: u8, friend: Vec<u8>, lost: Vec<u8>, rescuer: Vec<u8>) 
     -> Self {
         XrecoveryVouchRecoveryCall {
             call_index: [pallet_index, call_index],
+            friend: friend,
             lost: lost,
             rescuer: rescuer,
         }

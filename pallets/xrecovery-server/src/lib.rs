@@ -464,28 +464,27 @@ pub mod pallet {
 			};
 			
 			// Send the xmc message to Litentry xrecovery pallet.
-			let LitentryParaId = T::LitentryParachainId::get();
-			let XrecoveryPalletId = T::XrecoveryPalletID::get();
-			let friends_u8: Vec<u8> = friends.iter().map(|friend| friend.encode()).collect::<Vec<_>>().encode();
+			// let LitentryParaId = T::LitentryParachainId::get();
+			// let XrecoveryPalletId = T::XrecoveryPalletID::get();
+			// let friends_u8: Vec<u8> = friends.iter().map(|friend| friend.encode()).collect::<Vec<_>>().encode();
 
 
-			let block_number_u32 = TryInto::<u32>::try_into(delay_period).map_or(100000, |a| a);
-			let call = XrecoveryCreateRecoveryCall::new(XrecoveryPalletId, 2, friends_u8, threshold, block_number_u32);
-			let request_hash = call.request_hash();
+			// let block_number_u32 = TryInto::<u32>::try_into(delay_period).map_or(100000, |a| a);
+			// let call = XrecoveryCreateRecoveryCall::new(XrecoveryPalletId, 2, friends_u8, threshold, block_number_u32);
 
-			let message = Xcm::Transact { 
-				origin_type: OriginKind::Native, 
-				require_weight_at_most: 10000000, 
-				call: call.encode().into() };
+			// let message = Xcm::Transact { 
+			// 	origin_type: OriginKind::Native, 
+			// 	require_weight_at_most: 10000000, 
+			// 	call: call.encode().into() };
 			
 			
-			T::XcmSender::send_xcm((Junction::Parent, Junction::Parachain { id: LitentryParaId.into() }).into(), message);
+			// T::XcmSender::send_xcm((Junction::Parent, Junction::Parachain { id: LitentryParaId.into() }).into(), message);
 
 
 			// Create the xrecovery configuration storage item
-			let call = <Recoverable<T>>::insert(&who, Some(recovery_config));
+			// let call = <Recoverable<T>>::insert(&who, Some(recovery_config));
 
-			Self::deposit_event(Event::RecoveryCreated(who));
+			// Self::deposit_event(Event::RecoveryCreated(who));
 			Ok(().into())
 		}
 
@@ -512,35 +511,34 @@ pub mod pallet {
 		/// Total Complexity: O(F + X)
 		/// # </weight>
 		#[pallet::weight(<T as pallet::Config>::WeightInfo::asset_claim())]
-		pub fn initiate_recovery(origin: OriginFor<T>, account: T::AccountId) -> DispatchResultWithPostInfo {
+		pub fn handle_initiate_recovery(origin: OriginFor<T>, account: T::AccountId) -> DispatchResultWithPostInfo {
 			let who = ensure_signed(origin)?;
 			// Check that the account is recoverable
 			ensure!(<Recoverable<T>>::contains_key(&account), Error::<T>::NotRecoverable);
 			// Check that the xrecovery process has not already been started
 			ensure!(!<ActiveRecoveries<T>>::contains_key(&account, &who), Error::<T>::AlreadyStarted);
 			// Take xrecovery deposit
-			let recovery_deposit = T::RecoveryDeposit::get();
-			T::Currency::reserve(&who, recovery_deposit)?;
+			// let recovery_deposit = T::RecoveryDeposit::get();
+			// T::Currency::reserve(&who, recovery_deposit)?;
 			// Create an active xrecovery status
-			let recovery_status = ActiveRecovery {
-				created: <system::Pallet<T>>::block_number(),
-				deposit: recovery_deposit,
-				friends: vec![],
-			};
+			// let recovery_status = ActiveRecovery {
+			// 	created: <system::Pallet<T>>::block_number(),
+			// 	deposit: recovery_deposit,
+			// 	friends: vec![],
+			// };
 			// Create the active xrecovery storage item
-			<ActiveRecoveries<T>>::insert(&account, &who, Some(recovery_status));
+			// <ActiveRecoveries<T>>::insert(&account, &who, Some(recovery_status));
 
-			let call = XrecoveryCreateRecoveryCall::new(0, 0, vec![], 0, 0);
-			let request_hash = call.request_hash();
+			// let call = XrecoveryCreateRecoveryCall::new(0, 0, vec![], 0, 0);
 
-			let message = Xcm::Transact { 
-				origin_type: OriginKind::SovereignAccount, 
-				require_weight_at_most: 10000000, 
-				call: call.encode().into() };
+			// let message = Xcm::Transact { 
+			// 	origin_type: OriginKind::SovereignAccount, 
+			// 	require_weight_at_most: 10000000, 
+			// 	call: call.encode().into() };
 			
-			T::XcmSender::send_xcm((Junction::Parent, Junction::Parachain { id: 0 }).into(), message);
+			// T::XcmSender::send_xcm((Junction::Parent, Junction::Parachain { id: 0 }).into(), message);
 
-			Self::deposit_event(Event::RecoveryInitiated(account, who));
+			// Self::deposit_event(Event::RecoveryInitiated(account, who));
 			Ok(().into())
 		}
 

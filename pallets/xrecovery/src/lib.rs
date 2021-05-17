@@ -174,13 +174,14 @@ pub mod pallet {
 	use sp_std::prelude::*;
 	use core::{convert::TryInto,};
 	use sp_runtime::{
-		traits::{Dispatchable, SaturatedConversion, CheckedAdd, CheckedMul},
+		traits::{Dispatchable, SaturatedConversion, CheckedAdd, CheckedMul}, AccountId32,
 	};
 	use codec::{Encode, Decode};
 	use weights::WeightInfo;
 	use cumulus_primitives_core::ParaId;
 
-	use litentry_pallet_primitives::XrecoveryCreateRecoveryCall;
+	use litentry_pallet_primitives::{ XrecoveryRegisterToLitentryCall, XrecoveryCreateRecoveryCall, XrecoveryInitiateRecoveryCall,
+		XrecoveryVouchRecoveryCall, XrecoveryClaimRecoveryCall, XrecoveryRemoveRecoveryCall, XrecoveryCancelRecoveryCall, };
 
 	use frame_support::{pallet_prelude::*,
 		Parameter, RuntimeDebug, weights::GetDispatchInfo,
@@ -188,6 +189,7 @@ pub mod pallet {
 		dispatch::DispatchResultWithPostInfo, dispatch::PostDispatchInfo,
 	};
 	use frame_system::{self as system, ensure_signed, ensure_root};
+	use polkadot_parachain::primitives::Sibling;
 
 	type BalanceOf<T> =
 		<<T as Config>::Currency as Currency<<T as frame_system::Config>::AccountId>>::Balance;
@@ -225,6 +227,8 @@ pub mod pallet {
 		/// The overarching event type.
 		type Event: From<Event<Self>> + IsType<<Self as frame_system::Config>::Event>;
 
+		// type AccountId: Into<AccountId32>;
+
 		/// Weights definition.
 		type WeightInfo: WeightInfo;
 
@@ -245,8 +249,7 @@ pub mod pallet {
 		/// This is held for adding `sizeof(AccountId)` bytes more into a pre-existing storage value.
 		type FriendDepositFactor: Get<BalanceOf<Self>>;
 
-		/// The maximum amount of friends allowed in a xrecovery configuration.
-		type MaxFriends: Get<u16>;
+
 
 		/// The base amount of currency needed to reserve for starting a xrecovery.
 		///
@@ -257,11 +260,15 @@ pub mod pallet {
 		/// threshold.
 		type RecoveryDeposit: Get<BalanceOf<Self>>;
 
+		/// following configuration need get from Litentry.
 		/// Litentry Parachain's parachain ID
 		type LitentryParachainId: Get<ParaId>;
 
 		/// Xrecovery Pallet ID in Litentry parachain runtime
 		type XrecoveryPalletID: Get<u8>;
+
+		/// The maximum amount of friends allowed in a xrecovery configuration.
+		type MaxFriends: Get<u16>;
 
 		/// Xrecovery Pallet ID in Litentry parachain runtime
 		type XrecoveryParachainRegister: Get<u8>;
@@ -276,10 +283,22 @@ pub mod pallet {
 		type XrecoveryVouchRecovery: Get<u8>;
 
 		/// Xrecovery Pallet ID in Litentry parachain runtime
+		type XrecoveryClaimRecovery: Get<u8>;
+
+		/// Xrecovery Pallet ID in Litentry parachain runtime
 		type XrecoveryCloseRecovery: Get<u8>;
 
 		/// Xrecovery Pallet ID in Litentry parachain runtime
-		type XrecoveryMoveRecovery: Get<u8>;
+		type XrecoveryRemoveRecovery: Get<u8>;
+
+		/// Xrecovery Pallet ID in Litentry parachain runtime
+		type XrecoveryCancelRecovery: Get<u8>;
+
+		/// Xrecovery Pallet ID in Litentry parachain runtime
+		type XrecoveryDefaultDelayBlockNumber: Get<u32>;
+
+		/// Xrecovery Pallet ID in Litentry parachain runtime
+		type XrecoveryWeightAtMost: Get<u64>;
 
 		/// The XCM sender module.
 		type XcmSender: SendXcm;
@@ -310,6 +329,8 @@ pub mod pallet {
 
 	#[pallet::error]
 	pub enum Error<T> {
+		/// Error to send xcm to Litentry
+		XcmSendError,
 		/// User is not allowed to make a call on behalf of this account
 		NotAllowed,
 		/// Threshold must be greater than zero
@@ -344,6 +365,7 @@ pub mod pallet {
 		AlreadyProxy,
 		/// Some internal state is broken.
 		BadState,
+		OnlyParachainsAllowed,
 	}
 
 	#[pallet::hooks]
@@ -353,13 +375,13 @@ pub mod pallet {
 	#[pallet::generate_store(pub(super) trait Store)]
 	pub struct Pallet<T>(_);
 
-	#[pallet::storage]
-	#[pallet::getter(fn recovery_config)]
-	pub(super) type Recoverable<T: Config> =  StorageMap<_, Blake2_128Concat, T::AccountId, Option<RecoveryConfig<T::BlockNumber, BalanceOf<T>, T::AccountId>>, ValueQuery>;
+	// #[pallet::storage]
+	// #[pallet::getter(fn recovery_config)]
+	// pub(super) type Recoverable<T: Config> =  StorageMap<_, Blake2_128Concat, T::AccountId, Option<RecoveryConfig<T::BlockNumber, BalanceOf<T>, T::AccountId>>, ValueQuery>;
 
-	#[pallet::storage]
-	#[pallet::getter(fn active_recovery)]
-	pub(super) type ActiveRecoveries<T: Config> =  StorageDoubleMap<_, Blake2_128Concat, T::AccountId, Blake2_128Concat, T::AccountId, Option<ActiveRecovery<T::BlockNumber, BalanceOf<T>, T::AccountId>>, ValueQuery>;
+	// #[pallet::storage]
+	// #[pallet::getter(fn active_recovery)]
+	// pub(super) type ActiveRecoveries<T: Config> =  StorageDoubleMap<_, Blake2_128Concat, T::AccountId, Blake2_128Concat, T::AccountId, Option<ActiveRecovery<T::BlockNumber, BalanceOf<T>, T::AccountId>>, ValueQuery>;
 
 	#[pallet::storage]
 	#[pallet::getter(fn proxy)]
@@ -447,12 +469,15 @@ pub mod pallet {
 		/// # </weight>
 		#[pallet::weight(<T as pallet::Config>::WeightInfo::asset_claim())]
 		pub fn create_recovery(origin: OriginFor<T>,
-			// friends: Vec<T::MultiLocation>,
 			friends: Vec<T::AccountId>,
 			threshold: u16,
 			delay_period: T::BlockNumber,
 		) -> DispatchResultWithPostInfo {
 			let who = ensure_signed(origin)?;
+
+			// let mut bytes = [0_u8; 32];
+			// let id32: AccountId32 = AccountId32::from(who);
+
 			// Check account is not already set up for xrecovery
 			// we can create a new one to repalce old one.
 			// ensure!(!<Recoverable<T>>::contains_key(&who), Error::<T>::AlreadyRecoverable);
@@ -463,6 +488,7 @@ pub mod pallet {
 			let max_friends = T::MaxFriends::get() as usize;
 			ensure!(friends.len() <= max_friends, Error::<T>::MaxFriends);
 			ensure!(Self::is_sorted_and_unique(&friends), Error::<T>::NotSorted);
+			
 			// Total deposit is base fee + number of friends * factor fee
 			let friend_deposit = T::FriendDepositFactor::get()
 				.checked_mul(&friends.len().saturated_into())
@@ -472,6 +498,7 @@ pub mod pallet {
 				.ok_or(Error::<T>::Overflow)?;
 			// Reserve the deposit
 			T::Currency::reserve(&who, total_deposit)?;
+
 			// Create the xrecovery configuration
 			let recovery_config = RecoveryConfig {
 				delay_period,
@@ -479,30 +506,31 @@ pub mod pallet {
 				friends: friends.clone(),
 				threshold,
 			};
-			// Send the xmc message to Litentry xrecovery pallet.
-			let LitentryParaId = T::LitentryParachainId::get();
-			let XrecoveryPalletId = T::XrecoveryPalletID::get();
+
 			let friends_u8: Vec<u8> = friends.iter().map(|friend| friend.encode()).collect::<Vec<_>>().encode();
 
+			let account_u8: Vec<u8> = who.encode();
 
-			let block_number_u32 = TryInto::<u32>::try_into(delay_period).map_or(100000, |a| a);
-			let call = XrecoveryCreateRecoveryCall::new(XrecoveryPalletId, 2, friends_u8, threshold, block_number_u32);
-			// let request_hash = call.request_hash();
+			let default_delay_period = T::XrecoveryDefaultDelayBlockNumber::get();
+			let block_number_u32: u32 = TryInto::<u32>::try_into(delay_period).map_or(default_delay_period, |a| a);
+			let call = XrecoveryCreateRecoveryCall::new(
+				T::XrecoveryPalletID::get(), 
+				T::XrecoveryCreateRecovery::get(),
+				account_u8, friends_u8, threshold, block_number_u32);
 
 			let message = Xcm::Transact { 
 				origin_type: OriginKind::Native, 
-				require_weight_at_most: 10000000, 
+				require_weight_at_most: T::XrecoveryWeightAtMost::get(), 
 				call: call.encode().into() };
 			
 			
-			T::XcmSender::send_xcm((Junction::Parent, Junction::Parachain { id: LitentryParaId.into() }).into(), message);
-
-
-			// Create the xrecovery configuration storage item
-			// let call = <Recoverable<T>>::insert(&who, Some(recovery_config));
-
-			Self::deposit_event(Event::RecoveryCreated(who));
-			Ok(().into())
+			match T::XcmSender::send_xcm((Junction::Parent, Junction::Parachain { id: T::XrecoveryPalletID::get().into() }).into(), message) {
+				Ok(()) => {
+					Self::deposit_event(Event::RecoveryCreated(who));
+					Ok(().into())
+				},
+				Err(e) => Err(Error::<T>::XcmSendError.into()),
+			}
 		}
 
 		/// Initiate the process for recovering a recoverable account.
@@ -532,35 +560,43 @@ pub mod pallet {
 			let who = ensure_signed(origin)?;
 			// Check that the account is recoverable
 			// not check it, the sender should know if the recovery already set.
-			ensure!(<Recoverable<T>>::contains_key(&account), Error::<T>::NotRecoverable);
+			// ensure!(<Recoverable<T>>::contains_key(&account), Error::<T>::NotRecoverable);
 			// Check that the xrecovery process has not already been started
 			// not check it. the new one will replace old one
-			ensure!(!<ActiveRecoveries<T>>::contains_key(&account, &who), Error::<T>::AlreadyStarted);
+			// ensure!(!<ActiveRecoveries<T>>::contains_key(&account, &who), Error::<T>::AlreadyStarted);
 
 			// Take xrecovery deposit
-			let recovery_deposit = T::RecoveryDeposit::get();
-			T::Currency::reserve(&who, recovery_deposit)?;
+			// let recovery_deposit = T::RecoveryDeposit::get();
+			// T::Currency::reserve(&who, recovery_deposit)?;
 			// Create an active xrecovery status
-			let recovery_status = ActiveRecovery {
-				created: <system::Pallet<T>>::block_number(),
-				deposit: recovery_deposit,
-				friends: vec![],
-			};
+			// let recovery_status = ActiveRecovery {
+			// 	created: <system::Pallet<T>>::block_number(),
+			// 	deposit: recovery_deposit,
+			// 	friends: vec![],
+			// };
 			// Create the active xrecovery storage item
-			<ActiveRecoveries<T>>::insert(&account, &who, Some(recovery_status));
+			// <ActiveRecoveries<T>>::insert(&account, &who, Some(recovery_status));
 
-			let call = XrecoveryCreateRecoveryCall::new(0, 0, vec![], 0, 0);
-			// let request_hash = call.request_hash();
+			// we must reserve the LIT in the 
+			let account_u8: Vec<u8> = who.encode();
+
+			let call = XrecoveryInitiateRecoveryCall::new(
+				T::XrecoveryPalletID::get(), 
+				T::XrecoveryInitiateRecovery::get(), 
+				account_u8);
 
 			let message = Xcm::Transact { 
-				origin_type: OriginKind::SovereignAccount, 
-				require_weight_at_most: 10000000, 
+				origin_type: OriginKind::Native,
+				require_weight_at_most: T::XrecoveryWeightAtMost::get(),
 				call: call.encode().into() };
 			
-			T::XcmSender::send_xcm((Junction::Parent, Junction::Parachain { id: 0 }).into(), message);
-
-			Self::deposit_event(Event::RecoveryInitiated(account, who));
-			Ok(().into())
+			match T::XcmSender::send_xcm((Junction::Parent, Junction::Parachain { id: T::LitentryParachainId::get().into() }).into(), message) {
+				Ok(()) => {
+					Self::deposit_event(Event::RecoveryInitiated(who, account));
+					Ok(().into())
+				},
+				Err(e) => Err(Error::<T>::XcmSendError.into()),
+			}
 		}
 
 		/// Allow a "friend" of a recoverable account to vouch for an active xrecovery
@@ -592,20 +628,41 @@ pub mod pallet {
 		pub fn vouch_recovery(origin: OriginFor<T>, lost: T::AccountId, rescuer: T::AccountId) -> DispatchResultWithPostInfo {
 			let who = ensure_signed(origin)?;
 			// Get the xrecovery configuration for the lost account.
-			let recovery_config = Self::recovery_config(&lost).ok_or(Error::<T>::NotRecoverable)?;
+			// let recovery_config = Self::recovery_config(&lost).ok_or(Error::<T>::NotRecoverable)?;
 			// Get the active xrecovery process for the rescuer.
-			let mut active_recovery = Self::active_recovery(&lost, &rescuer).ok_or(Error::<T>::NotStarted)?;
+			// let mut active_recovery = Self::active_recovery(&lost, &rescuer).ok_or(Error::<T>::NotStarted)?;
 			// Make sure the voter is a friend
-			ensure!(Self::is_friend(&recovery_config.friends, &who), Error::<T>::NotFriend);
+			// ensure!(Self::is_friend(&recovery_config.friends, &who), Error::<T>::NotFriend);
 			// Either insert the vouch, or return an error that the user already vouched.
-			match active_recovery.friends.binary_search(&who) {
-				Ok(_pos) => Err(Error::<T>::AlreadyVouched)?,
-				Err(pos) => active_recovery.friends.insert(pos, who.clone()),
-			}
+			// match active_recovery.friends.binary_search(&who) {
+			// 	Ok(_pos) => Err(Error::<T>::AlreadyVouched)?,
+			// 	Err(pos) => active_recovery.friends.insert(pos, who.clone()),
+			// }
 			// Update storage with the latest details
 			// <ActiveRecoveries<T>>::insert(&lost, &rescuer, Some(active_recovery));
-			Self::deposit_event(Event::RecoveryVouched(lost, rescuer, who));
-			Ok(().into())
+			// Self::deposit_event(Event::RecoveryVouched(lost, rescuer, who));
+
+			let account_u8: Vec<u8> = who.encode();
+			let lost_u8: Vec<u8> = lost.encode();
+			let rescuer_u8: Vec<u8> = rescuer.encode();
+
+			let call = XrecoveryVouchRecoveryCall::new(
+				T::XrecoveryPalletID::get(), 
+				T::XrecoveryInitiateRecovery::get(), 
+				account_u8, lost_u8, rescuer_u8);
+
+			let message = Xcm::Transact { 
+				origin_type: OriginKind::Native,
+				require_weight_at_most: T::XrecoveryWeightAtMost::get(),
+				call: call.encode().into() };
+			
+			match T::XcmSender::send_xcm((Junction::Parent, Junction::Parachain { id: T::LitentryParachainId::get().into() }).into(), message) {
+				Ok(()) => {
+					Self::deposit_event(Event::RecoveryVouched(who, lost, rescuer));
+					Ok(().into())
+				},
+				Err(e) => Err(Error::<T>::XcmSendError.into()),
+			}
 		}
 
 		/// Allow a successful rescuer to claim their recovered account.
@@ -629,28 +686,32 @@ pub mod pallet {
 		/// Total Complexity: O(F + V)
 		/// # </weight>
 		#[pallet::weight(<T as pallet::Config>::WeightInfo::asset_claim())]
-		pub fn claim_recovery(origin: OriginFor<T>, account: T::AccountId) -> DispatchResultWithPostInfo {
+		pub fn claim_recovery(origin: OriginFor<T>, lost: T::AccountId, rescuer: T::AccountId) -> DispatchResultWithPostInfo {
 			let who = ensure_signed(origin)?;
+
+			Sibling::try_from_account(&who).ok_or(<Error<T>>::OnlyParachainsAllowed)?;
+
+
 			// Get the xrecovery configuration for the lost account
-			let recovery_config = Self::recovery_config(&account).ok_or(Error::<T>::NotRecoverable)?;
+			// let recovery_config = Self::recovery_config(&account).ok_or(Error::<T>::NotRecoverable)?;
 			// Get the active xrecovery process for the rescuer
-			let active_recovery = Self::active_recovery(&account, &who).ok_or(Error::<T>::NotStarted)?;
+			// let active_recovery = Self::active_recovery(&account, &who).ok_or(Error::<T>::NotStarted)?;
 			ensure!(!Proxy::<T>::contains_key(&who), Error::<T>::AlreadyProxy);
 			// Make sure the delay period has passed
-			let current_block_number = <system::Pallet<T>>::block_number();
-			let recoverable_block_number = active_recovery.created
-				.checked_add(&recovery_config.delay_period)
-				.ok_or(Error::<T>::Overflow)?;
-			ensure!(recoverable_block_number <= current_block_number, Error::<T>::DelayPeriod);
+			// let current_block_number = <system::Pallet<T>>::block_number();
+			// let recoverable_block_number = active_recovery.created
+			// 	.checked_add(&recovery_config.delay_period)
+			// 	.ok_or(Error::<T>::Overflow)?;
+			// ensure!(recoverable_block_number <= current_block_number, Error::<T>::DelayPeriod);
 			// Make sure the threshold is met
-			ensure!(
-				recovery_config.threshold as usize <= active_recovery.friends.len(),
-				Error::<T>::Threshold
-			);
+			// ensure!(
+			// 	recovery_config.threshold as usize <= active_recovery.friends.len(),
+			// 	Error::<T>::Threshold
+			// );
 			system::Pallet::<T>::inc_consumers(&who).map_err(|_| Error::<T>::BadState)?;
 			// Create the xrecovery storage item
-			Proxy::<T>::insert(&who, Some(&account));
-			Self::deposit_event(Event::AccountRecovered(account, who));
+			Proxy::<T>::insert(&rescuer, Some(&lost));
+			Self::deposit_event(Event::AccountRecovered(lost, rescuer));
 			Ok(().into())
 		}
 
@@ -678,12 +739,13 @@ pub mod pallet {
 		pub fn close_recovery(origin: OriginFor<T>, rescuer: T::AccountId) -> DispatchResultWithPostInfo {
 			let who = ensure_signed(origin)?;
 			// Take the active xrecovery process started by the rescuer for this account.
-			let active_recovery = <ActiveRecoveries<T>>::take(&who, &rescuer).ok_or(Error::<T>::NotStarted)?;
+			// let active_recovery = <ActiveRecoveries<T>>::take(&who, &rescuer).ok_or(Error::<T>::NotStarted)?;
 			// Move the reserved funds from the rescuer to the rescued account.
 			// Acts like a slashing mechanism for those who try to maliciously recover accounts.
-			let res = T::Currency::repatriate_reserved(&rescuer, &who, active_recovery.deposit, BalanceStatus::Free);
-			debug_assert!(res.is_ok());
-			Self::deposit_event(Event::RecoveryClosed(who, rescuer));
+			// let res = T::Currency::repatriate_reserved(&rescuer, &who, active_recovery.deposit, BalanceStatus::Free);
+			
+			// debug_assert!(res.is_ok());
+			// Self::deposit_event(Event::RecoveryClosed(who, rescuer));
 			Ok(().into())
 		}
 
@@ -712,14 +774,14 @@ pub mod pallet {
 		pub fn remove_recovery(origin: OriginFor<T>,) -> DispatchResultWithPostInfo {
 			let who = ensure_signed(origin)?;
 			// Check there are no active recoveries
-			let mut active_recoveries = <ActiveRecoveries<T>>::iter_prefix_values(&who);
-			ensure!(active_recoveries.next().is_none(), Error::<T>::StillActive);
+			// let mut active_recoveries = <ActiveRecoveries<T>>::iter_prefix_values(&who);
+			// ensure!(active_recoveries.next().is_none(), Error::<T>::StillActive);
 			// Take the xrecovery configuration for this account.
-			let recovery_config = <Recoverable<T>>::take(&who).ok_or(Error::<T>::NotRecoverable)?;
+			// let recovery_config = <Recoverable<T>>::take(&who).ok_or(Error::<T>::NotRecoverable)?;
 
 			// Unreserve the initial deposit for the xrecovery configuration.
-			T::Currency::unreserve(&who, recovery_config.deposit);
-			Self::deposit_event(Event::RecoveryRemoved(who));
+			// T::Currency::unreserve(&who, recovery_config.deposit);
+			// Self::deposit_event(Event::RecoveryRemoved(who));
 			Ok(().into())
 		}
 

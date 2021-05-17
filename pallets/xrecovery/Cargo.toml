@@ -24,9 +24,11 @@ frame-system = { version = "3.0.0", branch = "rococo-v1", default-features = fal
 frame-benchmarking = {version = '3.0.0', branch = "rococo-v1", default-features = false, optional = true }
 sp-core = { version = "3.0.0", branch = "rococo-v1", default-features = false, optional = true }
 xcm = { git = "https://github.com/paritytech/polkadot", branch = "rococo-v1", default-features = false }
+# xcm-builder = { git = "https://github.com/paritytech/polkadot", branch = "rococo-v1", default-features = false }
 
 litentry-pallet-primitives = {path = "../../primitives"}
 cumulus-primitives-core = {git = "https://github.com/paritytech/cumulus", branch = "rococo-v1", default-features = false }
+polkadot-parachain = {git = "https://github.com/paritytech/polkadot", branch = "rococo-v1", default-features = false }
 
 [dev-dependencies]
 sp-core = { version = "3.0.0" }
@@ -46,6 +48,7 @@ std = [
 	"frame-system/std",
 	"xcm/std",
 	"cumulus-primitives-core/std",
+	"polkadot-parachain/std",
 ]
 litentry-server = []
 runtime-benchmarks = ["sp-runtime", "frame-benchmarking", "sp-core"]
