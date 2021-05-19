@@ -26,6 +26,8 @@ sp-core = { version = "3.0.0", branch = "rococo-v1", default-features = false, o
 xcm = { git = "https://github.com/paritytech/polkadot", branch = "rococo-v1", default-features = false }
 # xcm-builder = { git = "https://github.com/paritytech/polkadot", branch = "rococo-v1", default-features = false }
 
+cumulus-pallet-xcm = { git = "https://github.com/paritytech/cumulus", branch = "rococo-v1",  default-features = false }
+
 litentry-pallet-primitives = {path = "../../primitives"}
 cumulus-primitives-core = {git = "https://github.com/paritytech/cumulus", branch = "rococo-v1", default-features = false }
 polkadot-parachain = {git = "https://github.com/paritytech/polkadot", branch = "rococo-v1", default-features = false }

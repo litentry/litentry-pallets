@@ -171,6 +171,7 @@ use xcm::v0::{
 pub mod pallet {
 	use crate::*;
 	use frame_system::pallet_prelude::*;
+	use frame_system::Config as SystemConfig;
 	use sp_std::prelude::*;
 	use core::{convert::TryInto,};
 	use sp_runtime::{
@@ -179,6 +180,9 @@ pub mod pallet {
 	use codec::{Encode, Decode};
 	use weights::WeightInfo;
 	use cumulus_primitives_core::ParaId;
+	// use xcm_executor::traits::LocationConversion;
+
+	use cumulus_pallet_xcm::{Origin as CumulusOrigin, ensure_sibling_para};
 
 	use litentry_pallet_primitives::{ XrecoveryRegisterToLitentryCall, XrecoveryCreateRecoveryCall, XrecoveryInitiateRecoveryCall,
 		XrecoveryVouchRecoveryCall, XrecoveryClaimRecoveryCall, XrecoveryRemoveRecoveryCall, XrecoveryCancelRecoveryCall, };
@@ -233,7 +237,7 @@ pub mod pallet {
 		type WeightInfo: WeightInfo;
 
 		/// The overarching call type.
-		type Call: Parameter + Dispatchable<Origin=Self::Origin, PostInfo=PostDispatchInfo> + GetDispatchInfo;
+		type Call: Parameter + Dispatchable<Origin=<Self as frame_system::Config>::Origin, PostInfo=PostDispatchInfo> + GetDispatchInfo;
 
 		/// The currency mechanism.
 		type Currency: ReservableCurrency<Self::AccountId>;
@@ -249,6 +253,9 @@ pub mod pallet {
 		/// This is held for adding `sizeof(AccountId)` bytes more into a pre-existing storage value.
 		type FriendDepositFactor: Get<BalanceOf<Self>>;
 
+		// type AccountIdConverter: LocationConversion<Self::AccountId>;
+
+		type Origin: From<<Self as SystemConfig>::Origin> + Into<Result<CumulusOrigin, <Self as Config>::Origin>>;
 
 
 		/// The base amount of currency needed to reserve for starting a xrecovery.
@@ -407,6 +414,7 @@ pub mod pallet {
 			account: T::AccountId,
 			call: Box<<T as Config>::Call>
 		) -> DispatchResultWithPostInfo {
+		// where <T as pallet::Config>::Origin: From<RawOrigin<<T as frame_system::Config>::AccountId>> {
 			let who = ensure_signed(origin)?;
 			// Check `who` is allowed to make a call on behalf of `account`
 			let target = Self::proxy(&who).ok_or(Error::<T>::NotAllowed)?;
@@ -687,16 +695,24 @@ pub mod pallet {
 		/// # </weight>
 		#[pallet::weight(<T as pallet::Config>::WeightInfo::asset_claim())]
 		pub fn claim_recovery(origin: OriginFor<T>, lost: T::AccountId, rescuer: T::AccountId) -> DispatchResultWithPostInfo {
-			let who = ensure_signed(origin)?;
+			// let who = ensure_signed(origin)?;
 
-			Sibling::try_from_account(&who).ok_or(<Error<T>>::OnlyParachainsAllowed)?;
+			let para = ensure_sibling_para(<T as Config>::Origin::from(origin)).or_else(|_| Err(Error::<T>::BadState))?;
+
+			if para != T::LitentryParachainId::get() {
+				return  Err(Error::<T>::XcmSendError.into());
+			}
+
+
+			// let xcm_origin = T::AccountIdConverter::try_into_location(who.clone())
+				// .map_err(|_| Error::<T>::BadLocation)?;
 
 
 			// Get the xrecovery configuration for the lost account
 			// let recovery_config = Self::recovery_config(&account).ok_or(Error::<T>::NotRecoverable)?;
 			// Get the active xrecovery process for the rescuer
 			// let active_recovery = Self::active_recovery(&account, &who).ok_or(Error::<T>::NotStarted)?;
-			ensure!(!Proxy::<T>::contains_key(&who), Error::<T>::AlreadyProxy);
+			// ensure!(!Proxy::<T>::contains_key(&who), Error::<T>::AlreadyProxy);
 			// Make sure the delay period has passed
 			// let current_block_number = <system::Pallet<T>>::block_number();
 			// let recoverable_block_number = active_recovery.created
@@ -708,10 +724,10 @@ pub mod pallet {
 			// 	recovery_config.threshold as usize <= active_recovery.friends.len(),
 			// 	Error::<T>::Threshold
 			// );
-			system::Pallet::<T>::inc_consumers(&who).map_err(|_| Error::<T>::BadState)?;
+			// system::Pallet::<T>::inc_consumers(&who).map_err(|_| Error::<T>::BadState)?;
 			// Create the xrecovery storage item
-			Proxy::<T>::insert(&rescuer, Some(&lost));
-			Self::deposit_event(Event::AccountRecovered(lost, rescuer));
+			// Proxy::<T>::insert(&rescuer, Some(&lost));
+			// Self::deposit_event(Event::AccountRecovered(lost, rescuer));
 			Ok(().into())
 		}
 
