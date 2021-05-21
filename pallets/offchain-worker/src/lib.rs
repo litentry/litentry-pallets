@@ -212,7 +212,7 @@ pub mod pallet {
 			Self::valid_data_source(data_source)?;
 
 			// Check block number
-			Self::valid_commit_block_number(block_number, <frame_system::Module<T>>::block_number())?;
+			Self::valid_commit_block_number(block_number, <frame_system::Pallet<T>>::block_number())?;
 
 			// Check the commit slot
 			Self::valid_commit_slot(account.clone(), Self::get_ocw_index(Some(&account)), data_source)?;
@@ -572,7 +572,7 @@ pub mod pallet {
 						};
 
 						Self::fetch_balances(
-							<account_linker::Module<T>>::eth_addresses(account),
+							<account_linker::Pallet<T>>::eth_addresses(account),
 							urls::HttpRequest::GET(get),
 							&urls::parse_etherscan_balances).ok()
 					},
@@ -597,7 +597,7 @@ pub mod pallet {
 							api_token: token,
 						};
 						Self::fetch_balances(
-							<account_linker::Module<T>>::eth_addresses(account),
+							<account_linker::Pallet<T>>::eth_addresses(account),
 							urls::HttpRequest::POST(post),
 							&urls::parse_blockchain_info_balances).ok()
 					},
