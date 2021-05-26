@@ -246,7 +246,7 @@ pub mod pallet {
 
 			let index = index as usize;
 			let mut addrs = Self::polkadot_addresses(&account);
-			// NOTE: allow linking `MAX_ETH_LINKS` eth addresses.
+			// NOTE: allow linking `MAX_POLKADOT_LINKS` polkadot addresses.
 			if (index >= addrs.len()) && (addrs.len() != MAX_POLKADOT_LINKS) {
 				addrs.push(origin.clone());
 			} else if (index >= addrs.len()) && (addrs.len() == MAX_POLKADOT_LINKS) {
