@@ -28,6 +28,7 @@ pub mod pallet {
 	pub const EXPIRING_BLOCK_NUMBER_MAX: u32 = 10 * 60 * 24 * 30; // 30 days for 6s per block
 	pub const MAX_ETH_LINKS: usize = 3;
 	pub const MAX_BTC_LINKS: usize = 3;
+	pub const MAX_POLKADOT_LINKS: usize = 3;
 
 	enum BTCAddrType {
 		Legacy,
@@ -46,6 +47,7 @@ pub mod pallet {
 	pub enum Event<T: Config> {
 		EthAddressLinked(T::AccountId, Vec<u8>),
 		BtcAddressLinked(T::AccountId, Vec<u8>),
+		PolkadotAddressLinked(T::AccountId, T::AccountId),
 	}
 
 	#[pallet::error]
@@ -74,6 +76,10 @@ pub mod pallet {
 	#[pallet::storage]
 	#[pallet::getter(fn btc_addresses)]
 	pub(super) type BitcoinLink<T: Config> =  StorageMap<_, Blake2_128Concat, T::AccountId, Vec<Vec<u8>>, ValueQuery>;
+
+	#[pallet::storage]
+	#[pallet::getter(fn polkadot_addresses)]
+	pub(super) type PolkadotLink<T: Config> =  StorageMap<_, Blake2_128Concat, T::AccountId, Vec<T::AccountId>, ValueQuery>;
 
 	#[pallet::call]
 	impl<T:Config> Pallet<T> {
@@ -224,6 +230,33 @@ pub mod pallet {
 
 			<BitcoinLink<T>>::insert(account.clone(), addrs);
 			Self::deposit_event(Event::BtcAddressLinked(account, addr));
+
+			Ok(().into())
+
+		}
+
+		#[pallet::weight(1)]
+		pub fn link_polkadot(
+			origin: OriginFor<T>,
+			account: T::AccountId,
+			index: u32,
+		) -> DispatchResultWithPostInfo {
+
+			let origin = ensure_signed(origin)?;
+
+			let index = index as usize;
+			let mut addrs = Self::polkadot_addresses(&account);
+			// NOTE: allow linking `MAX_ETH_LINKS` eth addresses.
+			if (index >= addrs.len()) && (addrs.len() != MAX_POLKADOT_LINKS) {
+				addrs.push(origin.clone());
+			} else if (index >= addrs.len()) && (addrs.len() == MAX_POLKADOT_LINKS) {
+				addrs[MAX_POLKADOT_LINKS - 1] = origin.clone();
+			} else {
+				addrs[index] = origin.clone();
+			}
+
+			<PolkadotLink<T>>::insert(account.clone(), addrs);
+			Self::deposit_event(Event::PolkadotAddressLinked(account, origin));
 
 			Ok(().into())
 
