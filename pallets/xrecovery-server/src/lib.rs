@@ -174,6 +174,8 @@ pub mod pallet {
 	use crate::*;
 	use frame_system::pallet_prelude::*;
 	use sp_std::prelude::*;
+	use frame_system::Config as SystemConfig;
+
 	use core::{convert::TryInto,};
 	use sp_runtime::{
 		traits::{Dispatchable, SaturatedConversion, CheckedAdd, CheckedMul},
@@ -183,6 +185,8 @@ pub mod pallet {
 	use cumulus_primitives_core::ParaId;
 
 	use litentry_pallet_primitives::XrecoveryCreateRecoveryCall;
+	use polkadot_parachain::primitives::Sibling;
+	use cumulus_pallet_xcm::{Origin as CumulusOrigin, ensure_sibling_para};
 
 	use frame_support::{pallet_prelude::*,
 		Parameter, RuntimeDebug, weights::GetDispatchInfo,
@@ -231,7 +235,7 @@ pub mod pallet {
 		type WeightInfo: WeightInfo;
 
 		/// The overarching call type.
-		type Call: Parameter + Dispatchable<Origin=Self::Origin, PostInfo=PostDispatchInfo> + GetDispatchInfo;
+		type Call: Parameter + Dispatchable<Origin=<Self as frame_system::Config>::Origin, PostInfo=PostDispatchInfo> + GetDispatchInfo;
 
 		/// The currency mechanism.
 		type Currency: ReservableCurrency<Self::AccountId>;
@@ -267,6 +271,9 @@ pub mod pallet {
 
 		/// The XCM sender module.
 		type XcmSender: SendXcm;
+
+		type Origin: From<<Self as SystemConfig>::Origin> + Into<Result<CumulusOrigin, <Self as Config>::Origin>>;
+
 	}
 
 
@@ -338,6 +345,10 @@ pub mod pallet {
 	pub struct Pallet<T>(_);
 
 	#[pallet::storage]
+	#[pallet::getter(fn parachain_register)]
+	pub(super) type ParachainRegister<T: Config> =  StorageMap<_, Blake2_128Concat, ParaId, Option<(u8, u8)>, ValueQuery>;
+
+	#[pallet::storage]
 	#[pallet::getter(fn recovery_config)]
 	pub(super) type Recoverable<T: Config> =  StorageMap<_, Blake2_128Concat, T::AccountId, Option<RecoveryConfig<T::BlockNumber, BalanceOf<T>, T::AccountId>>, ValueQuery>;
 
@@ -351,6 +362,20 @@ pub mod pallet {
 
 	#[pallet::call]
 	impl<T:Config> Pallet<T> {
+		#[pallet::weight(<T as pallet::Config>::WeightInfo::asset_claim())]
+		pub fn handle_parachain_register(origin: OriginFor<T>,
+			module_id: u8,
+    		set_proxy_method_id: u8,
+		) -> DispatchResultWithPostInfo {
+
+			let para = ensure_sibling_para(<T as Config>::Origin::from(origin)).or_else(|_| Err(Error::<T>::BadState))?;
+			ParachainRegister::<T>::insert(para, Some((module_id, set_proxy_method_id)));
+
+			Ok(().into())
+		}
+				
+
+
 		/// Send a call through a recovered account.
 		///
 		/// The dispatch origin for this call must be _Signed_ and registered to

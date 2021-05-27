@@ -309,6 +309,9 @@ pub mod pallet {
 
 		/// The XCM sender module.
 		type XcmSender: SendXcm;
+
+		/// Xrecovery Pallet ID in Litentry parachain runtime
+		type XrecoveryMaxRetryRegister: Get<u8>;
 	}
 
 
@@ -388,11 +391,19 @@ pub mod pallet {
 	#[pallet::getter(fn registered)]
 	pub(super) type Registered<T: Config> =  StorageValue<_, bool, ValueQuery>;
 
+	#[pallet::storage]
+	#[pallet::getter(fn retry_register)]
+	pub(super) type RetryRegister<T: Config> =  StorageValue<_, u8, ValueQuery>;
+
 	#[pallet::hooks]
 	impl<T: Config> Hooks<BlockNumberFor<T>> for Pallet<T> {
 		fn on_initialize(block_number: T::BlockNumber) -> Weight {
 			let registered = Self::registered();
 			if registered {
+				return 10
+			}
+
+			if Self::retry_register() > T::XrecoveryMaxRetryRegister::get() {
 				return 10
 			}
 
@@ -410,13 +421,14 @@ pub mod pallet {
 						require_weight_at_most: T::XrecoveryWeightAtMost::get(), 
 						call: call.encode().into() };
 					
-					
 					match T::XcmSender::send_xcm((Junction::Parent, Junction::Parachain { id: T::XrecoveryPalletID::get().into() }).into(), message) {
 						Ok(()) => {
 							Registered::<T>::put(true);
 							Self::deposit_event(Event::ClaimCallBackRegisterSent())
 						},
-						Err(_) => {},
+						Err(_) => {
+							RetryRegister::<T>::mutate(|old| *old + 1);
+						},
 					}
 					100000
 				},

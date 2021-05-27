@@ -27,6 +27,8 @@ xcm = { git = "https://github.com/paritytech/polkadot", branch = "rococo-v1", de
 
 litentry-pallet-primitives = {path = "../../primitives"}
 cumulus-primitives-core = {git = "https://github.com/paritytech/cumulus", branch = "rococo-v1", default-features = false }
+polkadot-parachain = {git = "https://github.com/paritytech/polkadot", branch = "rococo-v1", default-features = false }
+cumulus-pallet-xcm = { git = "https://github.com/paritytech/cumulus", branch = "rococo-v1",  default-features = false }
 
 [dev-dependencies]
 sp-core = { version = "3.0.0" }
@@ -49,6 +51,8 @@ std = [
 	"frame-system/std",
 	"xcm/std",
 	"cumulus-primitives-core/std",
+	"polkadot-parachain/std",
+	"cumulus-pallet-xcm/std",
 ]
 runtime-benchmarks = ["sp-runtime", "frame-benchmarking", "sp-core"]
 
