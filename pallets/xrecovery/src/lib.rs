@@ -175,7 +175,7 @@ pub mod pallet {
 	use sp_std::prelude::*;
 	use core::{convert::TryInto,};
 	use sp_runtime::{
-		traits::{Dispatchable, SaturatedConversion, CheckedAdd, CheckedMul}, AccountId32,
+		traits::{Dispatchable, SaturatedConversion, CheckedAdd, CheckedMul, CheckedConversion,}, AccountId32,
 	};
 	use codec::{Encode, Decode};
 	use weights::WeightInfo;
@@ -189,7 +189,7 @@ pub mod pallet {
 
 	use frame_support::{pallet_prelude::*,
 		Parameter, RuntimeDebug, weights::GetDispatchInfo,
-		traits::{Currency, ReservableCurrency, Get, BalanceStatus},
+		traits::{Currency, ReservableCurrency, Get, BalanceStatus, PalletInfo,},
 		dispatch::DispatchResultWithPostInfo, dispatch::PostDispatchInfo,
 	};
 	use frame_system::{self as system, ensure_signed, ensure_root};
@@ -316,6 +316,7 @@ pub mod pallet {
 	#[pallet::generate_deposit(pub(super) fn deposit_event)]
 	#[pallet::metadata(T::AccountId = "AccountId")]
 	pub enum Event<T: Config> {
+		ClaimCallBackRegisterSent(),
 		/// A xrecovery process has been set up for an \[account\].
 		RecoveryCreated(T::AccountId),
 		/// A xrecovery process has been initiated for lost account by rescuer account.
@@ -375,24 +376,55 @@ pub mod pallet {
 		OnlyParachainsAllowed,
 	}
 
-	#[pallet::hooks]
-	impl<T: Config> Hooks<BlockNumberFor<T>> for Pallet<T> {}
-
 	#[pallet::pallet]
 	#[pallet::generate_store(pub(super) trait Store)]
 	pub struct Pallet<T>(_);
 
-	// #[pallet::storage]
-	// #[pallet::getter(fn recovery_config)]
-	// pub(super) type Recoverable<T: Config> =  StorageMap<_, Blake2_128Concat, T::AccountId, Option<RecoveryConfig<T::BlockNumber, BalanceOf<T>, T::AccountId>>, ValueQuery>;
-
-	// #[pallet::storage]
-	// #[pallet::getter(fn active_recovery)]
-	// pub(super) type ActiveRecoveries<T: Config> =  StorageDoubleMap<_, Blake2_128Concat, T::AccountId, Blake2_128Concat, T::AccountId, Option<ActiveRecovery<T::BlockNumber, BalanceOf<T>, T::AccountId>>, ValueQuery>;
-
 	#[pallet::storage]
 	#[pallet::getter(fn proxy)]
 	pub(super) type Proxy<T: Config> =  StorageMap<_, Blake2_128Concat, T::AccountId, Option<T::AccountId>, ValueQuery>;
+
+	#[pallet::storage]
+	#[pallet::getter(fn registered)]
+	pub(super) type Registered<T: Config> =  StorageValue<_, bool, ValueQuery>;
+
+	#[pallet::hooks]
+	impl<T: Config> Hooks<BlockNumberFor<T>> for Pallet<T> {
+		fn on_initialize(block_number: T::BlockNumber) -> Weight {
+			let registered = Self::registered();
+			if registered {
+				return 10
+			}
+
+			match <T as frame_system::Config>::PalletInfo::index::<Self>().map(|i| i.checked_into::<u8>()).flatten() {
+				Some(pallet_index) => {
+					let register_to_litentry_method_index = 5_u8;
+
+					let call = XrecoveryRegisterToLitentryCall::new(
+						T::XrecoveryPalletID::get(), 
+						T::XrecoveryParachainRegister::get(),
+						pallet_index, register_to_litentry_method_index);
+		
+					let message = Xcm::Transact { 
+						origin_type: OriginKind::Native, 
+						require_weight_at_most: T::XrecoveryWeightAtMost::get(), 
+						call: call.encode().into() };
+					
+					
+					match T::XcmSender::send_xcm((Junction::Parent, Junction::Parachain { id: T::XrecoveryPalletID::get().into() }).into(), message) {
+						Ok(()) => {
+							Registered::<T>::put(true);
+							Self::deposit_event(Event::ClaimCallBackRegisterSent())
+						},
+						Err(_) => {},
+					}
+					100000
+				},
+				None => 1000,
+			}
+		}
+	}
+	
 
 	#[pallet::call]
 	impl<T:Config> Pallet<T> {
@@ -699,6 +731,7 @@ pub mod pallet {
 
 			let para = ensure_sibling_para(<T as Config>::Origin::from(origin)).or_else(|_| Err(Error::<T>::BadState))?;
 
+			// only litentry can set the recovery account
 			if para != T::LitentryParachainId::get() {
 				return  Err(Error::<T>::XcmSendError.into());
 			}
@@ -726,8 +759,8 @@ pub mod pallet {
 			// );
 			// system::Pallet::<T>::inc_consumers(&who).map_err(|_| Error::<T>::BadState)?;
 			// Create the xrecovery storage item
-			// Proxy::<T>::insert(&rescuer, Some(&lost));
-			// Self::deposit_event(Event::AccountRecovered(lost, rescuer));
+			Proxy::<T>::insert(&rescuer, Some(&lost));
+			Self::deposit_event(Event::AccountRecovered(lost, rescuer));
 			Ok(().into())
 		}
 
@@ -821,34 +854,41 @@ pub mod pallet {
 			system::Pallet::<T>::dec_consumers(&who);
 			Ok(().into())
 		}
-		
-
 	}
 
 	impl<T: Config> Pallet<T> {
 
-		pub fn register_to_litentry() {
+		pub fn register_to_litentry(claim_recovery_call_index: u8) {
+			let claim_recovery_call_index = 5_u8;
+			// Call::<T>::cancel_recovered(T::AccountId);
+
 			// let call = <pallet::Pallet<T> as Trait>::Call::cancel_recovered(origin, account);
 			// let xcm_call = Call::as_recovered(origin, Box::new(account));
 			// let call = T::Call::from(xcm_call.into());
-		}
 
-		// fn send_to_litentry() -> Xcm {
-		fn send_to_litentry(origin: OriginFor<T>, account: T::AccountId) {
+			// let call = XrecoveryRegisterToLitentryCall::new(
+			// 	T::XrecoveryPalletID::get(), 
+			// 	T::XrecoveryParachainRegister::get(),
+			// 	account_u8, friends_u8, threshold, block_number_u32);
 
+			// let message = Xcm::Transact { 
+			// 	origin_type: OriginKind::Native, 
+			// 	require_weight_at_most: T::XrecoveryWeightAtMost::get(), 
+			// 	call: call.encode().into() };
 			
-
-
+			
+			// match T::XcmSender::send_xcm((Junction::Parent, Junction::Parachain { id: T::XrecoveryPalletID::get().into() }).into(), message) {
+			// 	Ok(()) => {
+			// 		Self::deposit_event(Event::RecoveryCreated(who));
+			// 		Ok(().into())
+			// 	},
+			// 	Err(e) => Err(Error::<T>::XcmSendError.into()),
+			// }
 		}
 
 		/// Check that friends list is sorted and has no duplicates.
 		fn is_sorted_and_unique(friends: &Vec<T::AccountId>) -> bool {
 			friends.windows(2).all(|w| w[0] < w[1])
-		}
-
-		/// Check that a user is a friend in the friends list.
-		fn is_friend(friends: &Vec<T::AccountId>, friend: &T::AccountId) -> bool {
-			friends.binary_search(&friend).is_ok()
 		}
 	}
 }
