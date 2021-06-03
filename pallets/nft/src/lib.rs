@@ -157,11 +157,26 @@ pub mod pallet {
 			let who = ensure_signed(origin)?; // TODO who can?
 			let next_id = orml_nft::Pallet::<T>::next_class_id();
 
-			let mut max_amount = 0u8;
-
 			match class_type {
 				ClassType::Merge(id1, id2, burn) => {
-
+					if !burn {
+						ensure!(<orml_nft::Module<T>>::classes(id1).is_some(), Error::<T>::ClassIdNotFound);
+						ensure!(<orml_nft::Module<T>>::classes(id2).is_some(), Error::<T>::ClassIdNotFound);
+					} else {
+						let class_info1 = orml_nft::Pallet::<T>::classes(id1).ok_or(Error::<T>::ClassIdNotFound)?;
+						let class_info2 = orml_nft::Pallet::<T>::classes(id1).ok_or(Error::<T>::ClassIdNotFound)?;
+	
+						let data1 = class_info1.data;
+						ensure!(
+							data1.properties.0.contains(ClassProperty::Burnable),
+							Error::<T>::NonBurnable
+						);
+						let data2 = class_info2.data;
+						ensure!(
+							data2.properties.0.contains(ClassProperty::Burnable),
+							Error::<T>::NonBurnable
+						);
+					}
 				}
 				_ => {}
 			}
