@@ -52,7 +52,7 @@ impl Decode for Properties {
 
 #[derive(Encode, Decode, Clone, RuntimeDebug, PartialEq, Eq)]
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
-pub struct ClassData<BN> {
+pub struct ClassData<BN, ID> {
 	/// Property of token
 	pub properties: Properties,
     /// Maximum number of NFT
@@ -61,6 +61,8 @@ pub struct ClassData<BN> {
 	pub start_block: Option<BN>,
 	/// till when user can claim this nft
 	pub end_block: Option<BN>,
+	/// merged from two class; if true, burn the two items 
+	pub base: Option<(ID, ID, bool)>,
 }
 
 #[derive(Encode, Decode, Clone, RuntimeDebug, PartialEq, Eq)]
@@ -74,6 +76,7 @@ pub struct TokenData {
 
 pub type TokenIdOf<T> = <T as orml_nft::Config>::TokenId;
 pub type ClassIdOf<T> = <T as orml_nft::Config>::ClassId;
+pub type BlockNumberOf<T> = <T as frame_system::Config>::BlockNumber;
 
 #[frame_support::pallet]
 pub mod pallet {
@@ -82,7 +85,7 @@ pub mod pallet {
 	#[pallet::config]
 	pub trait Config:
 		frame_system::Config
-		+ orml_nft::Config<ClassData = ClassData<<Self as frame_system::Config>::BlockNumber>, TokenData = TokenData>
+		+ orml_nft::Config<ClassData = ClassData<BlockNumberOf<Self>, ClassIdOf<Self>>, TokenData = TokenData>
 	{
 		type Event: From<Event<Self>> + IsType<<Self as frame_system::Config>::Event>;
 
@@ -146,6 +149,7 @@ pub mod pallet {
                 max_amount,
 				start_block: None,
 				end_block: None,
+				base: None,
 			};
 			orml_nft::Pallet::<T>::create_class(&who, metadata, data)?;
 
