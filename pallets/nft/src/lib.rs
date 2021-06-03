@@ -52,16 +52,25 @@ impl Decode for Properties {
 
 #[derive(Encode, Decode, Clone, RuntimeDebug, PartialEq, Eq)]
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
-pub struct ClassData {
+pub struct ClassData<BN> {
 	/// Property of token
 	pub properties: Properties,
     /// Maximum number of NFT
     pub max_amount: u8,
+	/// from when user can claim this nft
+	pub start_block: Option<BN>,
+	/// till when user can claim this nft
+	pub end_block: Option<BN>,
 }
 
 #[derive(Encode, Decode, Clone, RuntimeDebug, PartialEq, Eq)]
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
-pub struct TokenData {}
+pub struct TokenData {
+	/// if token is used to generate an advanced nft
+	pub used: bool,
+	/// 0 = common, 1 = rare, 2 = superrare
+	pub rarity: u8,
+}
 
 pub type TokenIdOf<T> = <T as orml_nft::Config>::TokenId;
 pub type ClassIdOf<T> = <T as orml_nft::Config>::ClassId;
@@ -73,7 +82,7 @@ pub mod pallet {
 	#[pallet::config]
 	pub trait Config:
 		frame_system::Config
-		+ orml_nft::Config<ClassData = ClassData, TokenData = TokenData>
+		+ orml_nft::Config<ClassData = ClassData<<Self as frame_system::Config>::BlockNumber>, TokenData = TokenData>
 	{
 		type Event: From<Event<Self>> + IsType<<Self as frame_system::Config>::Event>;
 
@@ -135,6 +144,8 @@ pub mod pallet {
 			let data = ClassData {
 				properties,
                 max_amount,
+				start_block: None,
+				end_block: None,
 			};
 			orml_nft::Pallet::<T>::create_class(&who, metadata, data)?;
 
@@ -163,7 +174,10 @@ pub mod pallet {
 			let class_info = orml_nft::Pallet::<T>::classes(class_id).ok_or(Error::<T>::ClassIdNotFound)?;
 			ensure!(who == class_info.owner, Error::<T>::NoPermission);
 
-			let data = TokenData {};
+			let data = TokenData {
+				used: false,
+				rarity: 0,
+			};
 			for _ in 0..quantity {
 				orml_nft::Pallet::<T>::mint(&to, class_id, metadata.clone(), data.clone())?;
 			}
