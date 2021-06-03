@@ -55,14 +55,12 @@ impl Decode for Properties {
 pub struct ClassData<BN, ID> {
 	/// Property of token
 	pub properties: Properties,
-    /// Maximum number of NFT
-    pub max_amount: u8,
 	/// from when user can claim this nft
 	pub start_block: Option<BN>,
 	/// till when user can claim this nft
 	pub end_block: Option<BN>,
 	/// merged from two class; if true, burn the two items 
-	pub base: Option<(ID, ID, bool)>,
+	pub class_type: ClassType<ID>,
 }
 
 #[derive(Encode, Decode, Clone, RuntimeDebug, PartialEq, Eq)]
@@ -72,6 +70,14 @@ pub struct TokenData {
 	pub used: bool,
 	/// 0 = common, 1 = rare, 2 = superrare
 	pub rarity: u8,
+}
+
+#[derive(Encode, Decode, Clone, RuntimeDebug, PartialEq, Eq)]
+#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
+pub enum ClassType<ID> {
+	Simple(u8),
+	Claim(CID), // root
+	Merge(ID, ID, bool),
 }
 
 pub type TokenIdOf<T> = <T as orml_nft::Config>::TokenId;
@@ -140,16 +146,31 @@ pub mod pallet {
 		/// - `properties`: class property, include `Transferable` `Burnable`
 		#[pallet::weight(<T as Config>::WeightInfo::create_class())]
 		#[transactional]
-		pub fn create_class(origin: OriginFor<T>, metadata: CID, properties: Properties, max_amount: u8) -> DispatchResultWithPostInfo {
+		pub fn create_class(
+			origin: OriginFor<T>, 
+			metadata: CID, 
+			properties: Properties, 
+			start_block: Option<BlockNumberOf<T>>,
+			end_block: Option<BlockNumberOf<T>>,
+			class_type: ClassType<ClassIdOf<T>>,
+		) -> DispatchResultWithPostInfo {
 			let who = ensure_signed(origin)?; // TODO who can?
 			let next_id = orml_nft::Pallet::<T>::next_class_id();
 
+			let mut max_amount = 0u8;
+
+			match class_type {
+				ClassType::Merge(id1, id2, burn) => {
+
+				}
+				_ => {}
+			}
+
 			let data = ClassData {
 				properties,
-                max_amount,
-				start_block: None,
-				end_block: None,
-				base: None,
+				start_block,
+				end_block,
+				class_type,
 			};
 			orml_nft::Pallet::<T>::create_class(&who, metadata, data)?;
 
