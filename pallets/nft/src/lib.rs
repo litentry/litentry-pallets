@@ -164,7 +164,7 @@ pub mod pallet {
 						ensure!(<orml_nft::Module<T>>::classes(id2).is_some(), Error::<T>::ClassIdNotFound);
 					} else {
 						let class_info1 = orml_nft::Pallet::<T>::classes(id1).ok_or(Error::<T>::ClassIdNotFound)?;
-						let class_info2 = orml_nft::Pallet::<T>::classes(id1).ok_or(Error::<T>::ClassIdNotFound)?;
+						let class_info2 = orml_nft::Pallet::<T>::classes(id2).ok_or(Error::<T>::ClassIdNotFound)?;
 	
 						let data1 = class_info1.data;
 						ensure!(
