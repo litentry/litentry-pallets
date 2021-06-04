@@ -1,7 +1,6 @@
 use crate::{mock::*};
 
-use codec::Encode;
-use frame_support::{assert_ok, assert_noop};
+use frame_support::assert_ok;
 use sp_runtime::AccountId32;
 
 #[test]
