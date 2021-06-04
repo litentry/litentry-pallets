@@ -60,6 +60,8 @@ pub mod pallet {
 		InvalidBTCAddress,
 		InvalidBTCAddressLength,
 		InvalidExpiringBlockNumber,
+		NoPendingRequest,
+		WrongPendingRequest,
 	}
 
 	#[pallet::hooks]
@@ -80,6 +82,10 @@ pub mod pallet {
 	#[pallet::storage]
 	#[pallet::getter(fn polkadot_addresses)]
 	pub(super) type PolkadotLink<T: Config> =  StorageMap<_, Blake2_128Concat, T::AccountId, Vec<T::AccountId>, ValueQuery>;
+
+	#[pallet::storage]
+	#[pallet::getter(fn polkadot_pending)]
+	pub(super) type PolkadotPending<T: Config> =  StorageMap<_, Blake2_128Concat, T::AccountId, (T::AccountId, u32), ValueQuery>;
 
 	#[pallet::call]
 	impl<T:Config> Pallet<T> {
@@ -235,7 +241,7 @@ pub mod pallet {
 
 		}
 
-		#[pallet::weight(1)]
+		#[pallet::weight(T::WeightInfo::link_polkadot())]
 		pub fn link_polkadot(
 			origin: OriginFor<T>,
 			account: T::AccountId,
@@ -244,8 +250,28 @@ pub mod pallet {
 
 			let origin = ensure_signed(origin)?;
 
+			// TODO: charge some fee
+
+			<PolkadotPending<T>>::insert(origin, (account, index));
+
+			Ok(().into())
+
+		}
+
+		#[pallet::weight(T::WeightInfo::accept_polkadot())]
+		pub fn accept_polkadot(
+			origin: OriginFor<T>,
+			account: T::AccountId,
+		) -> DispatchResultWithPostInfo {
+
+			let origin = ensure_signed(origin)?;
+
+			let (target, index) = Self::polkadot_pending(&account);
+			ensure!(target == origin, Error::<T>::WrongPendingRequest);
+			<PolkadotPending<T>>::remove(&origin);
+
 			let index = index as usize;
-			let mut addrs = Self::polkadot_addresses(&account);
+			let mut addrs = Self::polkadot_addresses(&target);
 			// NOTE: allow linking `MAX_POLKADOT_LINKS` polkadot addresses.
 			if (index >= addrs.len()) && (addrs.len() != MAX_POLKADOT_LINKS) {
 				addrs.push(origin.clone());
@@ -255,11 +281,10 @@ pub mod pallet {
 				addrs[index] = origin.clone();
 			}
 
-			<PolkadotLink<T>>::insert(account.clone(), addrs);
+			<PolkadotLink<T>>::insert(target.clone(), addrs);
 			Self::deposit_event(Event::PolkadotAddressLinked(account, origin));
 
 			Ok(().into())
-
 		}
 	}
 }
