@@ -154,8 +154,10 @@ pub mod pallet {
 			end_block: Option<BlockNumberOf<T>>,
 			class_type: ClassType<ClassIdOf<T>>,
 		) -> DispatchResultWithPostInfo {
-			let who = ensure_signed(origin)?; // TODO who can?
+			let who = ensure_signed(origin)?;
 			let next_id = orml_nft::Pallet::<T>::next_class_id();
+
+			// TODO charge
 
 			match class_type {
 				ClassType::Merge(id1, id2, burn) => {
@@ -226,6 +228,50 @@ pub mod pallet {
 			Ok(().into())
 		}
 
+		#[pallet::weight(<T as Config>::WeightInfo::mint(1))]
+		#[transactional]
+		pub fn claim(
+			origin: OriginFor<T>,
+			class_id: ClassIdOf<T>,
+			proof: u32, // TODO: fix this
+		) -> DispatchResultWithPostInfo {
+			let who = ensure_signed(origin)?;
+			let class_info = orml_nft::Pallet::<T>::classes(class_id).ok_or(Error::<T>::ClassIdNotFound)?;
+
+			if class_info.data.class_type != ClassType::Claim(_) {
+
+			}
+
+			// TODO: check if claimed
+			// TODO: check proof
+
+			// TODO: adjustible rarity
+			let data = TokenData {
+				used: false,
+				rarity: 0,
+			};
+
+			// TODO: if metadata can change?
+			let metadata = class_info.metadata;
+
+			// TODO: add a claimed set
+
+			orml_nft::Pallet::<T>::mint(&who, class_id, metadata, data)?;
+			Ok(().into())
+		}
+
+		#[pallet::weight(<T as Config>::WeightInfo::mint(1))]
+		#[transactional]
+		pub fn merge(
+			origin: OriginFor<T>,
+			class_id: ClassIdOf<T>,
+			token1: (ClassIdOf<T>, TokenIdOf<T>),
+			token2: (ClassIdOf<T>, TokenIdOf<T>),
+		) -> DispatchResultWithPostInfo {
+
+			Ok(().into())
+		}
+
 		/// Transfer NFT token to another account
 		///
 		/// - `to`: the token owner's account
@@ -235,7 +281,7 @@ pub mod pallet {
 		pub fn transfer(
 			origin: OriginFor<T>,
 			to: <T::Lookup as StaticLookup>::Source,
-			token: (ClassIdOf<T>, TokenIdOf<T>),
+			
 		) -> DispatchResultWithPostInfo {
 			let who = ensure_signed(origin)?;
 			let to = T::Lookup::lookup(to)?;
