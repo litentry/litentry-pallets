@@ -281,7 +281,7 @@ pub mod pallet {
 				addrs[index] = origin.clone();
 			}
 
-			<PolkadotLink<T>>::insert(target.clone(), addrs);
+			<PolkadotLink<T>>::insert(account.clone(), addrs);
 			Self::deposit_event(Event::PolkadotAddressLinked(account, origin));
 
 			Ok(().into())
