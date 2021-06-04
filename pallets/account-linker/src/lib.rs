@@ -60,7 +60,6 @@ pub mod pallet {
 		InvalidBTCAddress,
 		InvalidBTCAddressLength,
 		InvalidExpiringBlockNumber,
-		NoPendingRequest,
 		WrongPendingRequest,
 	}
 
