@@ -45,7 +45,7 @@ fn test_no_polkadot_pending_address() {
         let origin: AccountId32 = AccountId32::from([0u8; 32]);
         let target: AccountId32 = AccountId32::from([1u8; 32]);
 
-        assert_eq!(AccountLinker::polkadot_pending(&origin), (AccountId32::default(), 0));
+        assert_eq!(AccountLinker::polkadot_pending(&origin), (AccountId32::default(), u32::default()));
 
 		assert_noop!(
             AccountLinker::accept_polkadot(
