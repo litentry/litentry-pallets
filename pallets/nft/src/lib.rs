@@ -279,7 +279,7 @@ pub mod pallet {
 
 			let who = ensure_signed(origin)?;
 			let merged_class_info = orml_nft::Pallet::<T>::classes(class_id).ok_or(Error::<T>::ClassIdNotFound)?;
-			let burn;
+			let mut burn = false;
 
 			if let ClassType::Merge(id1, id2, b) = merged_class_info.data.class_type {
 				ensure!(
@@ -292,8 +292,8 @@ pub mod pallet {
 			}
 
 			// get token 1 and 2
-			let token_info1 = <orml_nft::Module<T>>::tokens(token1.0, token1.1).ok_or(Error::<T>::TokenNotFound)?;
-			let token_info2 = <orml_nft::Module<T>>::tokens(token2.0, token2.1).ok_or(Error::<T>::TokenNotFound)?;
+			let mut token_info1 = <orml_nft::Module<T>>::tokens(token1.0, token1.1).ok_or(Error::<T>::TokenNotFound)?;
+			let mut token_info2 = <orml_nft::Module<T>>::tokens(token2.0, token2.1).ok_or(Error::<T>::TokenNotFound)?;
 
 			// burn or set used of token 1 and 2
 			if burn {
