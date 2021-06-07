@@ -179,7 +179,7 @@ pub mod pallet {
 	#[pallet::getter(fn account_balance)]
 	pub(super) type AccountBalance<T: Config> =  StorageMap<_, Blake2_128Concat, T::AccountId, (Option<u128>, Option<u128>), ValueQuery>;
 
-// 		/// Record account's btc and ethereum balance
+	/// Record account's btc and ethereum balance
 	#[pallet::storage]
 	#[pallet::getter(fn commit_account_balance)]
 	pub(super) type CommitAccountBalance<T: Config> =  StorageDoubleMap<_, Blake2_128Concat, T::AccountId, Blake2_128Concat, QueryKey<T::AccountId>, Option<u128>, ValueQuery>;
