@@ -113,6 +113,14 @@ pub mod pallet {
 		NonTransferable,
 		/// Property of class don't support burn
 		NonBurnable,
+		/// Token not found
+		TokenNotFound,
+		/// Wrong class type
+		WrongClassType,
+		/// Merge nft's base nfts are not provided correctly
+		WrongMergeBase,
+		/// Use already used token to merge new token
+		TokenUsed,
 	}
 
 	#[pallet::event]
@@ -269,6 +277,48 @@ pub mod pallet {
 			token2: (ClassIdOf<T>, TokenIdOf<T>),
 		) -> DispatchResultWithPostInfo {
 
+			let who = ensure_signed(origin)?;
+			let merged_class_info = orml_nft::Pallet::<T>::classes(class_id).ok_or(Error::<T>::ClassIdNotFound)?;
+			let burn;
+
+			if let ClassType::Merge(id1, id2, b) = merged_class_info.data.class_type {
+				ensure!(
+					((id1 == token1.0) && (id2 == token2.0)) || ((id1 == token2.0) && (id2 == token1.0)),
+					Error::<T>::WrongMergeBase,
+				);
+				burn = b;
+			} else {
+				Err(Error::<T>::WrongClassType)?
+			}
+
+			// get token 1 and 2
+			let token_info1 = <orml_nft::Module<T>>::tokens(token1.0, token1.1).ok_or(Error::<T>::TokenNotFound)?;
+			let token_info2 = <orml_nft::Module<T>>::tokens(token2.0, token2.1).ok_or(Error::<T>::TokenNotFound)?;
+
+			// burn or set used of token 1 and 2
+			if burn {
+				Self::do_burn(&who, token1)?;
+				Self::do_burn(&who, token2)?;
+			} else {
+				ensure!(!token_info1.data.used && !token_info2.data.used, Error::<T>::TokenUsed);
+				token_info1.data.used = true;
+				token_info2.data.used = true;
+				orml_nft::Tokens::<T>::insert(token1.0, token1.1, token_info1);
+				orml_nft::Tokens::<T>::insert(token2.0, token2.1, token_info2);
+			}
+
+			// mint new token
+			// TODO: adjustible rarity
+			let data = TokenData {
+				used: false,
+				rarity: 0,
+			};
+
+			// TODO: if metadata can change?
+			let metadata = merged_class_info.metadata;
+
+			orml_nft::Pallet::<T>::mint(&who, class_id, metadata, data)?;
+
 			Ok(().into())
 		}
 
@@ -281,7 +331,7 @@ pub mod pallet {
 		pub fn transfer(
 			origin: OriginFor<T>,
 			to: <T::Lookup as StaticLookup>::Source,
-			
+			token: (ClassIdOf<T>, TokenIdOf<T>),
 		) -> DispatchResultWithPostInfo {
 			let who = ensure_signed(origin)?;
 			let to = T::Lookup::lookup(to)?;
