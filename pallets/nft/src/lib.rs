@@ -68,7 +68,7 @@ pub struct ClassData<BN, ID> {
 pub struct TokenData {
 	/// if token is used to generate an advanced nft
 	pub used: bool,
-	/// 0 = common, 1 = rare, 2 = superrare
+	/// 0 = common, otherwise say 1 = rare, 2 = super rare
 	pub rarity: u8,
 }
 
