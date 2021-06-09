@@ -109,7 +109,7 @@ pub mod pallet {
 		/// The on_finalize trigger the query result aggregation.
 		/// The argument block_number has big impact on the weight.
 		fn on_finalize(block_number: T::BlockNumber) {
-			log::info!("ocw on_finalize.{:?}.", block_number);
+			log::info!("ocw on_finalize {:?}.", block_number);
 
 			let query_session_length: usize = T::QuerySessionLength::get() as usize;
 			let index_in_session = TryInto::<usize>::try_into(block_number).map_or(query_session_length, |bn| bn % query_session_length);
@@ -127,6 +127,8 @@ pub mod pallet {
 		/// TODO block N offchain_worker will be called after block N+1 finalize
 		/// Trigger by offchain framework in each block
 		fn offchain_worker(block_number: T::BlockNumber) {
+			log::info!("ocw hook function called on block {:?}.", block_number);
+
 			let query_session_length: usize = T::QuerySessionLength::get() as usize;
 
 			let index_in_session = TryInto::<usize>::try_into(block_number).map_or(query_session_length, |bn| bn % query_session_length);
@@ -161,6 +163,8 @@ pub mod pallet {
 		InvalidAccountIndex,
 		/// Offchain worker index overflow
 		OffchainWorkerIndexOverflow,
+		/// Token Server no response
+		TokenServerNoResponse,
 	}
 
 	#[pallet::pallet]
@@ -346,11 +350,14 @@ pub mod pallet {
 
 			match local_token.get::<urls::TokenInfo>() {
 				Ok(Some(token)) => {
+          log::info!("API keys found! Start to query from sources.");
 					Self::query(block_number, &token);
+          Ok(())
 				},
 				_ => {
+          log::info!("No API keys stored! Request keys from local server.");
 					// Get token from local server
-					let _ = urls::get_token();
+					urls::get_token().map_err(|_| Error::<T>::TokenServerNoResponse )
 				},
 			};
 		}
