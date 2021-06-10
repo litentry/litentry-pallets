@@ -75,7 +75,7 @@ pub struct TokenData {
 #[derive(Encode, Decode, Clone, RuntimeDebug, PartialEq, Eq)]
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 pub enum ClassType<ID> {
-	Simple(u8),
+	Simple(u32),
 	Claim(CID), // root
 	Merge(ID, ID, bool),
 }
@@ -121,6 +121,8 @@ pub mod pallet {
 		WrongMergeBase,
 		/// Use already used token to merge new token
 		TokenUsed,
+		/// Mint more NFT than the maximum allowed
+		QuantitiyOverflow,
 	}
 
 	#[pallet::event]
@@ -213,7 +215,7 @@ pub mod pallet {
 		#[transactional]
 		pub fn mint(
 			origin: OriginFor<T>,
-			to: <T::Lookup as StaticLookup>::Source, // TODO why
+			to: <T::Lookup as StaticLookup>::Source,
 			class_id: ClassIdOf<T>,
 			metadata: CID,
 			quantity: u32,
@@ -225,7 +227,12 @@ pub mod pallet {
 			ensure!(who == class_info.owner, Error::<T>::NoPermission);
 
 			match class_info.data.class_type {
-				ClassType::Simple(_) => {}
+				ClassType::Simple(max_num) => {
+					let issued = class_info.total_issuance;
+					if TokenIdOf::<T>::from(quantity) + issued > TokenIdOf::<T>::from(max_num) {
+						Err(Error::<T>::QuantitiyOverflow)?
+					}
+				}
 				_ => {
 					Err(Error::<T>::WrongClassType)?
 				}
