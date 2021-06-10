@@ -123,6 +123,8 @@ pub mod pallet {
 		TokenUsed,
 		/// Mint more NFT than the maximum allowed
 		QuantitiyOverflow,
+		/// Out of NFT valid issuance period
+		OutOfCampaignPeriod,
 	}
 
 	#[pallet::event]
@@ -225,6 +227,7 @@ pub mod pallet {
 			ensure!(quantity >= 1, Error::<T>::InvalidQuantity);
 			let class_info = orml_nft::Pallet::<T>::classes(class_id).ok_or(Error::<T>::ClassIdNotFound)?;
 			ensure!(who == class_info.owner, Error::<T>::NoPermission);
+			ensure!(Self::check_time(&class_info.data), Error::<T>::OutOfCampaignPeriod);
 
 			match class_info.data.class_type {
 				ClassType::Simple(max_num) => {
@@ -259,6 +262,8 @@ pub mod pallet {
 		) -> DispatchResultWithPostInfo {
 			let who = ensure_signed(origin)?;
 			let class_info = orml_nft::Pallet::<T>::classes(class_id).ok_or(Error::<T>::ClassIdNotFound)?;
+
+			ensure!(Self::check_time(&class_info.data), Error::<T>::OutOfCampaignPeriod);
 
 			match class_info.data.class_type {
 				ClassType::Claim(_) => {}
@@ -296,6 +301,9 @@ pub mod pallet {
 
 			let who = ensure_signed(origin)?;
 			let merged_class_info = orml_nft::Pallet::<T>::classes(class_id).ok_or(Error::<T>::ClassIdNotFound)?;
+
+			ensure!(Self::check_time(&merged_class_info.data), Error::<T>::OutOfCampaignPeriod);
+
 			let mut burn = false;
 
 			if let ClassType::Merge(id1, id2, b) = merged_class_info.data.class_type {
@@ -404,6 +412,23 @@ impl<T: Config> Pallet<T> {
 		orml_nft::Pallet::<T>::burn(&who, token)?;
 
 		Ok(())
+	}
+}
+
+impl<T: Config> Pallet<T> {
+	fn check_time(token_info: &ClassData<BlockNumberOf<T>, ClassIdOf<T>>) -> bool {
+		let current_block_number = <frame_system::Pallet<T>>::block_number();
+		if let Some(start_block) = token_info.start_block {
+			if start_block > current_block_number {
+				return false
+			}
+		}
+		if let Some(end_block) = token_info.end_block {
+			if end_block < current_block_number {
+				return false
+			}
+		}
+		true
 	}
 }
 
