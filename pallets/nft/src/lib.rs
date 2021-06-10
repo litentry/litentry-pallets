@@ -224,6 +224,13 @@ pub mod pallet {
 			let class_info = orml_nft::Pallet::<T>::classes(class_id).ok_or(Error::<T>::ClassIdNotFound)?;
 			ensure!(who == class_info.owner, Error::<T>::NoPermission);
 
+			match class_info.data.class_type {
+				ClassType::Simple(_) => {}
+				_ => {
+					Err(Error::<T>::WrongClassType)?
+				}
+			}
+
 			let data = TokenData {
 				used: false,
 				rarity: 0,
@@ -246,8 +253,11 @@ pub mod pallet {
 			let who = ensure_signed(origin)?;
 			let class_info = orml_nft::Pallet::<T>::classes(class_id).ok_or(Error::<T>::ClassIdNotFound)?;
 
-			if class_info.data.class_type != ClassType::Claim(_) {
-
+			match class_info.data.class_type {
+				ClassType::Claim(_) => {}
+				_ => {
+					Err(Error::<T>::WrongClassType)?
+				}
 			}
 
 			// TODO: check if claimed
