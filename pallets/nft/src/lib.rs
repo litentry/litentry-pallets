@@ -15,6 +15,11 @@ use sp_runtime::{
 };
 use sp_std::vec::Vec;
 
+#[cfg(test)]
+mod mock;
+
+#[cfg(test)]
+mod tests;
 pub mod weights;
 
 pub use pallet::*;
