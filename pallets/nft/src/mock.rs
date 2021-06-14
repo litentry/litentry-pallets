@@ -1,3 +1,4 @@
+use super::*;
 use frame_support::{
 	parameter_types,
 	traits::{OnFinalize, OnInitialize},
@@ -21,7 +22,7 @@ frame_support::construct_runtime!(
 		UncheckedExtrinsic = UncheckedExtrinsic,
 	{
 		System: frame_system::{Module, Call, Config, Storage, Event<T>},
-        
+		OrmlNFT: orml_nft::{Module, Storage, Config<T>},
 		Nft: nft::{Module, Call, Storage, Event<T>},
 	}
 );
@@ -61,6 +62,13 @@ impl nft::Config for Test {
 	type WeightInfo = ();
 }
 
+impl orml_nft::Config for Test {
+	type ClassId = u32;
+	type TokenId = u64;
+	type ClassData = ClassData<BlockNumberOf<Self>, ClassIdOf<Self>>;
+	type TokenData = TokenData;
+}
+
 pub type NftError = nft::Error<Test>;
 
 // Build genesis storage according to the mock runtime.
@@ -71,15 +79,15 @@ pub fn new_test_ext() -> sp_io::TestExternalities {
 		.into()
 }
 
-pub fn run_to_block(n: u32) {
-    while System::block_number() < n {
-        Nft::on_finalize(System::block_number());
-        System::on_finalize(System::block_number());
-        System::set_block_number(System::block_number() + 1);
-        System::on_initialize(System::block_number());
-        Nft::on_initialize(System::block_number());
-    }
-}
+// pub fn run_to_block(n: u32) {
+//     while System::block_number() < n {
+//         Nft::on_finalize(System::block_number());
+//         System::on_finalize(System::block_number());
+//         System::set_block_number(System::block_number() + 1);
+//         System::on_initialize(System::block_number());
+//         Nft::on_initialize(System::block_number());
+//     }
+// }
 
 pub fn events() -> Vec<Event> {
 	let evt = System::events().into_iter().map(|evt| evt.event).collect::<Vec<_>>();
