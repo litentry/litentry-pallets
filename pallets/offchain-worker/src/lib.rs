@@ -127,6 +127,11 @@ pub mod pallet {
 
 			let index_in_session = TryInto::<usize>::try_into(block_number).map_or(query_session_length, |bn| bn % query_session_length);
 
+			// SBP M1 review: the offchain_worker function will be called with the best block,
+			// but it's possible that it can "skip" blocks if the node has been down some time.
+			// This implies that some claims might be not be fulfilled because of the call
+			// to clear_claim in on_finalize which is called reliably at every block.
+
 			// Start query at second block of a session
 			if index_in_session == 1 {
 				Self::start(block_number);
@@ -252,6 +257,19 @@ pub mod pallet {
 						let mut source_index = 0;
 						for source in &urls::DATA_SOURCE_LIST {
 							let task_index = urls::TOTAL_DATA_SOURCE_NUMBER * account_index + source_index;
+
+							// SBP M1 review: if I understand correctly, the logic is "distributing" the work
+							// over the various offchain workers, and a given account requesting a claim will
+							// always be processed by only 1 offchain worker.
+							// 
+							// This can be a problem because:
+							// 1) as mentionned in offchain_worker function, some claims might be erased before being processed.
+							// 2) there is therefore no voting / averaging system in place if every account is processed by at most 1 ocw.
+							//
+							// The OCW documentation mentions the following:
+							// "Note that the results from off-chain workers are not subject to regular transaction verification.
+							//  A verification mechanism (e.g. voting, averaging, checking sender signatures, or simply "trusting")
+							//  should be implemented to determine what information gets into the chain."
 							if task_index % ocw_length == ocw_account_index {
 								match source {
 									urls::DataSource::EthEtherScan => {

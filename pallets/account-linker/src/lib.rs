@@ -2,6 +2,7 @@
 
 pub use pallet::*;
 
+// SBP M1 review: this usually goes with the tests
 #[cfg(test)]
 mod mock;
 
@@ -13,279 +14,293 @@ mod util_eth;
 mod benchmarking;
 pub mod weights;
 
+// SBP M1 review: general comment, the pallet doesn't seem to build
+// for the wasm32-unknown-unknown target ...
+
 #[frame_support::pallet]
 pub mod pallet {
-	use crate::*;
+    use crate::*;
 	use frame_system::pallet_prelude::*;
-	use codec::Encode;
+    use codec::Encode;
 	use sp_std::prelude::*;
 	use sp_io::crypto::secp256k1_ecdsa_recover_compressed;
-	use frame_support::{dispatch::DispatchResultWithPostInfo, pallet_prelude::*,};
-	use frame_system::{ensure_signed};
-	use btc::base58::ToBase58;
-	use btc::witness::WitnessProgram;
-	use weights::WeightInfo;
-	pub const EXPIRING_BLOCK_NUMBER_MAX: u32 = 10 * 60 * 24 * 30; // 30 days for 6s per block
-	pub const MAX_ETH_LINKS: usize = 3;
-	pub const MAX_BTC_LINKS: usize = 3;
-	pub const MAX_POLKADOT_LINKS: usize = 3;
+    use frame_support::{dispatch::DispatchResultWithPostInfo, pallet_prelude::*,};
+    use frame_system::{ensure_signed};
+    use btc::base58::ToBase58;
+    use btc::witness::WitnessProgram;
+    use weights::WeightInfo;
+    pub const EXPIRING_BLOCK_NUMBER_MAX: u32 = 10 * 60 * 24 * 30; // 30 days for 6s per block
+    pub const MAX_ETH_LINKS: usize = 3;
+    pub const MAX_BTC_LINKS: usize = 3;
+    pub const MAX_POLKADOT_LINKS: usize = 3;
 
-	enum BTCAddrType {
-		Legacy,
-		Segwit,
-	}
+    enum BTCAddrType {
+        Legacy,
+        Segwit,
+    }
 
-	#[pallet::config]
-	pub trait Config: frame_system::Config {
-		type Event: From<Event<Self>> + IsType<<Self as frame_system::Config>::Event>;
-		type WeightInfo: WeightInfo;
-	}
+    #[pallet::config]
+    pub trait Config: frame_system::Config {
+        type Event: From<Event<Self>> + IsType<<Self as frame_system::Config>::Event>;
+        type WeightInfo: WeightInfo;
+    }
 
-	#[pallet::event]
-	#[pallet::generate_deposit(pub(super) fn deposit_event)]
-	#[pallet::metadata(T::AccountId = "AccountId")]
-	pub enum Event<T: Config> {
-		EthAddressLinked(T::AccountId, Vec<u8>),
-		BtcAddressLinked(T::AccountId, Vec<u8>),
-		PolkadotAddressLinked(T::AccountId, T::AccountId),
-	}
+    #[pallet::event]
+    #[pallet::generate_deposit(pub(super) fn deposit_event)]
+    #[pallet::metadata(T::AccountId = "AccountId")]
+    pub enum Event<T: Config> {
+        EthAddressLinked(T::AccountId, Vec<u8>),
+        BtcAddressLinked(T::AccountId, Vec<u8>),
+        PolkadotAddressLinked(T::AccountId, T::AccountId),
+    }
 
-	#[pallet::error]
-	pub enum Error<T> {
-		EcdsaRecoverFailure,
-		LinkRequestExpired,
-		UnexpectedAddress,
-		// Unexpected ethereum message length error
-		UnexpectedEthMsgLength,
-		InvalidBTCAddress,
-		InvalidBTCAddressLength,
-		InvalidExpiringBlockNumber,
-		WrongPendingRequest,
-	}
+    #[pallet::error]
+    pub enum Error<T> {
+        EcdsaRecoverFailure,
+        LinkRequestExpired,
+        UnexpectedAddress,
+        // Unexpected ethereum message length error
+        UnexpectedEthMsgLength,
+        InvalidBTCAddress,
+        InvalidBTCAddressLength,
+        InvalidExpiringBlockNumber,
+        WrongPendingRequest,
+    }
 
-	#[pallet::hooks]
-	impl<T: Config> Hooks<BlockNumberFor<T>> for Pallet<T> {}
+    #[pallet::hooks]
+    impl<T: Config> Hooks<BlockNumberFor<T>> for Pallet<T> {}
 
-	#[pallet::pallet]
-	#[pallet::generate_store(pub(super) trait Store)]
-	pub struct Pallet<T>(_);
+    #[pallet::pallet]
+    #[pallet::generate_store(pub(super) trait Store)]
+    pub struct Pallet<T>(_);
 
-	#[pallet::storage]
-	#[pallet::getter(fn eth_addresses)]
-	pub(super) type EthereumLink<T: Config> =  StorageMap<_, Blake2_128Concat, T::AccountId, Vec<[u8; 20]>, ValueQuery>;
+    #[pallet::storage]
+    #[pallet::getter(fn eth_addresses)]
+    pub(super) type EthereumLink<T: Config> =  StorageMap<_, Blake2_128Concat, T::AccountId, Vec<[u8; 20]>, ValueQuery>;
 
-	#[pallet::storage]
-	#[pallet::getter(fn btc_addresses)]
-	pub(super) type BitcoinLink<T: Config> =  StorageMap<_, Blake2_128Concat, T::AccountId, Vec<Vec<u8>>, ValueQuery>;
+    #[pallet::storage]
+    #[pallet::getter(fn btc_addresses)]
+    pub(super) type BitcoinLink<T: Config> =  StorageMap<_, Blake2_128Concat, T::AccountId, Vec<Vec<u8>>, ValueQuery>;
 
-	#[pallet::storage]
-	#[pallet::getter(fn polkadot_addresses)]
-	pub(super) type PolkadotLink<T: Config> =  StorageMap<_, Blake2_128Concat, T::AccountId, Vec<T::AccountId>, ValueQuery>;
+    #[pallet::storage]
+    #[pallet::getter(fn polkadot_addresses)]
+    pub(super) type PolkadotLink<T: Config> =  StorageMap<_, Blake2_128Concat, T::AccountId, Vec<T::AccountId>, ValueQuery>;
 
-	#[pallet::storage]
-	#[pallet::getter(fn polkadot_pending)]
-	pub(super) type PolkadotPending<T: Config> =  StorageMap<_, Blake2_128Concat, T::AccountId, (T::AccountId, u32), ValueQuery>;
+    #[pallet::storage]
+    #[pallet::getter(fn polkadot_pending)]
+    pub(super) type PolkadotPending<T: Config> =  StorageMap<_, Blake2_128Concat, T::AccountId, (T::AccountId, u32), ValueQuery>;
 
-	#[pallet::call]
-	impl<T:Config> Pallet<T> {
+    #[pallet::call]
+    impl<T:Config> Pallet<T> {
 
-		#[pallet::weight(T::WeightInfo::link_eth())]
-		pub fn link_eth(
-			origin: OriginFor<T>,
-			account: T::AccountId,
-			index: u32,
-			addr_expected: [u8; 20],
-			expiring_block_number: T::BlockNumber,
-			r: [u8; 32],
-			s: [u8; 32],
-			v: u8,
-		) -> DispatchResultWithPostInfo {
+        #[pallet::weight(T::WeightInfo::link_eth())]
+        pub fn link_eth(
+            origin: OriginFor<T>,
+            account: T::AccountId,
+            index: u32,
+            // SBP M1 review: you could define a type for [u8; 20] e.g. EthAddress
+            addr_expected: [u8; 20],
+            expiring_block_number: T::BlockNumber,
+            // SBP M1 review: you could create a type for the ETH signature to reduce the nbr of args
+            r: [u8; 32],
+            s: [u8; 32],
+            v: u8,
+        ) -> DispatchResultWithPostInfo {
 
-			let _ = ensure_signed(origin)?;
+            let _ = ensure_signed(origin)?;
 
-			let current_block_number = <frame_system::Pallet<T>>::block_number();
-			ensure!(expiring_block_number > current_block_number, Error::<T>::LinkRequestExpired);
+            let current_block_number = <frame_system::Pallet<T>>::block_number();
+            ensure!(expiring_block_number > current_block_number, Error::<T>::LinkRequestExpired);
 			ensure!((expiring_block_number - current_block_number) < T::BlockNumber::from(EXPIRING_BLOCK_NUMBER_MAX),
 				Error::<T>::InvalidExpiringBlockNumber);
 
-			let mut bytes = b"Link Litentry: ".encode();
-			let mut account_vec = account.encode();
-			let mut expiring_block_number_vec = expiring_block_number.encode();
+            // SBP M1 review: this code block should probably go in one or more
+            // utility function(s) in util_eth to keep the code a bit simpler here.
+            let mut bytes = b"Link Litentry: ".encode();
+            let mut account_vec = account.encode();
+            let mut expiring_block_number_vec = expiring_block_number.encode();
 
-			bytes.append(&mut account_vec);
-			bytes.append(&mut expiring_block_number_vec);
+            bytes.append(&mut account_vec);
+            bytes.append(&mut expiring_block_number_vec);
 
-			let hash = util_eth::eth_data_hash(bytes).map_err(|_| Error::<T>::UnexpectedEthMsgLength)?;
+            let hash = util_eth::eth_data_hash(bytes).map_err(|_| Error::<T>::UnexpectedEthMsgLength)?;
 
-			let mut msg = [0u8; 32];
-			let mut sig = [0u8; 65];
+            let mut msg = [0u8; 32];
+            let mut sig = [0u8; 65];
 
-			msg[..32].copy_from_slice(&hash[..32]);
-			sig[..32].copy_from_slice(&r[..32]);
-			sig[32..64].copy_from_slice(&s[..32]);
-			sig[64] = v;
+            msg[..32].copy_from_slice(&hash[..32]);
+            sig[..32].copy_from_slice(&r[..32]);
+            sig[32..64].copy_from_slice(&s[..32]);
+            sig[64] = v;
 
-			let addr = util_eth::addr_from_sig(msg, sig)
+            let addr = util_eth::addr_from_sig(msg, sig)
 				.map_err(|_| Error::<T>::EcdsaRecoverFailure)?;
-			ensure!(addr == addr_expected, Error::<T>::UnexpectedAddress);
+            ensure!(addr == addr_expected, Error::<T>::UnexpectedAddress);
+            //---
 
-			let index = index as usize;
-			let mut addrs = Self::eth_addresses(&account);
-			// NOTE: allow linking `MAX_ETH_LINKS` eth addresses.
-			if (index >= addrs.len()) && (addrs.len() != MAX_ETH_LINKS) {
-				addrs.push(addr.clone());
-			} else if (index >= addrs.len()) && (addrs.len() == MAX_ETH_LINKS) {
-				addrs[MAX_ETH_LINKS - 1] = addr.clone();
-			} else {
-				addrs[index] = addr.clone();
-			}
+            // SBP M1 review: not sure why you need to pass an index to this function ?
+            // Can't you just push the addresses to the storage map in the order
+            // they were added ? This would make the code much simpler ...
+            // Also, you could look at the StorageMap mutate/try_mutate functions.
+            let index = index as usize;
+            let mut addrs = Self::eth_addresses(&account);
+            // NOTE: allow linking `MAX_ETH_LINKS` eth addresses.
+            if (index >= addrs.len()) && (addrs.len() != MAX_ETH_LINKS) {
+                addrs.push(addr.clone());
+            } else if (index >= addrs.len()) && (addrs.len() == MAX_ETH_LINKS) {
+                addrs[MAX_ETH_LINKS - 1] = addr.clone();
+            } else {
+                addrs[index] = addr.clone();
+            }
 
-			<EthereumLink<T>>::insert(account.clone(), addrs);
-			Self::deposit_event(Event::EthAddressLinked(account, addr.to_vec()));
+            <EthereumLink<T>>::insert(account.clone(), addrs);
+            Self::deposit_event(Event::EthAddressLinked(account, addr.to_vec()));
 
-			Ok(().into())
+            Ok(().into())
 
-		}
+        }
 
-		/// separate sig to r, s, v because runtime only support array parameter with length <= 32
-		#[pallet::weight(T::WeightInfo::link_btc())]
-		pub fn link_btc(
-			origin: OriginFor<T>,
-			account: T::AccountId,
-			index: u32,
-			addr_expected: Vec<u8>,
-			expiring_block_number: T::BlockNumber,
-			r: [u8; 32],
-			s: [u8; 32],
-			v: u8,
-		) -> DispatchResultWithPostInfo {
+        // SBP M1 review: similar remarks as for link_eth
+        /// separate sig to r, s, v because runtime only support array parameter with length <= 32
+        #[pallet::weight(T::WeightInfo::link_btc())]
+        pub fn link_btc(
+            origin: OriginFor<T>,
+            account: T::AccountId,
+            index: u32,
+            addr_expected: Vec<u8>,
+            expiring_block_number: T::BlockNumber,
+            r: [u8; 32],
+            s: [u8; 32],
+            v: u8,
+        ) -> DispatchResultWithPostInfo {
 
-			let _ = ensure_signed(origin)?;
+            let _ = ensure_signed(origin)?;
 
-			let current_block_number = <frame_system::Pallet<T>>::block_number();
-			ensure!(expiring_block_number > current_block_number, Error::<T>::LinkRequestExpired);
+            let current_block_number = <frame_system::Pallet<T>>::block_number();
+            ensure!(expiring_block_number > current_block_number, Error::<T>::LinkRequestExpired);
 			ensure!((expiring_block_number - current_block_number) < T::BlockNumber::from(EXPIRING_BLOCK_NUMBER_MAX),
 				Error::<T>::InvalidExpiringBlockNumber);
 
-			// TODO: we may enlarge this 2
-			if addr_expected.len() < 2 {
-				Err(Error::<T>::InvalidBTCAddressLength)?
-			}
+            // TODO: we may enlarge this 2
+            if addr_expected.len() < 2 {
+                Err(Error::<T>::InvalidBTCAddressLength)?
+            }
 
-			let addr_type = if addr_expected[0] == b'1' {
-				BTCAddrType::Legacy
-			} else if addr_expected[0] == b'b' && addr_expected[1] == b'c' { // TODO: a better way?
-				BTCAddrType::Segwit
-			} else {
-				Err(Error::<T>::InvalidBTCAddress)?
-			};
+            let addr_type = if addr_expected[0] == b'1' {
+                BTCAddrType::Legacy
+            } else if addr_expected[0] == b'b' && addr_expected[1] == b'c' { // TODO: a better way?
+                BTCAddrType::Segwit
+            } else {
+                Err(Error::<T>::InvalidBTCAddress)?
+            };
 
-			let mut bytes = b"Link Litentry: ".encode();
-			let mut account_vec = account.encode();
-			let mut expiring_block_number_vec = expiring_block_number.encode();
+            let mut bytes = b"Link Litentry: ".encode();
+            let mut account_vec = account.encode();
+            let mut expiring_block_number_vec = expiring_block_number.encode();
 
-			bytes.append(&mut account_vec);
-			bytes.append(&mut expiring_block_number_vec);
+            bytes.append(&mut account_vec);
+            bytes.append(&mut expiring_block_number_vec);
 
-			// TODO: seems btc uses sha256???
-			let hash = sp_io::hashing::keccak_256(&bytes);
+            // TODO: seems btc uses sha256???
+            let hash = sp_io::hashing::keccak_256(&bytes);
 
-			let mut msg = [0u8; 32];
-			let mut sig = [0u8; 65];
+            let mut msg = [0u8; 32];
+            let mut sig = [0u8; 65];
 
-			msg[..32].copy_from_slice(&hash[..32]);
-			sig[..32].copy_from_slice(&r[..32]);
-			sig[32..64].copy_from_slice(&s[..32]);
-			sig[64] = v;
+            msg[..32].copy_from_slice(&hash[..32]);
+            sig[..32].copy_from_slice(&r[..32]);
+            sig[32..64].copy_from_slice(&s[..32]);
+            sig[64] = v;
 
-			let pk = secp256k1_ecdsa_recover_compressed(&sig, &msg)
-			.map_err(|_| Error::<T>::EcdsaRecoverFailure)?;
+            let pk = secp256k1_ecdsa_recover_compressed(&sig, &msg)
+                .map_err(|_| Error::<T>::EcdsaRecoverFailure)?;
 
-			let addr = match addr_type {
-				BTCAddrType::Legacy => {
+            let addr = match addr_type {
+                BTCAddrType::Legacy => {
 					btc::legacy::btc_addr_from_pk(&pk).to_base58()
 				},
-				// Native P2WPKH is a scriptPubKey of 22 bytes.
-				// It starts with a OP_0, followed by a canonical push of the keyhash (i.e. 0x0014{20-byte keyhash})
-				// keyhash is RIPEMD160(SHA256) of a compressed public key
-				// https://bitcoincore.org/en/segwit_wallet_dev/
-				BTCAddrType::Segwit => {
-					let pk_hash = btc::legacy::hash160(&pk);
-					let mut pk = [0u8; 22];
-					pk[0] = 0;
-					pk[1] = 20;
-					pk[2..].copy_from_slice(&pk_hash);
-					let wp = WitnessProgram::from_scriptpubkey(&pk.to_vec()).map_err(|_| Error::<T>::InvalidBTCAddress)?;
+                // Native P2WPKH is a scriptPubKey of 22 bytes.
+                // It starts with a OP_0, followed by a canonical push of the keyhash (i.e. 0x0014{20-byte keyhash})
+                // keyhash is RIPEMD160(SHA256) of a compressed public key
+                // https://bitcoincore.org/en/segwit_wallet_dev/
+                BTCAddrType::Segwit => {
+                    let pk_hash = btc::legacy::hash160(&pk);
+                    let mut pk = [0u8; 22];
+                    pk[0] = 0;
+                    pk[1] = 20;
+                    pk[2..].copy_from_slice(&pk_hash);
+                    let wp = WitnessProgram::from_scriptpubkey(&pk.to_vec()).map_err(|_| Error::<T>::InvalidBTCAddress)?;
 					wp.to_address(b"bc".to_vec()).map_err(|_| Error::<T>::InvalidBTCAddress)?
-				}
-			};
+                }
+            };
 
-			ensure!(addr == addr_expected, Error::<T>::UnexpectedAddress);
+            ensure!(addr == addr_expected, Error::<T>::UnexpectedAddress);
 
-			let index = index as usize;
-			let mut addrs = Self::btc_addresses(&account);
-			// NOTE: allow linking `MAX_BTC_LINKS` btc addresses.
-			if (index >= addrs.len()) && (addrs.len() != MAX_BTC_LINKS) {
-				addrs.push(addr.clone());
-			} else if (index >= addrs.len()) && (addrs.len() == MAX_BTC_LINKS) {
-				addrs[MAX_BTC_LINKS - 1] = addr.clone();
-			} else {
-				addrs[index] = addr.clone();
-			}
+            let index = index as usize;
+            let mut addrs = Self::btc_addresses(&account);
+            // NOTE: allow linking `MAX_BTC_LINKS` btc addresses.
+            if (index >= addrs.len()) && (addrs.len() != MAX_BTC_LINKS) {
+                addrs.push(addr.clone());
+            } else if (index >= addrs.len()) && (addrs.len() == MAX_BTC_LINKS) {
+                addrs[MAX_BTC_LINKS - 1] = addr.clone();
+            } else {
+                addrs[index] = addr.clone();
+            }
 
-			<BitcoinLink<T>>::insert(account.clone(), addrs);
-			Self::deposit_event(Event::BtcAddressLinked(account, addr));
+            <BitcoinLink<T>>::insert(account.clone(), addrs);
+            Self::deposit_event(Event::BtcAddressLinked(account, addr));
 
-			Ok(().into())
+            Ok(().into())
 
-		}
+        }
 
-		#[pallet::weight(T::WeightInfo::link_polkadot())]
-		pub fn link_polkadot(
-			origin: OriginFor<T>,
-			account: T::AccountId,
-			index: u32,
-		) -> DispatchResultWithPostInfo {
+        #[pallet::weight(T::WeightInfo::link_polkadot())]
+        pub fn link_polkadot(
+            origin: OriginFor<T>,
+            account: T::AccountId,
+            index: u32,
+        ) -> DispatchResultWithPostInfo {
 
-			let origin = ensure_signed(origin)?;
+            let origin = ensure_signed(origin)?;
 
-			// TODO: charge some fee
+            // TODO: charge some fee
 
-			<PolkadotPending<T>>::insert(origin, (account, index));
+            <PolkadotPending<T>>::insert(origin, (account, index));
 
-			Ok(().into())
+            Ok(().into())
 
-		}
+        }
 
-		#[pallet::weight(T::WeightInfo::accept_polkadot())]
-		pub fn accept_polkadot(
-			origin: OriginFor<T>,
-			account: T::AccountId,
-		) -> DispatchResultWithPostInfo {
+		// SBP M1 review: similar remarks as for link_eth
+        #[pallet::weight(T::WeightInfo::accept_polkadot())]
+        pub fn accept_polkadot(
+            origin: OriginFor<T>,
+            account: T::AccountId,
+        ) -> DispatchResultWithPostInfo {
 
-			let origin = ensure_signed(origin)?;
+            let origin = ensure_signed(origin)?;
 
-			let (target, index) = Self::polkadot_pending(&account);
-			ensure!(target == origin, Error::<T>::WrongPendingRequest);
-			<PolkadotPending<T>>::remove(&origin);
+            let (target, index) = Self::polkadot_pending(&account);
+            ensure!(target == origin, Error::<T>::WrongPendingRequest);
+            <PolkadotPending<T>>::remove(&origin);
 
-			let index = index as usize;
-			let mut addrs = Self::polkadot_addresses(&target);
-			// NOTE: allow linking `MAX_POLKADOT_LINKS` polkadot addresses.
-			if (index >= addrs.len()) && (addrs.len() != MAX_POLKADOT_LINKS) {
-				addrs.push(origin.clone());
-			} else if (index >= addrs.len()) && (addrs.len() == MAX_POLKADOT_LINKS) {
-				addrs[MAX_POLKADOT_LINKS - 1] = origin.clone();
-			} else {
-				addrs[index] = origin.clone();
-			}
+            let index = index as usize;
+            let mut addrs = Self::polkadot_addresses(&target);
+            // NOTE: allow linking `MAX_POLKADOT_LINKS` polkadot addresses.
+            if (index >= addrs.len()) && (addrs.len() != MAX_POLKADOT_LINKS) {
+                addrs.push(origin.clone());
+            } else if (index >= addrs.len()) && (addrs.len() == MAX_POLKADOT_LINKS) {
+                addrs[MAX_POLKADOT_LINKS - 1] = origin.clone();
+            } else {
+                addrs[index] = origin.clone();
+            }
 
-			<PolkadotLink<T>>::insert(account.clone(), addrs);
-			Self::deposit_event(Event::PolkadotAddressLinked(account, origin));
+            <PolkadotLink<T>>::insert(account.clone(), addrs);
+            Self::deposit_event(Event::PolkadotAddressLinked(account, origin));
 
-			Ok(().into())
-		}
-	}
+            Ok(().into())
+        }
+    }
 }
 
 

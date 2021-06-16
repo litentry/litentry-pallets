@@ -26,3 +26,4 @@ jobs:
       run: cargo build
     - name: Run unit tests
       run: cargo test --verbose
+# SBP M1 review: you could also run cargo clippy for some general code hygiene recommandations ...
