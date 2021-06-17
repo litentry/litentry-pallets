@@ -101,9 +101,11 @@ pub mod pallet {
 	impl<T: Config> Hooks<BlockNumberFor<T>> for Pallet<T> {
 		fn on_initialize(block_number: T::BlockNumber) -> Weight {
 			log::info!("ocw on_initialize {:?}.", block_number);
+// SBP M1: magic value?
 			1000
 		}
 
+// SBP M1: lacking weight? Might be simpler to push it in `on_initialize`
 		fn on_finalize(block_number: T::BlockNumber) {
 			log::info!("ocw on_finalize.{:?}.", block_number);
 
@@ -192,6 +194,8 @@ pub mod pallet {
 	#[pallet::call]
 	impl<T:Config> Pallet<T> {
 
+// SBP M1: add comprehensive doc to each extrinsic
+
 		#[pallet::weight(<T as pallet::Config>::WeightInfo::asset_claim())]
 		pub fn asset_claim(origin: OriginFor<T>,) -> DispatchResultWithPostInfo {
 			let account = ensure_signed(origin)?;
@@ -231,6 +235,7 @@ pub mod pallet {
 			let offchain_worker_account = StorageValueRef::persistent(b"offchain-worker::account");
 
 			// Get my ocw index
+			// SBP M1: describe this logic
 			let ocw_account_index = match offchain_worker_account.get::<T::AccountId>() {
 				Some(Some(account)) => Self::get_ocw_index(Some(&account)),
 				_ => Self::get_ocw_index(None),
@@ -250,10 +255,13 @@ pub mod pallet {
 					Some(account_index) => {
 
 						let mut source_index = 0;
+						// SBP M1: note that nested loops on unbounded elements might lead to chain being flooded. Make sure it makes sense economically
 						for source in &urls::DATA_SOURCE_LIST {
 							let task_index = urls::TOTAL_DATA_SOURCE_NUMBER * account_index + source_index;
+							// SBP M1: clarify this logic
 							if task_index % ocw_length == ocw_account_index {
 								match source {
+									// SBP M1: should be outsourced in the external token server (have an abstrate get_balance)
 									urls::DataSource::EthEtherScan => {
 										match Self::get_balance_from_etherscan(&account, info) {
 											Some(balance) => Self::offchain_signed_tx(account.clone(), block_number, urls::DataSource::EthEtherScan, balance),
@@ -287,7 +295,7 @@ pub mod pallet {
 		fn clear_claim() {
 			// Remove all account index in last session
 			<ClaimAccountIndex<T>>::remove_all();
-
+// SBP M1: can't this be replaced by a single map?
 			let accounts: Vec<T::AccountId> = <ClaimAccountSet::<T>>::iter().map(|(k, _)| k).collect();
 
 			// Set account index
@@ -315,6 +323,7 @@ pub mod pallet {
 		}
 
 		// Aggregate query result and then record on chain
+		// SBP M1: too long, split into multiple methods
 		fn aggregate_query_result() {
 			let mut result_map: BTreeMap<(T::AccountId, urls::BlockChainType, u128), u32> = BTreeMap::new();
 			let mut result_key: BTreeMap<(T::AccountId, urls::BlockChainType), Vec<u128>> = BTreeMap::new();
@@ -340,6 +349,7 @@ pub mod pallet {
 		
 						let key_key = (account, block_type);
 						match result_key.get(&key_key) {
+							// SBP M1: looks fragile
 							Some(balance_vec) => {
 								let mut found = false;
 								for item in balance_vec.iter() {
@@ -370,6 +380,7 @@ pub mod pallet {
 				let mut most_value = 0_u128;
 				let mut most_times = 0_u32;
 
+				// SBP M1: extract methods for easier testing
 				for balance in result.1 {
 					let key = (account.clone(), block_type, *balance);
 					match result_map.get(&key) {
@@ -480,6 +491,7 @@ pub mod pallet {
 			let task_base_index = data_source_index + ocw_account_index * urls::TOTAL_DATA_SOURCE_NUMBER;
 
 			let mut round: u32 = 0;
+			// SBP M1: extract method and add comment
 			while round < query_task_redudancy {
 				// task index in n round
 				let task_index = task_base_index + round * total_task_per_round;
@@ -525,11 +537,11 @@ pub mod pallet {
 			}
 
 			// Compute the scope of session
-			let sesseion_start_block = commit_block_number -  commit_block_number % T::QuerySessionLength::get() ;
-			let sesseion_end_block = sesseion_start_block + T::QuerySessionLength::get();
+			let session_start_block = commit_block_number -  commit_block_number % T::QuerySessionLength::get() ;
+			let session_end_block = session_start_block + T::QuerySessionLength::get();
 
 			// If commit block number out of the scope of session.
-			if current_block_number >= sesseion_end_block || current_block_number <= sesseion_start_block {
+			if current_block_number >= session_end_block || current_block_number <= session_start_block {
 				return Err(<Error<T>>::InvalidCommitBlockNumber.into());
 			}
 
@@ -556,6 +568,8 @@ pub mod pallet {
 		fn get_claim_account_length() -> u32 {
 			<ClaimAccountIndex::<T>>::iter().collect::<Vec<_>>().len() as u32
 		}
+
+// SBP M1: move logic in token server. This allows for easier upgrade (no need to redeploy runtime)
 
 		fn get_balance_from_etherscan(account: &T::AccountId, info: &urls::TokenInfo) -> Option<u128> {
 			if info.etherscan.len() == 0 {
