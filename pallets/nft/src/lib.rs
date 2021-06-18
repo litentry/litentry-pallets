@@ -14,6 +14,7 @@ use sp_runtime::{
 	DispatchResult, RuntimeDebug,
 };
 use sp_std::vec::Vec;
+use sp_core::hashing::keccak_256;
 
 #[cfg(test)]
 mod mock;
@@ -21,6 +22,8 @@ mod mock;
 #[cfg(test)]
 mod tests;
 pub mod weights;
+
+pub mod merkle_proof;
 
 pub use pallet::*;
 pub use weights::WeightInfo;
@@ -66,6 +69,18 @@ pub struct ClassData<BN, ID> {
 	pub end_block: Option<BN>,
 	/// merged from two class; if true, burn the two items 
 	pub class_type: ClassType<ID>,
+  /// claimed vec for claim type NFT class, to guarantee each user claims once 
+  claimed_vec: Vec<u32>, // maximal index of claiming user is 2^32 which is more than enough
+}
+
+impl<BN, ID> ClassData<BN, ID> {
+  fn is_claimed(&self, index: u32) -> bool {
+    self.claimed_vec.contains(&index)
+  }
+
+  fn record_claim(&mut self, index: u32) {
+    self.claimed_vec.push(index);
+  }
 }
 
 #[derive(Encode, Decode, Clone, RuntimeDebug, PartialEq, Eq)]
@@ -127,9 +142,11 @@ pub mod pallet {
 		/// Use already used token to merge new token
 		TokenUsed,
 		/// Mint more NFT than the maximum allowed
-		QuantitiyOverflow,
+		QuantityOverflow,
 		/// Out of NFT valid issuance period
 		OutOfCampaignPeriod,
+		/// NFT for certain user already claimed
+		TokenAlreadyClaimed,
 	}
 
 	#[pallet::event]
@@ -173,6 +190,8 @@ pub mod pallet {
 		) -> DispatchResultWithPostInfo {
 			let who = ensure_signed(origin)?;
 			let next_id = orml_nft::Pallet::<T>::next_class_id();
+      // Create a vector to record users who already claimed 
+      let claimed_vec = Vec::new();
 
 			// TODO charge
 
@@ -205,6 +224,7 @@ pub mod pallet {
 				start_block,
 				end_block,
 				class_type,
+        claimed_vec,
 			};
 			orml_nft::Pallet::<T>::create_class(&who, metadata, data)?;
 
@@ -238,7 +258,7 @@ pub mod pallet {
 				ClassType::Simple(max_num) => {
 					let issued = class_info.total_issuance;
 					if TokenIdOf::<T>::from(quantity) + issued > TokenIdOf::<T>::from(max_num) {
-						Err(Error::<T>::QuantitiyOverflow)?
+						Err(Error::<T>::QuantityOverflow)?
 					}
 				}
 				_ => {
@@ -262,11 +282,12 @@ pub mod pallet {
 		#[transactional]
 		pub fn claim(
 			origin: OriginFor<T>,
+      index: u32,
 			class_id: ClassIdOf<T>,
-			proof: u32, // TODO: fix this
+			proof: Vec<[u8; 32]>, 
 		) -> DispatchResultWithPostInfo {
 			let who = ensure_signed(origin)?;
-			let class_info = orml_nft::Pallet::<T>::classes(class_id).ok_or(Error::<T>::ClassIdNotFound)?;
+			let mut class_info = orml_nft::Pallet::<T>::classes(class_id).ok_or(Error::<T>::ClassIdNotFound)?;
 
 			ensure!(Self::check_time(&class_info.data), Error::<T>::OutOfCampaignPeriod);
 
@@ -277,10 +298,20 @@ pub mod pallet {
 				}
 			}
 
-			// TODO: check if claimed
-			// TODO: check proof
+      // check if this user has already claimed
+      ensure!(class_info.data.is_claimed(index), Error::<T>::TokenAlreadyClaimed);
 
-			// TODO: adjustible rarity
+      // push this user's index into already claimed list
+      class_info.data.record_claim(index);
+
+      // calculate hash for this user
+      let mut bytes = index.encode();
+      bytes.append(&mut who.encode());
+      let computed_hash = keccak_256(&bytes);
+
+      let verify_res = merkle_proof::proof_verify(&computed_hash, &proof, &class_info.metadata);
+
+			// TODO: adjustable rarity
 			let data = TokenData {
 				used: false,
 				rarity: 0,
@@ -288,8 +319,6 @@ pub mod pallet {
 
 			// TODO: if metadata can change?
 			let metadata = class_info.metadata;
-
-			// TODO: add a claimed set
 
 			orml_nft::Pallet::<T>::mint(&who, class_id, metadata, data)?;
 			Ok(().into())
