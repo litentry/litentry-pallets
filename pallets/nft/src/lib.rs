@@ -147,6 +147,8 @@ pub mod pallet {
 		OutOfCampaignPeriod,
 		/// NFT for certain user already claimed
 		TokenAlreadyClaimed,
+		/// user claim verification fails 
+		UserNotInClaimList,
 	}
 
 	#[pallet::event]
@@ -309,7 +311,8 @@ pub mod pallet {
       bytes.append(&mut who.encode());
       let computed_hash = keccak_256(&bytes);
 
-      let verify_res = merkle_proof::proof_verify(&computed_hash, &proof, &class_info.metadata);
+      // verify the proof
+      ensure!(merkle_proof::proof_verify(&computed_hash, &proof, &class_info.metadata), Error::<T>::UserNotInClaimList);
 
 			// TODO: adjustable rarity
 			let data = TokenData {
