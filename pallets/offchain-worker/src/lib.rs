@@ -205,7 +205,7 @@ pub mod pallet {
 		}
 
 		#[pallet::weight(<T as pallet::Config>::WeightInfo::submit_balance())]
-		fn submit_balance(origin: OriginFor<T>, account: T::AccountId, block_number: T::BlockNumber, data_source: urls::DataSource, balance: u128)-> DispatchResultWithPostInfo {
+		pub fn submit_balance(origin: OriginFor<T>, account: T::AccountId, block_number: T::BlockNumber, data_source: urls::DataSource, balance: u128)-> DispatchResultWithPostInfo {
 			let sender = ensure_signed(origin)?;
 
 			// Check data source
