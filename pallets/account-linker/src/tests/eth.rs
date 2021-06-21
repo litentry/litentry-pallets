@@ -156,7 +156,7 @@ fn test_insert_eth_address() {
 			assert_eq!(
 					events(),
 					[
-						Event::account_linker(crate::Event::EthAddressLinked(account.clone(), key_pair.address().to_fixed_bytes().to_vec())),
+						Event::AccountLinker(crate::Event::EthAddressLinked(account.clone(), key_pair.address().to_fixed_bytes().to_vec())),
 					]
 				);
 		}
