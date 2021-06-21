@@ -28,7 +28,7 @@ fn test_insert_polkadot_address() {
         assert_eq!(
                 events(),
                 [
-                    Event::account_linker(crate::Event::PolkadotAddressLinked(origin.clone(), target.clone())),
+                    Event::AccountLinker(crate::Event::PolkadotAddressLinked(origin.clone(), target.clone())),
                 ]
             );
 
