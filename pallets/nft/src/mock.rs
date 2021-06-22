@@ -8,6 +8,7 @@ use crate as nft;
 use sp_core::H256;
 use sp_runtime::{
 	traits::{BlakeTwo256, IdentityLookup},
+	AccountId32,
 	generic,
 };
 
@@ -43,7 +44,7 @@ impl system::Config for Test {
 	type BlockNumber = u32;
 	type Hash = H256;
 	type Hashing = BlakeTwo256;
-	type AccountId = u64;
+	type AccountId = AccountId32;
 	type Lookup = IdentityLookup<Self::AccountId>;
 	type Header = generic::Header<Self::BlockNumber, BlakeTwo256>;
 	type Event = Event;

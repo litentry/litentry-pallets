@@ -301,7 +301,7 @@ pub mod pallet {
 			}
 
       // check if this user has already claimed
-      ensure!(class_info.data.is_claimed(index), Error::<T>::TokenAlreadyClaimed);
+      ensure!(!class_info.data.is_claimed(index), Error::<T>::TokenAlreadyClaimed);
 
       // push this user's index into already claimed list
       class_info.data.record_claim(index);
