@@ -45,7 +45,9 @@ export default class BalanceTree {
     let encodedMsg = new Uint8Array(encodedIndex.length + encodedAcc.length);
 
     encodedMsg.set(encodedIndex);
-    encodedMsg.set(encodedAcc);
+    encodedMsg.set(encodedAcc, encodedIndex.length);
+
+    console.log(`Encoded bytes is ${encodedMsg}`);
 
     let buf = Buffer.from(keccakAsU8a(encodedMsg))
     return buf
