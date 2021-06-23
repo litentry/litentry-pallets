@@ -309,31 +309,32 @@ pub mod pallet {
             );
 
             match class_info.data.class_type {
-                ClassType::Claim(_) => {}
+                ClassType::Claim(merkle_root) => {
+                    // check if this user has already claimed
+                    ensure!(
+                        !ClaimedList::<T>::get(class_id).contains(&index),
+                        Error::<T>::TokenAlreadyClaimed
+                    );
+
+                    // push this user's index into already claimed list
+                    ClaimedList::<T>::mutate(class_id, |claimed_vec| {
+                        claimed_vec.push(index);
+                    });
+
+                    // calculate hash for this user
+                    let mut bytes = index.encode();
+                    bytes.append(&mut who.encode());
+                    let computed_hash = keccak_256(&bytes);
+
+                    // verify the proof
+                    ensure!(
+                        merkle_proof::proof_verify(&computed_hash, &proof, &merkle_root),
+                        Error::<T>::UserNotInClaimList
+                    );
+                }
+
                 _ => Err(Error::<T>::WrongClassType)?,
             }
-
-            // check if this user has already claimed
-            ensure!(
-                !ClaimedList::<T>::get(class_id).contains(&index),
-                Error::<T>::TokenAlreadyClaimed
-            );
-
-            // push this user's index into already claimed list
-            ClaimedList::<T>::mutate(class_id, |claimed_vec| {
-                claimed_vec.push(index);
-            });
-
-            // calculate hash for this user
-            let mut bytes = index.encode();
-            bytes.append(&mut who.encode());
-            let computed_hash = keccak_256(&bytes);
-
-            // verify the proof
-            ensure!(
-                merkle_proof::proof_verify(&computed_hash, &proof, &class_info.metadata),
-                Error::<T>::UserNotInClaimList
-            );
 
             // TODO: adjustable rarity
             let data = TokenData {
