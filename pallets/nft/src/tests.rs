@@ -1,5 +1,6 @@
 use crate::{mock::*};
 use super::*;
+use crate::mock::Event as Event;
 use frame_support::{assert_ok, assert_noop};
 
 
@@ -31,6 +32,8 @@ fn test_issue_and_mint_eth() {
 fn test_issue_and_claim_eth() {
 	new_test_ext().execute_with(|| {
 
+		run_to_block(1);
+
         // issue a claim class
         assert_ok!(Nft::create_class(
 			Origin::signed(1),
@@ -41,12 +44,12 @@ fn test_issue_and_claim_eth() {
 			ClassType::Claim(CID::default()),
 		));
 
-        // assert_eq!(
-		// 	events(),
-		// 	[
-		// 		Event::nft(crate::Event::CreatedClass(account.clone(), 0)),
-		// 	]
-		// );
+        assert_eq!(
+			events(),
+			[
+				Event::nft(crate::Event::CreatedClass(1, 0)),
+			]
+		);
 
         // claim with proof
         assert_ok!(Nft::claim(
