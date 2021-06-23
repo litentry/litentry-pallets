@@ -1,6 +1,6 @@
 use super::*;
+use crate::mock::Event;
 use crate::mock::*;
-use crate::mock::Event as Event;
 use frame_support::{assert_noop, assert_ok};
 use sp_runtime::AccountId32;
 
@@ -53,8 +53,8 @@ fn test_issue_and_claim_eth() {
             0x59u8, 0x72u8, 0xaeu8, 0x67u8, 0xb7u8, 0x52u8, 0xdeu8, 0xa0u8, 0xcfu8, 0x1bu8, 0xc8u8,
             0xf3u8, 0x7au8, 0x48u8, 0x14u8, 0x3fu8, 0x84u8, 0xe7u8, 0x2bu8, 0x1du8, 0x19u8,
         ]];
-	
-	run_to_block(1);
+
+        run_to_block(1);
 
         // issue a claim class
         assert_ok!(Nft::create_class(
@@ -67,10 +67,11 @@ fn test_issue_and_claim_eth() {
         ));
 
         assert_eq!(
-          events(),
-          [
-            Event::nft(crate::Event::CreatedClass(account.clone(), 0)),
-          ]
+            events(),
+            [Event::nft(crate::Event::CreatedClass(
+                alice_account.clone(),
+                0
+            )),]
         );
 
         // alice claims with random proof
