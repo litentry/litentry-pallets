@@ -1,21 +1,21 @@
-import { UInt } from '@polkadot/types/codec';
+import { UInt } from "@polkadot/types/codec";
 import { TypeRegistry } from "@polkadot/types/create";
-import { decodeAddress, keccakAsU8a } from "@polkadot/util-crypto"
-import MerkleTree from './merkle-tree'
+import { decodeAddress, keccakAsU8a } from "@polkadot/util-crypto";
+import MerkleTree from "./merkle-tree";
 
 export default class BalanceTree {
-  private readonly tree: MerkleTree
-  constructor( accounts: string[]) {
+  private readonly tree: MerkleTree;
+  constructor(accounts: string[]) {
     this.tree = new MerkleTree(
       accounts.map((account, index) => {
-        console.log(`Current element is ${account} with index ${index}`)
-        return BalanceTree.toNode(index, account)
+        console.log(`Current element is ${account} with index ${index}`);
+        return BalanceTree.toNode(index, account);
       })
-    )
+    );
   }
 
   public getMekleTree(): MerkleTree {
-    return this.tree
+    return this.tree;
   }
 
   public static verifyProof(
@@ -24,16 +24,15 @@ export default class BalanceTree {
     proof: Buffer[],
     root: Buffer
   ): boolean {
-    let pair = BalanceTree.toNode(index, account)
+    let pair = BalanceTree.toNode(index, account);
     for (const item of proof) {
-      pair = MerkleTree.combinedHash(pair, item)
+      pair = MerkleTree.combinedHash(pair, item);
     }
-
-    return pair.equals(root)
+    return pair.equals(root);
   }
 
   // keccak256(SCALE.encode(index, account))
-  public static toNode(index: number , account: string): Buffer {
+  public static toNode(index: number, account: string): Buffer {
     const registry = new TypeRegistry();
 
     // encode index as u32 SCALE
@@ -49,16 +48,16 @@ export default class BalanceTree {
 
     console.log(`Encoded bytes is ${encodedMsg}`);
 
-    let buf = Buffer.from(keccakAsU8a(encodedMsg))
-    return buf
+    let buf = Buffer.from(keccakAsU8a(encodedMsg));
+    return buf;
   }
 
   public getHexRoot(): string {
-    return this.tree.getHexRoot()
+    return this.tree.getHexRoot();
   }
 
   // returns the hex bytes32 values of the proof
   public getProof(index: number, account: string): string[] {
-    return this.tree.getHexProof(BalanceTree.toNode(index, account))
+    return this.tree.getHexProof(BalanceTree.toNode(index, account));
   }
 }
