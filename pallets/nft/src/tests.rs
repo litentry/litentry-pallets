@@ -61,13 +61,34 @@ fn test_issue_and_claim_eth() {
     //  ]
     //);
 
-    // claim with proof
+    // alice claims with random proof
+    assert_noop!(Nft::claim(
+			Origin::signed(alice_account.clone()),
+      0,
+      0,
+      vec![[0u8; 32]],
+      ),
+      NftError::UserNotInClaimList
+    );
+
+    // alice claims with alice's proof
     assert_ok!(Nft::claim(
 			Origin::signed(alice_account.clone()),
       0,
       0,
-      alice_proof,
+      alice_proof.clone(),
       ));
+
+    // alice claims again
+    assert_noop!(Nft::claim(
+			Origin::signed(alice_account.clone()),
+      0,
+      0,
+      alice_proof,
+      ),
+      NftError::TokenAlreadyClaimed
+    );
+
 
     })
 }

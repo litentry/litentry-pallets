@@ -69,18 +69,6 @@ pub struct ClassData<BN, ID> {
 	pub end_block: Option<BN>,
 	/// merged from two class; if true, burn the two items 
 	pub class_type: ClassType<ID>,
-  /// claimed vec for claim type NFT class, to guarantee each user claims once 
-  claimed_vec: Vec<u32>, // maximal index of claiming user is 2^32 which is more than enough
-}
-
-impl<BN, ID> ClassData<BN, ID> {
-  fn is_claimed(&self, index: u32) -> bool {
-    self.claimed_vec.contains(&index)
-  }
-
-  fn record_claim(&mut self, index: u32) {
-    self.claimed_vec.push(index);
-  }
 }
 
 #[derive(Encode, Decode, Clone, RuntimeDebug, PartialEq, Eq)]
@@ -123,6 +111,8 @@ pub mod pallet {
 	pub enum Error<T> {
 		/// ClassId not found
 		ClassIdNotFound,
+		/// Class ClaimedList not found (Only for Claim type)
+		ClassClaimedListNotFound,
 		/// TokenId not found
 		TokenIdNotFound,
 		/// The operator is not the owner of the token and has no permission
@@ -171,6 +161,13 @@ pub mod pallet {
 	#[pallet::pallet]
 	pub struct Pallet<T>(_);
 
+	#[pallet::storage]
+	#[pallet::getter(fn claimed_list)]
+  /// claimed vec for claim type NFT class, to guarantee each user claims once 
+  // maximal index of claiming user is 2^32 which is more than enough
+  // TODO consider to reduce it to u16 to save storage usage
+	pub(super) type ClaimedList<T: Config> = StorageMap<_, Blake2_128Concat, ClassIdOf<T>, Vec<u32>, ValueQuery>;
+
 	#[pallet::hooks]
 	impl<T: Config> Hooks<T::BlockNumber> for Pallet<T> {}
 
@@ -192,8 +189,6 @@ pub mod pallet {
 		) -> DispatchResultWithPostInfo {
 			let who = ensure_signed(origin)?;
 			let next_id = orml_nft::Pallet::<T>::next_class_id();
-      // Create a vector to record users who already claimed 
-      let claimed_vec = Vec::new();
 
 			// TODO charge
 
@@ -218,6 +213,9 @@ pub mod pallet {
 						);
 					}
 				}
+        ClassType::Claim(_) => {
+          ClaimedList::<T>::insert(next_id, Vec::<u32>::new());
+        }
 				_ => {}
 			}
 
@@ -226,7 +224,6 @@ pub mod pallet {
 				start_block,
 				end_block,
 				class_type,
-        claimed_vec,
 			};
 			orml_nft::Pallet::<T>::create_class(&who, metadata, data)?;
 
@@ -289,7 +286,9 @@ pub mod pallet {
 			proof: Vec<[u8; 32]>, 
 		) -> DispatchResultWithPostInfo {
 			let who = ensure_signed(origin)?;
-			let mut class_info = orml_nft::Pallet::<T>::classes(class_id).ok_or(Error::<T>::ClassIdNotFound)?;
+			let class_info = orml_nft::Pallet::<T>::classes(class_id).ok_or(Error::<T>::ClassIdNotFound)?;
+
+      ensure!(ClaimedList::<T>::contains_key(class_id), Error::<T>::ClassClaimedListNotFound);
 
 			ensure!(Self::check_time(&class_info.data), Error::<T>::OutOfCampaignPeriod);
 
@@ -301,10 +300,12 @@ pub mod pallet {
 			}
 
       // check if this user has already claimed
-      ensure!(!class_info.data.is_claimed(index), Error::<T>::TokenAlreadyClaimed);
+      ensure!(!ClaimedList::<T>::get(class_id).contains(&index), Error::<T>::TokenAlreadyClaimed);
 
       // push this user's index into already claimed list
-      class_info.data.record_claim(index);
+      ClaimedList::<T>::mutate(class_id , | claimed_vec | {
+        claimed_vec.push(index);
+      });
 
       // calculate hash for this user
       let mut bytes = index.encode();
