@@ -265,6 +265,7 @@ pub mod pallet {
                 }
             }
 
+            // TODO: adjustible rarity
             let data = TokenData {
                 used: false,
                 rarity: 0,
