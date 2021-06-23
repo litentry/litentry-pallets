@@ -100,12 +100,12 @@ pub mod pallet {
 	#[pallet::hooks]
 	impl<T: Config> Hooks<BlockNumberFor<T>> for Pallet<T> {
 		fn on_initialize(block_number: T::BlockNumber) -> Weight {
-			debug::info!("ocw on_initialize {:?}.", block_number);
+			log::info!("ocw on_initialize {:?}.", block_number);
 			1000
 		}
 
 		fn on_finalize(block_number: T::BlockNumber) {
-			debug::info!("ocw on_finalize.{:?}.", block_number);
+			log::info!("ocw on_finalize.{:?}.", block_number);
 
 			let query_session_length: usize = T::QuerySessionLength::get() as usize;
 			let index_in_session = TryInto::<usize>::try_into(block_number).map_or(query_session_length, |bn| bn % query_session_length);
@@ -205,14 +205,14 @@ pub mod pallet {
 		}
 
 		#[pallet::weight(<T as pallet::Config>::WeightInfo::submit_balance())]
-		fn submit_balance(origin: OriginFor<T>, account: T::AccountId, block_number: T::BlockNumber, data_source: urls::DataSource, balance: u128)-> DispatchResultWithPostInfo {
+		pub fn submit_balance(origin: OriginFor<T>, account: T::AccountId, block_number: T::BlockNumber, data_source: urls::DataSource, balance: u128)-> DispatchResultWithPostInfo {
 			let sender = ensure_signed(origin)?;
 
 			// Check data source
 			Self::valid_data_source(data_source)?;
 
 			// Check block number
-			Self::valid_commit_block_number(block_number, <frame_system::Module<T>>::block_number())?;
+			Self::valid_commit_block_number(block_number, <frame_system::Pallet<T>>::block_number())?;
 
 			// Check the commit slot
 			Self::valid_commit_slot(account.clone(), Self::get_ocw_index(Some(&account)), data_source)?;
@@ -572,7 +572,7 @@ pub mod pallet {
 						};
 
 						Self::fetch_balances(
-							<account_linker::Module<T>>::eth_addresses(account),
+							<account_linker::Pallet<T>>::eth_addresses(account),
 							urls::HttpRequest::GET(get),
 							&urls::parse_etherscan_balances).ok()
 					},
@@ -597,7 +597,7 @@ pub mod pallet {
 							api_token: token,
 						};
 						Self::fetch_balances(
-							<account_linker::Module<T>>::eth_addresses(account),
+							<account_linker::Pallet<T>>::eth_addresses(account),
 							urls::HttpRequest::POST(post),
 							&urls::parse_blockchain_info_balances).ok()
 					},
@@ -631,7 +631,7 @@ pub mod pallet {
 
 		// Sign the query result
 		fn offchain_signed_tx(account: T::AccountId, block_number: T::BlockNumber, data_source: urls::DataSource, balance: u128) {
-			debug::info!("ocw sign tx: account {:?}, block number {:?}, data_source {:?}, balance {:?}",
+			log::info!("ocw sign tx: account {:?}, block number {:?}, data_source {:?}, balance {:?}",
 				account.clone(), block_number, data_source, balance);
 			// Get signer from ocw
 			let signer = Signer::<T, T::AuthorityId>::any_account();
@@ -644,16 +644,16 @@ pub mod pallet {
 			// Display error if the signed tx fails.
 			if let Some((acc, res)) = result {
 				if res.is_err() {
-					debug::error!("failure: offchain_signed_tx: tx sent: {:?}", acc.id);
+					log::error!("failure: offchain_signed_tx: tx sent: {:?}", acc.id);
 				} else {
-					debug::info!("successful: offchain_signed_tx: tx sent: {:?} index is {:?}", acc.id, acc.index);
+					log::info!("successful: offchain_signed_tx: tx sent: {:?} index is {:?}", acc.id, acc.index);
 				}
 
 				// Record the account in local storage then we can know my index
 				let account = StorageValueRef::persistent(b"offchain-worker::account");
 				account.set(&acc.id);
 			} else {
-				debug::error!("No local account available");
+				log::error!("No local account available");
 			}
 		}
 
