@@ -13,6 +13,7 @@ mod util_eth;
 mod benchmarking;
 pub mod weights;
 
+type EthAddress = [u8; 20];
 // rsv signature
 type Signature = [u8; 65];
 
@@ -72,7 +73,7 @@ pub mod pallet {
 
 	#[pallet::storage]
 	#[pallet::getter(fn eth_addresses)]
-	pub(super) type EthereumLink<T: Config> =  StorageMap<_, Blake2_128Concat, T::AccountId, Vec<[u8; 20]>, ValueQuery>;
+	pub(super) type EthereumLink<T: Config> =  StorageMap<_, Blake2_128Concat, T::AccountId, Vec<EthAddress>, ValueQuery>;
 
 	#[pallet::storage]
 	#[pallet::getter(fn btc_addresses)]
@@ -86,7 +87,7 @@ pub mod pallet {
 			origin: OriginFor<T>,
 			account: T::AccountId,
 			index: u32,
-			addr_expected: [u8; 20],
+			addr_expected: EthAddress,
 			expiring_block_number: T::BlockNumber,
 			sig: Signature,
 		) -> DispatchResultWithPostInfo {
@@ -98,12 +99,7 @@ pub mod pallet {
 			ensure!((expiring_block_number - current_block_number) < T::BlockNumber::from(EXPIRING_BLOCK_NUMBER_MAX),
 				Error::<T>::InvalidExpiringBlockNumber);
 
-			let mut bytes = b"Link Litentry: ".encode();
-			let mut account_vec = account.encode();
-			let mut expiring_block_number_vec = expiring_block_number.encode();
-
-			bytes.append(&mut account_vec);
-			bytes.append(&mut expiring_block_number_vec);
+			let bytes = Self::generate_raw_message(&account, expiring_block_number);
 
 			let hash = util_eth::eth_data_hash(bytes).map_err(|_| Error::<T>::UnexpectedEthMsgLength)?;
 
@@ -163,12 +159,7 @@ pub mod pallet {
 				Err(Error::<T>::InvalidBTCAddress)?
 			};
 
-			let mut bytes = b"Link Litentry: ".encode();
-			let mut account_vec = account.encode();
-			let mut expiring_block_number_vec = expiring_block_number.encode();
-
-			bytes.append(&mut account_vec);
-			bytes.append(&mut expiring_block_number_vec);
+			let bytes = Self::generate_raw_message(&account, expiring_block_number);
 
 			// TODO: seems btc uses sha256???
 			let hash = sp_io::hashing::keccak_256(&bytes);
@@ -216,6 +207,18 @@ pub mod pallet {
 
 			Ok(().into())
 
+		}
+	}
+
+	impl<T:Config> Pallet<T> {
+		fn generate_raw_message(account: &T::AccountId, expiring_block_number: T::BlockNumber) -> Vec<u8> {
+			let mut bytes = b"Link Litentry: ".encode();
+			let mut account_vec = account.encode();
+			let mut expiring_block_number_vec = expiring_block_number.encode();
+			
+			bytes.append(&mut account_vec);
+			bytes.append(&mut expiring_block_number_vec);
+			bytes
 		}
 	}
 }
