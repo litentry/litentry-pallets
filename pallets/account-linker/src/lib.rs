@@ -32,6 +32,7 @@ pub mod pallet {
 	pub const EXPIRING_BLOCK_NUMBER_MAX: u32 = 10 * 60 * 24 * 30; // 30 days for 6s per block
 	pub const MAX_ETH_LINKS: usize = 3;
 	pub const MAX_BTC_LINKS: usize = 3;
+	pub const MAX_POLKADOT_LINKS: usize = 3;
 
 	enum BTCAddrType {
 		Legacy,
@@ -50,6 +51,7 @@ pub mod pallet {
 	pub enum Event<T: Config> {
 		EthAddressLinked(T::AccountId, Vec<u8>),
 		BtcAddressLinked(T::AccountId, Vec<u8>),
+		PolkadotAddressLinked(T::AccountId, T::AccountId),
 	}
 
 	#[pallet::error]
@@ -62,6 +64,7 @@ pub mod pallet {
 		InvalidBTCAddress,
 		InvalidBTCAddressLength,
 		InvalidExpiringBlockNumber,
+		WrongPendingRequest,
 	}
 
 	#[pallet::hooks]
@@ -78,6 +81,14 @@ pub mod pallet {
 	#[pallet::storage]
 	#[pallet::getter(fn btc_addresses)]
 	pub(super) type BitcoinLink<T: Config> =  StorageMap<_, Blake2_128Concat, T::AccountId, Vec<Vec<u8>>, ValueQuery>;
+
+	#[pallet::storage]
+	#[pallet::getter(fn polkadot_addresses)]
+	pub(super) type PolkadotLink<T: Config> =  StorageMap<_, Blake2_128Concat, T::AccountId, Vec<T::AccountId>, ValueQuery>;
+
+	#[pallet::storage]
+	#[pallet::getter(fn polkadot_pending)]
+	pub(super) type PolkadotPending<T: Config> =  StorageMap<_, Blake2_128Concat, T::AccountId, (T::AccountId, u32), ValueQuery>;
 
 	#[pallet::call]
 	impl<T:Config> Pallet<T> {
@@ -207,6 +218,52 @@ pub mod pallet {
 
 			Ok(().into())
 
+		}
+
+		#[pallet::weight(T::WeightInfo::link_polkadot())]
+		pub fn link_polkadot(
+			origin: OriginFor<T>,
+			account: T::AccountId,
+			index: u32,
+		) -> DispatchResultWithPostInfo {
+
+			let origin = ensure_signed(origin)?;
+
+			// TODO: charge some fee
+
+			<PolkadotPending<T>>::insert(origin, (account, index));
+
+			Ok(().into())
+
+		}
+
+		#[pallet::weight(T::WeightInfo::accept_polkadot())]
+		pub fn accept_polkadot(
+			origin: OriginFor<T>,
+			account: T::AccountId,
+		) -> DispatchResultWithPostInfo {
+
+			let origin = ensure_signed(origin)?;
+
+			let (target, index) = Self::polkadot_pending(&account);
+			ensure!(target == origin, Error::<T>::WrongPendingRequest);
+			<PolkadotPending<T>>::remove(&origin);
+
+			let index = index as usize;
+			let mut addrs = Self::polkadot_addresses(&target);
+			// NOTE: allow linking `MAX_POLKADOT_LINKS` polkadot addresses.
+			if (index >= addrs.len()) && (addrs.len() != MAX_POLKADOT_LINKS) {
+				addrs.push(origin.clone());
+			} else if (index >= addrs.len()) && (addrs.len() == MAX_POLKADOT_LINKS) {
+				addrs[MAX_POLKADOT_LINKS - 1] = origin.clone();
+			} else {
+				addrs[index] = origin.clone();
+			}
+
+			<PolkadotLink<T>>::insert(account.clone(), addrs);
+			Self::deposit_event(Event::PolkadotAddressLinked(account, origin));
+
+			Ok(().into())
 		}
 	}
 

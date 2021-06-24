@@ -46,6 +46,8 @@ use sp_std::marker::PhantomData;
 pub trait WeightInfo {
 	fn link_eth() -> Weight;
 	fn link_btc() -> Weight;
+	fn link_polkadot() -> Weight;
+	fn accept_polkadot() -> Weight;
 }
 
 /// Weights for pallet_account_linker using the Substrate node and recommended hardware.
@@ -61,6 +63,15 @@ impl<T: frame_system::Config> WeightInfo for SubstrateWeight<T> {
 			.saturating_add(T::DbWeight::get().reads(1 as Weight))
 			.saturating_add(T::DbWeight::get().writes(1 as Weight))
 	}
+	fn link_polkadot() -> Weight {
+		(335_000_000 as Weight)
+			.saturating_add(T::DbWeight::get().reads(1 as Weight))
+	}
+	fn accept_polkadot() -> Weight {
+		(335_000_000 as Weight)
+		.saturating_add(T::DbWeight::get().reads(1 as Weight))
+		.saturating_add(T::DbWeight::get().writes(1 as Weight))
+	}
 }
 
 // For backwards compatibility and tests
@@ -74,5 +85,14 @@ impl WeightInfo for () {
 		(335_000_000 as Weight)
 			.saturating_add(RocksDbWeight::get().reads(1 as Weight))
 			.saturating_add(RocksDbWeight::get().writes(1 as Weight))
+	}
+	fn link_polkadot() -> Weight {
+		(335_000_000 as Weight)
+			.saturating_add(RocksDbWeight::get().reads(1 as Weight))
+	}
+	fn accept_polkadot() -> Weight {
+		(335_000_000 as Weight)
+		.saturating_add(RocksDbWeight::get().reads(1 as Weight))
+		.saturating_add(RocksDbWeight::get().writes(1 as Weight))
 	}
 }
