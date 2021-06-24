@@ -2,6 +2,7 @@
 members = [
     'pallets/account-linker',
     'pallets/identity',
+    'pallets/nft',
     'pallets/offchain-worker',
 ]
 
