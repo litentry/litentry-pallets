@@ -13,6 +13,8 @@ mod util_eth;
 mod benchmarking;
 pub mod weights;
 
+type Signature = [u8; 65];
+
 #[frame_support::pallet]
 pub mod pallet {
 	use crate::*;
@@ -85,9 +87,7 @@ pub mod pallet {
 			index: u32,
 			addr_expected: [u8; 20],
 			expiring_block_number: T::BlockNumber,
-			r: [u8; 32],
-			s: [u8; 32],
-			v: u8,
+			sig: Signature,
 		) -> DispatchResultWithPostInfo {
 
 			let _ = ensure_signed(origin)?;
@@ -107,12 +107,7 @@ pub mod pallet {
 			let hash = util_eth::eth_data_hash(bytes).map_err(|_| Error::<T>::UnexpectedEthMsgLength)?;
 
 			let mut msg = [0u8; 32];
-			let mut sig = [0u8; 65];
-
 			msg[..32].copy_from_slice(&hash[..32]);
-			sig[..32].copy_from_slice(&r[..32]);
-			sig[32..64].copy_from_slice(&s[..32]);
-			sig[64] = v;
 
 			let addr = util_eth::addr_from_sig(msg, sig)
 				.map_err(|_| Error::<T>::EcdsaRecoverFailure)?;
@@ -144,9 +139,7 @@ pub mod pallet {
 			index: u32,
 			addr_expected: Vec<u8>,
 			expiring_block_number: T::BlockNumber,
-			r: [u8; 32],
-			s: [u8; 32],
-			v: u8,
+			sig: Signature,
 		) -> DispatchResultWithPostInfo {
 
 			let _ = ensure_signed(origin)?;
@@ -180,12 +173,7 @@ pub mod pallet {
 			let hash = sp_io::hashing::keccak_256(&bytes);
 
 			let mut msg = [0u8; 32];
-			let mut sig = [0u8; 65];
-
 			msg[..32].copy_from_slice(&hash[..32]);
-			sig[..32].copy_from_slice(&r[..32]);
-			sig[32..64].copy_from_slice(&s[..32]);
-			sig[64] = v;
 
 			let pk = secp256k1_ecdsa_recover_compressed(&sig, &msg)
 			.map_err(|_| Error::<T>::EcdsaRecoverFailure)?;
