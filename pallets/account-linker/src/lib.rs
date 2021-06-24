@@ -249,18 +249,18 @@ pub mod pallet {
 			ensure!(target == origin, Error::<T>::WrongPendingRequest);
 			<PolkadotPending<T>>::remove(&origin);
 
-			let index = index as usize;
-			let mut addrs = Self::polkadot_addresses(&target);
-			// NOTE: allow linking `MAX_POLKADOT_LINKS` polkadot addresses.
-			if (index >= addrs.len()) && (addrs.len() != MAX_POLKADOT_LINKS) {
-				addrs.push(origin.clone());
-			} else if (index >= addrs.len()) && (addrs.len() == MAX_POLKADOT_LINKS) {
-				addrs[MAX_POLKADOT_LINKS - 1] = origin.clone();
-			} else {
-				addrs[index] = origin.clone();
-			}
+			PolkadotLink::<T>::mutate(&account, |addrs| {
+				let index = index as usize;
+				// NOTE: allow linking `MAX_POLKADOT_LINKS` polkadot addresses.
+				if (index >= addrs.len()) && (addrs.len() != MAX_POLKADOT_LINKS) {
+					addrs.push(origin.clone());
+				} else if (index >= addrs.len()) && (addrs.len() == MAX_POLKADOT_LINKS) {
+					addrs[MAX_POLKADOT_LINKS - 1] = origin.clone();
+				} else {
+					addrs[index] = origin.clone();
+				}
+			});
 
-			<PolkadotLink<T>>::insert(account.clone(), addrs);
 			Self::deposit_event(Event::PolkadotAddressLinked(account, origin));
 
 			Ok(().into())
