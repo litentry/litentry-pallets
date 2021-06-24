@@ -118,18 +118,18 @@ pub mod pallet {
 				.map_err(|_| Error::<T>::EcdsaRecoverFailure)?;
 			ensure!(addr == addr_expected, Error::<T>::UnexpectedAddress);
 
-			let index = index as usize;
-			let mut addrs = Self::eth_addresses(&account);
-			// NOTE: allow linking `MAX_ETH_LINKS` eth addresses.
-			if (index >= addrs.len()) && (addrs.len() != MAX_ETH_LINKS) {
-				addrs.push(addr.clone());
-			} else if (index >= addrs.len()) && (addrs.len() == MAX_ETH_LINKS) {
-				addrs[MAX_ETH_LINKS - 1] = addr.clone();
-			} else {
-				addrs[index] = addr.clone();
-			}
+			EthereumLink::<T>::mutate(&account, |addrs| {
+				let index = index as usize;
+				// NOTE: allow linking `MAX_ETH_LINKS` eth addresses.
+				if (index >= addrs.len()) && (addrs.len() != MAX_ETH_LINKS) {
+					addrs.push(addr.clone());
+				} else if (index >= addrs.len()) && (addrs.len() == MAX_ETH_LINKS) {
+					addrs[MAX_ETH_LINKS - 1] = addr.clone();
+				} else {
+					addrs[index] = addr.clone();
+				}
+			});
 
-			<EthereumLink<T>>::insert(account.clone(), addrs);
 			Self::deposit_event(Event::EthAddressLinked(account, addr.to_vec()));
 
 			Ok(().into())
@@ -211,18 +211,18 @@ pub mod pallet {
 
 			ensure!(addr == addr_expected, Error::<T>::UnexpectedAddress);
 
-			let index = index as usize;
-			let mut addrs = Self::btc_addresses(&account);
-			// NOTE: allow linking `MAX_BTC_LINKS` btc addresses.
-			if (index >= addrs.len()) && (addrs.len() != MAX_BTC_LINKS) {
-				addrs.push(addr.clone());
-			} else if (index >= addrs.len()) && (addrs.len() == MAX_BTC_LINKS) {
-				addrs[MAX_BTC_LINKS - 1] = addr.clone();
-			} else {
-				addrs[index] = addr.clone();
-			}
+			BitcoinLink::<T>::mutate(&account, |addrs| {
+				let index = index as usize;
+				// NOTE: allow linking `MAX_BTC_LINKS` btc addresses.
+				if (index >= addrs.len()) && (addrs.len() != MAX_BTC_LINKS) {
+					addrs.push(addr.clone());
+				} else if (index >= addrs.len()) && (addrs.len() == MAX_BTC_LINKS) {
+					addrs[MAX_BTC_LINKS - 1] = addr.clone();
+				} else {
+					addrs[index] = addr.clone();
+				}
+			});
 
-			<BitcoinLink<T>>::insert(account.clone(), addrs);
 			Self::deposit_event(Event::BtcAddressLinked(account, addr));
 
 			Ok(().into())
