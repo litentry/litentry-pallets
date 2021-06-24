@@ -13,6 +13,7 @@ mod util_eth;
 mod benchmarking;
 pub mod weights;
 
+// rsv signature
 type Signature = [u8; 65];
 
 #[frame_support::pallet]
