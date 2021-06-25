@@ -34,8 +34,8 @@ export default class BalanceTree {
   public static toNode(index: number, account: string): Buffer {
     const registry = new TypeRegistry();
 
-    // encode index as u32 SCALE
-    let encodedIndex = new UInt(registry, index, 32).toU8a();
+    // encode index as u16 SCALE
+    let encodedIndex = new UInt(registry, index, 16).toU8a();
 
     // decode address from ss58 to u8a
     // TODO consider error handling

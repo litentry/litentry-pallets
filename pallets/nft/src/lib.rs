@@ -161,10 +161,10 @@ pub mod pallet {
     #[pallet::storage]
     #[pallet::getter(fn claimed_list)]
     /// claimed vec for claim type NFT class, to guarantee each user claims once
-    // maximal index of claiming user is 2^32 which is more than enough
+    // maximal index of claiming user is 2^16 which is more than enough
     // TODO consider to reduce it to u16 to save storage usage
     pub(super) type ClaimedList<T: Config> =
-        StorageMap<_, Blake2_128Concat, ClassIdOf<T>, Vec<u32>, ValueQuery>;
+        StorageMap<_, Blake2_128Concat, ClassIdOf<T>, Vec<u16>, ValueQuery>;
 
     #[pallet::hooks]
     impl<T: Config> Hooks<T::BlockNumber> for Pallet<T> {}
@@ -220,7 +220,7 @@ pub mod pallet {
                     }
                 }
                 ClassType::Claim(_) => {
-                    ClaimedList::<T>::insert(next_id, Vec::<u32>::new());
+                    ClaimedList::<T>::insert(next_id, Vec::<u16>::new());
                 }
                 _ => {}
             }
@@ -290,7 +290,7 @@ pub mod pallet {
         #[transactional]
         pub fn claim(
             origin: OriginFor<T>,
-            index: u32,
+            index: u16,
             class_id: ClassIdOf<T>,
             proof: Vec<[u8; 32]>,
         ) -> DispatchResultWithPostInfo {
