@@ -8,7 +8,6 @@ export default class BalanceTree {
   constructor(accounts: string[]) {
     this.tree = new MerkleTree(
       accounts.map((account, index) => {
-        console.log(`Current element is ${account} with index ${index}`);
         return BalanceTree.toNode(index, account);
       })
     );
@@ -39,6 +38,7 @@ export default class BalanceTree {
     let encodedIndex = new UInt(registry, index, 32).toU8a();
 
     // decode address from ss58 to u8a
+    // TODO consider error handling
     let encodedAcc = decodeAddress(account);
 
     let encodedMsg = new Uint8Array(encodedIndex.length + encodedAcc.length);

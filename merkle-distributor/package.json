@@ -6,7 +6,7 @@
   "scripts": {
     "test": "ts-node distributor.ts"
   },
-  "author": "Han Zhao",
+  "author": "Han Zhao - Litentry",
   "license": "ISC",
   "devDependencies": {
     "@polkadot/api": "^2.10.1",
