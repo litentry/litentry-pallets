@@ -1,5 +1,6 @@
 use codec::Encode;
 use sp_std::prelude::*;
+use frame_support::{debug};
 
 pub fn addr_from_sig(msg: [u8; 32], sig: [u8; 65]) -> Result<[u8; 20], sp_io::EcdsaVerifyError> {
 	let pubkey = sp_io::crypto::secp256k1_ecdsa_recover(&sig, &msg)?;
@@ -16,7 +17,7 @@ pub fn addr_from_sig(msg: [u8; 32], sig: [u8; 65]) -> Result<[u8; 20], sp_io::Ec
 pub fn eth_data_hash(mut data: Vec<u8>) -> Result<[u8; 32], &'static str> {
 	const MSG_LEN: usize = 51;
 	if data.len() != MSG_LEN {
-		log::error!("Ethereum message has an unexpected length {} !!! Expected is {}.", data.len(), MSG_LEN);
+		debug::error!("Ethereum message has an unexpected length {} !!! Expected is {}.", data.len(), MSG_LEN);
 		return Err("Unexpected ethereum message length!");
 	}
 	let mut length_bytes = usize_to_u8_array(data.len())?;

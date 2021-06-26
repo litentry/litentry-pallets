@@ -1,5 +1,8 @@
 use sp_std::{prelude::*};
 use core::{fmt};
+use frame_support::{
+	debug, 
+};
 use sp_runtime::offchain::{http, storage::StorageValueRef,};
 use codec::{Encode, Decode};
 use alt_serde::{Deserialize, Deserializer};
@@ -189,7 +192,7 @@ pub fn fetch_json_http_get<'a>(remote_url: &'a [u8]) -> Result<Vec<u8>, &'static
         .map_err(|_| "Error in waiting http response back")?;
 
     if response.code != 200 {
-        log::warn!("Unexpected status code: {}", response.code);
+        debug::warn!("Unexpected status code: {}", response.code);
         return Err("Non-200 status code returned from http request");
     }
 
@@ -206,7 +209,7 @@ pub fn fetch_json_http_post<'a>(remote_url: &'a [u8], body: &'a [u8]) -> Result<
     let remote_url_str = core::str::from_utf8(remote_url)
         .map_err(|_| "Error in converting remote_url to string")?;
 
-    log::info!("Offchain Worker post request url is {}.", remote_url_str);
+    debug::info!("Offchain Worker post request url is {}.", remote_url_str);
 
     let pending = http::Request::post(remote_url_str, vec![body]).send()
         .map_err(|_| "Error in sending http POST request")?;
@@ -215,7 +218,7 @@ pub fn fetch_json_http_post<'a>(remote_url: &'a [u8], body: &'a [u8]) -> Result<
         .map_err(|_| "Error in waiting http response back")?;
 
     if response.code != 200 {
-        log::warn!("Unexpected status code: {}", response.code);
+        debug::warn!("Unexpected status code: {}", response.code);
         return Err("Non-200 status code returned from http request");
     }
 
@@ -236,7 +239,7 @@ pub fn send_get_token() -> Result<Vec<u8>, &'static str> {
         .map_err(|_| "Error in waiting http response back")?;
 
     if response.code != 200 {
-        log::warn!("Unexpected status code: {}", response.code);
+        debug::warn!("Unexpected status code: {}", response.code);
         return Err("Non-200 status code returned from http request");
     }
 
@@ -270,7 +273,7 @@ pub fn parse_etherscan_balances(price_str: &str) -> Option<Vec<u128>> {
     //     {"account":"0xBE0eB53F46cd790Cd13851d5EFf43D12404d33E8","balance":"2571179226430511381996287"}
     //   ]
     // }
-    log::info!("Offchain Worker response from etherscan is {:?}", price_str);
+    debug::info!("Offchain Worker response from etherscan is {:?}", price_str);
 
     let token_info: EtherScanResponse = serde_json::from_str(price_str).ok()?;
     let result: Vec<u128> = token_info.result.iter().map(|item| match utils::chars_to_u128(&item.balance.iter().map(|i| *i as char).collect()) {
@@ -330,7 +333,7 @@ pub fn parse_store_tokens(resp_str: &str) {
         Ok(info) => {
             let s_info = StorageValueRef::persistent(b"offchain-worker::token");
             s_info.set(&info);
-            log::info!("Token info get from local server is {:?}.", &info);
+            debug::info!("Token info get from local server is {:?}.", &info);
         },
         Err(_) => {},
     }
