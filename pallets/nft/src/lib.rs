@@ -24,6 +24,8 @@ pub use weights::WeightInfo;
 
 pub type CID = Vec<u8>;
 
+pub type HashByte32 = [u8; 32];
+
 #[repr(u8)]
 #[derive(Encode, Decode, Clone, Copy, BitFlags, RuntimeDebug, PartialEq, Eq)]
 pub enum ClassProperty {
@@ -78,7 +80,7 @@ pub struct TokenData {
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 pub enum ClassType<ID> {
 	Simple(u32),
-	Claim(CID), // root
+	Claim(HashByte32), // Merkle root with type HashByte32
 	Merge(ID, ID, bool),
 }
 
@@ -292,7 +294,7 @@ pub mod pallet {
 			origin: OriginFor<T>,
 			index: u16,
 			class_id: ClassIdOf<T>,
-			proof: Vec<[u8; 32]>,
+			proof: Vec<HashByte32>,
 		) -> DispatchResultWithPostInfo {
 			let who = ensure_signed(origin)?;
 			let class_info =
