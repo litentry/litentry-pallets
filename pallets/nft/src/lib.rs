@@ -1,3 +1,34 @@
+//! # NFT Pallet
+//!
+//! The NFT pallet provides supports for non fungible assets on Litentry
+//!
+//! ## Overview
+//!
+//! The NFT pallet enables third parties to issue (mainly identity related) non fungible assets.
+//! Currently there are 3 types (check `ClassType`) of non fungible assets:
+//! 1. Each instance is directly issued by the corresponding third party: Simple(u32)
+//! 2. At issuance, a list of user is provided and only these users may claim: Claim(HashByte32)
+//! 3. Can be minted only when the user have 2 specific base non fungible assets: Merge(ID, ID, bool)
+//!
+//! ## Interface
+//!
+//! ### Dispatchable Functions
+//! #### Class Issuance
+//! * `create_class` - Create an NFT class (think the whole CryptoKitties or Hashmask each as a class)
+//! 
+//! #### Instance Generation
+//! * `mint` - Mint specified number of instance of `Simple(u32)` type
+//! * `claim` - Whitelisted user claim an instance of `Claim(HashByte32)`, with a Merkle proof whose root
+//! is the HashByte32
+//! * `merge` - From two NFT instance, mint a new NFT instance of `Merge(ID, ID, bool)` type
+//! 
+//! #### Daily User Actions
+//! * `transfer` - Transfer ownership of a transferable NFT
+//! * `burn` - Burn a burnable NFT
+//! 
+//! [`Call`]: ./enum.Call.html
+//! [`Config`]: ./trait.Config.html
+
 #![cfg_attr(not(feature = "std"), no_std)]
 
 use enumflags2::BitFlags;
