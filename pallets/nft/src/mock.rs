@@ -8,6 +8,7 @@ use crate as nft;
 use sp_core::H256;
 use sp_runtime::{
 	traits::{BlakeTwo256, IdentityLookup},
+	AccountId32,
 	generic,
 };
 
@@ -43,7 +44,7 @@ impl system::Config for Test {
 	type BlockNumber = u32;
 	type Hash = H256;
 	type Hashing = BlakeTwo256;
-	type AccountId = u64;
+	type AccountId = AccountId32;
 	type Lookup = IdentityLookup<Self::AccountId>;
 	type Header = generic::Header<Self::BlockNumber, BlakeTwo256>;
 	type Event = Event;
@@ -80,13 +81,13 @@ pub fn new_test_ext() -> sp_io::TestExternalities {
 }
 
 pub fn run_to_block(n: u32) {
-    while System::block_number() < n {
-        <Nft as OnFinalize::<u32>>::on_finalize(System::block_number());
-        <System as OnFinalize::<u32>>::on_finalize(System::block_number());
-        System::set_block_number(System::block_number() + 1);
-        <System as OnInitialize::<u32>>::on_initialize(System::block_number());
+	while System::block_number() < n {
+		<Nft as OnFinalize::<u32>>::on_finalize(System::block_number());
+		<System as OnFinalize::<u32>>::on_finalize(System::block_number());
+		System::set_block_number(System::block_number() + 1);
+		<System as OnInitialize::<u32>>::on_initialize(System::block_number());
 		<Nft as OnInitialize::<u32>>::on_initialize(System::block_number());
-    }
+	}
 }
 
 pub fn events() -> Vec<Event> {
