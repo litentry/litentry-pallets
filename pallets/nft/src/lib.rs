@@ -486,10 +486,13 @@ pub mod pallet {
 			Ok(().into())
 		}
 
-		/// Transfer NFT token to another account
+		/// Transfer NFT token to another account, must be transferable
 		///
-		/// - `to`: the token owner's account
-		/// - `token`: (class_id, token_id)
+		/// Parameters:
+		/// - `to`: Receiver of the token
+		/// - `token`: NFT instance to transfer
+		/// 
+		/// Emits `TransferredToken` event when successful
 		#[pallet::weight(<T as Config>::WeightInfo::transfer())]
 		#[transactional]
 		pub fn transfer(
