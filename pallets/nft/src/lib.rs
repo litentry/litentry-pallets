@@ -94,7 +94,7 @@ pub struct ClassData<BN, ID> {
 	pub start_block: Option<BN>,
 	/// till when user can claim this nft
 	pub end_block: Option<BN>,
-	/// merged from two class; if true, burn the two items
+	/// type of this NFT class
 	pub class_type: ClassType<ID>,
 }
 
@@ -110,9 +110,15 @@ pub struct TokenData {
 #[derive(Encode, Decode, Clone, RuntimeDebug, PartialEq, Eq)]
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 pub enum ClassType<ID> {
+	/// A class that owner can mint instances no more than u32
 	Simple(u32),
-	Claim(HashByte32), // Merkle root with type HashByte32
-	Merge(ID, ID, bool),
+	/// A class whitelisted user may claim provided a proof
+	/// that indicates his/her account is in the Merkle tree with
+	/// root HashByte32
+	Claim(HashByte32),
+	/// A class that is merged from two class ID and ID
+	/// if true, burn the two instances
+	Merge(ID, ID, bool), 
 }
 
 pub type TokenIdOf<T> = <T as orml_nft::Config>::TokenId;
@@ -197,9 +203,10 @@ pub mod pallet {
 
 	#[pallet::storage]
 	#[pallet::getter(fn claimed_list)]
-	/// claimed vec for claim type NFT class, to guarantee each user claims once
-	// maximal index of claiming user is 2^16 which is more than enough
-	// TODO consider to reduce it to u16 to save storage usage
+	/// Claimed index vec for `Claim(HashByte32)` type NFT class, 
+	/// to guarantee each user claims once.
+	/// maximal index of claiming user is 2^16 which is more than enough
+	/// TODO consider to reduce it to u16 to save storage usage
 	pub(super) type ClaimedList<T: Config> =
 		StorageMap<_, Blake2_128Concat, ClassIdOf<T>, Vec<u16>, ValueQuery>;
 
@@ -575,6 +582,8 @@ impl<T: Config> Pallet<T> {
 }
 
 impl<T: Config> Pallet<T> {
+	/// check if current block time is in the range of the time span given by the 
+	/// token class info
 	fn check_time(token_info: &ClassData<BlockNumberOf<T>, ClassIdOf<T>>) -> bool {
 		let current_block_number = <frame_system::Pallet<T>>::block_number();
 		if let Some(start_block) = token_info.start_block {
