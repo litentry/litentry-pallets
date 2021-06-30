@@ -506,9 +506,12 @@ pub mod pallet {
 			Ok(().into())
 		}
 
-		/// Burn NFT token
+		/// Burn an NFT token instance, must be burnable
 		///
-		/// - `token`: (class_id, token_id)
+		/// Parameters:
+		/// - `token`: NFT instance to burn
+		/// 
+		/// Emits `BurnedToken` event when successful
 		#[pallet::weight(<T as Config>::WeightInfo::burn())]
 		#[transactional]
 		pub fn burn(
