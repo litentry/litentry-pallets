@@ -204,10 +204,20 @@ pub mod pallet {
 
 	#[pallet::call]
 	impl<T: Config> Pallet<T> {
-		/// Create NFT class, tokens belong to the class.
-		///
-		/// - `metadata`: external metadata
-		/// - `properties`: class property, include `Transferable` `Burnable`
+		/// Create NFT class, each class is a collection of NFT instances.
+		/// Currently there are 3 types (refer to `ClassType`)
+		/// 1. Each instance is directly issued by the corresponding third party: Simple(u32)
+		/// 2. At issuance, a list of user is provided and only these users may claim: Claim(HashByte32)
+		/// 3. Can be minted only when the user have 2 specific base non fungible assets: Merge(ID, ID, bool)
+		/// 
+		/// Parameters:
+		/// - `metadata`: CID identifier of the class's metadata
+		/// - `properties`: Class property, include `Transferable` `Burnable`
+		/// - `start_block`: From when the instances can be minted (None if no restriction)
+		/// - `end_block`: Till when the instances can be minted (None if no restriction)
+		/// - `class_type`: Type of this class (refer to `ClassType`)
+		/// 
+		/// Emits `CreatedClass` event when successful.
 		#[pallet::weight(<T as Config>::WeightInfo::create_class())]
 		#[transactional]
 		pub fn create_class(
@@ -270,12 +280,15 @@ pub mod pallet {
 			Ok(().into())
 		}
 
-		/// Mint NFT token
-		///
-		/// - `to`: the token owner's account
-		/// - `class_id`: token belong to the class id
-		/// - `metadata`: external metadata
-		/// - `quantity`: token quantity
+		/// Mint `Simple(u32)` NFT instances from the class owner
+		/// 
+		/// Parameters:
+		/// - `to`: The receiver of the minted NFTs
+		/// - `class_id`: Identifier of the NFT class to mint
+		/// - `metadata`: CID identifier of the instance's metadata
+		/// - `quantity`: number of NFT to mint
+		/// 
+		/// Emits `MintedToken` event when successful
 		#[pallet::weight(<T as Config>::WeightInfo::mint(*quantity))]
 		#[transactional]
 		pub fn mint(
