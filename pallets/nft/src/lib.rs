@@ -180,6 +180,8 @@ pub mod pallet {
 		MintedToken(T::AccountId, T::AccountId, ClassIdOf<T>, u32),
 		/// Claimed NFT token. \[claimer, class_id\]
 		ClaimedToken(T::AccountId, ClassIdOf<T>),
+		/// Merged NFT token. \[owner, class_id\]
+		MergedToken(T::AccountId, ClassIdOf<T>),	
 		/// Transferred NFT token. \[from, to, class_id, token_id\]
 		TransferredToken(T::AccountId, T::AccountId, ClassIdOf<T>, TokenIdOf<T>),
 		/// Burned NFT token. \[owner, class_id, token_id\]
@@ -408,6 +410,15 @@ pub mod pallet {
 			Ok(().into())
 		}
 
+		/// Merge from two NFT instances and generate a new NFT
+		/// of type `Merge(ID, ID, bool)`
+		/// 
+		/// Parameters:
+		/// - `class_id`: Identifier of the NFT class to mint
+		/// - `token1`: First NFT of the merge base
+		/// - `token2`: Seconde NFT of the merge base
+		/// 
+		/// Emits `MergedToken` event when successful
 		#[pallet::weight(<T as Config>::WeightInfo::mint(1))]
 		#[transactional]
 		pub fn merge(
@@ -470,6 +481,7 @@ pub mod pallet {
 			let metadata = merged_class_info.metadata;
 
 			orml_nft::Pallet::<T>::mint(&who, class_id, metadata, data)?;
+			Self::deposit_event(Event::MergedToken(who, class_id));
 
 			Ok(().into())
 		}
