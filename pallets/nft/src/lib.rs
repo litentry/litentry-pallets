@@ -178,6 +178,8 @@ pub mod pallet {
 		CreatedClass(T::AccountId, ClassIdOf<T>),
 		/// Minted NFT token. \[from, to, class_id, quantity\]
 		MintedToken(T::AccountId, T::AccountId, ClassIdOf<T>, u32),
+		/// Claimed NFT token. \[claimer, class_id\]
+		ClaimedToken(T::AccountId, ClassIdOf<T>),
 		/// Transferred NFT token. \[from, to, class_id, token_id\]
 		TransferredToken(T::AccountId, T::AccountId, ClassIdOf<T>, TokenIdOf<T>),
 		/// Burned NFT token. \[owner, class_id, token_id\]
@@ -332,6 +334,16 @@ pub mod pallet {
 			Ok(().into())
 		}
 
+		/// Claim a `Claim(HashByte32)` by a whitelisted user,
+		/// with a Merkle proof that proves the user's account
+		/// is in the Merkle tree of the given root
+		/// 
+		/// Parameters:
+		/// - `index`: Index of user's Merkle proof
+		/// - `class_id`: Identifier of the NFT class to mint
+		/// - `proof`: Merkle proof
+		/// 
+		/// Emits `ClaimedToken` event when successful
 		#[pallet::weight(<T as Config>::WeightInfo::mint(1))]
 		#[transactional]
 		pub fn claim(
@@ -392,6 +404,7 @@ pub mod pallet {
 			let metadata = class_info.metadata;
 
 			orml_nft::Pallet::<T>::mint(&who, class_id, metadata, data)?;
+			Self::deposit_event(Event::ClaimedToken(who, class_id));
 			Ok(().into())
 		}
 
