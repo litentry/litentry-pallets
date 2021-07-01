@@ -206,7 +206,6 @@ pub mod pallet {
 	/// Claimed index vec for `Claim(HashByte32)` type NFT class, 
 	/// to guarantee each user claims once.
 	/// maximal index of claiming user is 2^16 which is more than enough
-	/// TODO consider to reduce it to u16 to save storage usage
 	pub(super) type ClaimedList<T: Config> =
 		StorageMap<_, Blake2_128Concat, ClassIdOf<T>, Vec<u16>, ValueQuery>;
 
