@@ -1,3 +1,34 @@
+//! # NFT Pallet
+//!
+//! The NFT pallet provides supports for non fungible assets on Litentry
+//!
+//! ## Overview
+//!
+//! The NFT pallet enables third parties to issue (mainly identity related) non fungible assets.
+//! Currently there are 3 types (check `ClassType`) of non fungible assets:
+//! 1. Each instance is directly issued by the corresponding third party: Simple(u32)
+//! 2. At issuance, a list of user is provided and only these users may claim: Claim(HashByte32)
+//! 3. Can be minted only when the user have 2 specific base non fungible assets: Merge(ID, ID, bool)
+//!
+//! ## Interface
+//!
+//! ### Dispatchable Functions
+//! #### Class Issuance
+//! * `create_class` - Create an NFT class (think the whole CryptoKitties or Hashmask each as a class)
+//! 
+//! #### Instance Generation
+//! * `mint` - Mint specified number of instance of `Simple(u32)` type
+//! * `claim` - Whitelisted user claim an instance of `Claim(HashByte32)`, with a Merkle proof whose root
+//! is the HashByte32
+//! * `merge` - From two NFT instance, mint a new NFT instance of `Merge(ID, ID, bool)` type
+//! 
+//! #### Daily User Actions
+//! * `transfer` - Transfer ownership of a transferable NFT
+//! * `burn` - Burn a burnable NFT
+//! 
+//! [`Call`]: ./enum.Call.html
+//! [`Config`]: ./trait.Config.html
+
 #![cfg_attr(not(feature = "std"), no_std)]
 
 use enumflags2::BitFlags;
@@ -63,7 +94,7 @@ pub struct ClassData<BN, ID> {
 	pub start_block: Option<BN>,
 	/// till when user can claim this nft
 	pub end_block: Option<BN>,
-	/// merged from two class; if true, burn the two items
+	/// type of this NFT class
 	pub class_type: ClassType<ID>,
 }
 
@@ -79,9 +110,15 @@ pub struct TokenData {
 #[derive(Encode, Decode, Clone, RuntimeDebug, PartialEq, Eq)]
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 pub enum ClassType<ID> {
+	/// A class that owner can mint instances no more than u32
 	Simple(u32),
-	Claim(HashByte32), // Merkle root with type HashByte32
-	Merge(ID, ID, bool),
+	/// A class whitelisted user may claim provided a proof
+	/// that indicates his/her account is in the Merkle tree with
+	/// root HashByte32
+	Claim(HashByte32),
+	/// A class that is merged from two class ID and ID
+	/// if true, burn the two instances
+	Merge(ID, ID, bool), 
 }
 
 pub type TokenIdOf<T> = <T as orml_nft::Config>::TokenId;
@@ -147,6 +184,10 @@ pub mod pallet {
 		CreatedClass(T::AccountId, ClassIdOf<T>),
 		/// Minted NFT token. \[from, to, class_id, quantity\]
 		MintedToken(T::AccountId, T::AccountId, ClassIdOf<T>, u32),
+		/// Claimed NFT token. \[claimer, class_id\]
+		ClaimedToken(T::AccountId, ClassIdOf<T>),
+		/// Merged NFT token. \[owner, class_id\]
+		MergedToken(T::AccountId, ClassIdOf<T>),	
 		/// Transferred NFT token. \[from, to, class_id, token_id\]
 		TransferredToken(T::AccountId, T::AccountId, ClassIdOf<T>, TokenIdOf<T>),
 		/// Burned NFT token. \[owner, class_id, token_id\]
@@ -162,9 +203,9 @@ pub mod pallet {
 
 	#[pallet::storage]
 	#[pallet::getter(fn claimed_list)]
-	/// claimed vec for claim type NFT class, to guarantee each user claims once
-	// maximal index of claiming user is 2^16 which is more than enough
-	// TODO consider to reduce it to u16 to save storage usage
+	/// Claimed index vec for `Claim(HashByte32)` type NFT class, 
+	/// to guarantee each user claims once.
+	/// maximal index of claiming user is 2^16 which is more than enough
 	pub(super) type ClaimedList<T: Config> =
 		StorageMap<_, Blake2_128Concat, ClassIdOf<T>, Vec<u16>, ValueQuery>;
 
@@ -173,10 +214,20 @@ pub mod pallet {
 
 	#[pallet::call]
 	impl<T: Config> Pallet<T> {
-		/// Create NFT class, tokens belong to the class.
-		///
-		/// - `metadata`: external metadata
-		/// - `properties`: class property, include `Transferable` `Burnable`
+		/// Create NFT class, each class is a collection of NFT instances.
+		/// Currently there are 3 types (refer to `ClassType`)
+		/// 1. Each instance is directly issued by the corresponding third party: Simple(u32)
+		/// 2. At issuance, a list of user is provided and only these users may claim: Claim(HashByte32)
+		/// 3. Can be minted only when the user have 2 specific base non fungible assets: Merge(ID, ID, bool)
+		/// 
+		/// Parameters:
+		/// - `metadata`: CID identifier of the class's metadata
+		/// - `properties`: Class property, include `Transferable` `Burnable`
+		/// - `start_block`: From when the instances can be minted (None if no restriction)
+		/// - `end_block`: Till when the instances can be minted (None if no restriction)
+		/// - `class_type`: Type of this class (refer to `ClassType`)
+		/// 
+		/// Emits `CreatedClass` event when successful.
 		#[pallet::weight(<T as Config>::WeightInfo::create_class())]
 		#[transactional]
 		pub fn create_class(
@@ -239,12 +290,15 @@ pub mod pallet {
 			Ok(().into())
 		}
 
-		/// Mint NFT token
-		///
-		/// - `to`: the token owner's account
-		/// - `class_id`: token belong to the class id
-		/// - `metadata`: external metadata
-		/// - `quantity`: token quantity
+		/// Mint `Simple(u32)` NFT instances from the class owner
+		/// 
+		/// Parameters:
+		/// - `to`: The receiver of the minted NFTs
+		/// - `class_id`: Identifier of the NFT class to mint
+		/// - `metadata`: CID identifier of the instance's metadata
+		/// - `quantity`: number of NFT to mint
+		/// 
+		/// Emits `MintedToken` event when successful
 		#[pallet::weight(<T as Config>::WeightInfo::mint(*quantity))]
 		#[transactional]
 		pub fn mint(
@@ -288,6 +342,16 @@ pub mod pallet {
 			Ok(().into())
 		}
 
+		/// Claim a `Claim(HashByte32)` by a whitelisted user,
+		/// with a Merkle proof that proves the user's account
+		/// is in the Merkle tree of the given root
+		/// 
+		/// Parameters:
+		/// - `index`: Index of user's Merkle proof
+		/// - `class_id`: Identifier of the NFT class to mint
+		/// - `proof`: Merkle proof
+		/// 
+		/// Emits `ClaimedToken` event when successful
 		#[pallet::weight(<T as Config>::WeightInfo::mint(1))]
 		#[transactional]
 		pub fn claim(
@@ -348,9 +412,19 @@ pub mod pallet {
 			let metadata = class_info.metadata;
 
 			orml_nft::Pallet::<T>::mint(&who, class_id, metadata, data)?;
+			Self::deposit_event(Event::ClaimedToken(who, class_id));
 			Ok(().into())
 		}
 
+		/// Merge from two NFT instances and generate a new NFT
+		/// of type `Merge(ID, ID, bool)`
+		/// 
+		/// Parameters:
+		/// - `class_id`: Identifier of the NFT class to mint
+		/// - `token1`: First NFT of the merge base
+		/// - `token2`: Seconde NFT of the merge base
+		/// 
+		/// Emits `MergedToken` event when successful
 		#[pallet::weight(<T as Config>::WeightInfo::mint(1))]
 		#[transactional]
 		pub fn merge(
@@ -413,14 +487,18 @@ pub mod pallet {
 			let metadata = merged_class_info.metadata;
 
 			orml_nft::Pallet::<T>::mint(&who, class_id, metadata, data)?;
+			Self::deposit_event(Event::MergedToken(who, class_id));
 
 			Ok(().into())
 		}
 
-		/// Transfer NFT token to another account
+		/// Transfer NFT token to another account, must be transferable
 		///
-		/// - `to`: the token owner's account
-		/// - `token`: (class_id, token_id)
+		/// Parameters:
+		/// - `to`: Receiver of the token
+		/// - `token`: NFT instance to transfer
+		/// 
+		/// Emits `TransferredToken` event when successful
 		#[pallet::weight(<T as Config>::WeightInfo::transfer())]
 		#[transactional]
 		pub fn transfer(
@@ -434,9 +512,12 @@ pub mod pallet {
 			Ok(().into())
 		}
 
-		/// Burn NFT token
+		/// Burn an NFT token instance, must be burnable
 		///
-		/// - `token`: (class_id, token_id)
+		/// Parameters:
+		/// - `token`: NFT instance to burn
+		/// 
+		/// Emits `BurnedToken` event when successful
 		#[pallet::weight(<T as Config>::WeightInfo::burn())]
 		#[transactional]
 		pub fn burn(
@@ -500,6 +581,8 @@ impl<T: Config> Pallet<T> {
 }
 
 impl<T: Config> Pallet<T> {
+	/// check if current block time is in the range of the time span given by the 
+	/// token class info
 	fn check_time(token_info: &ClassData<BlockNumberOf<T>, ClassIdOf<T>>) -> bool {
 		let current_block_number = <frame_system::Pallet<T>>::block_number();
 		if let Some(start_block) = token_info.start_block {
