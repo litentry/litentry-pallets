@@ -225,6 +225,12 @@ pub mod pallet {
 
 		/// Offchain worker submit linked Eth and BTC balance via extrinsic.
 		///
+		/// Extrinsic Arguments
+		/// account: the target account offchain-worker query data for 
+		/// block_number: the block number for offchain-worker trigger the query
+		/// data_source: the enum for different data source defined in urls.rs
+		/// balance: the balance returned from data source
+		/// 
 		/// This will alter `CommitAccountBalance` in storage. 
 		///
 		/// The dispatch origin for this call is `account`.
@@ -349,17 +355,17 @@ pub mod pallet {
 			};
 		}
 
-		// Aggregate query result and then record on chain
-		// ---------------------
-		// Algorithm description as following:
-		// 1. collect all query result from `CommitAccountBalance`
-		// 2. select the most frequence result as final, then store them on-chain
-		// 3. store the successful commit according to off-chain worker account
-		// 4. reward the off-chain worker based on its correct query and submit
-		// 5. update the Eth and BTC balances on-chain
-		// 6. remove old off-chain worker index and generate new one via convert map to vector
-		// use vector's index as new off-chain worker index, make it variable and random
-		// 7. finally, remove all intermediate on-chain storage, make it empty for next round query
+		/// Aggregate query result and then record on chain
+		/// ---------------------
+		/// Algorithm description as following:
+		/// 1. collect all query result from `CommitAccountBalance`
+		/// 2. select the most frequence result as final, then store them on-chain
+		/// 3. store the successful commit according to off-chain worker account
+		/// 4. reward the off-chain worker based on its correct query and submit
+		/// 5. update the Eth and BTC balances on-chain
+		/// 6. remove old off-chain worker index and generate new one via convert map to vector
+		/// use vector's index as new off-chain worker index, make it variable and random
+		/// 7. finally, remove all intermediate on-chain storage, make it empty for next round query
 		fn aggregate_query_result() {
 			let mut result_map: BTreeMap<(T::AccountId, urls::BlockChainType, u128), u32> = BTreeMap::new();
 			let mut result_key: BTreeMap<(T::AccountId, urls::BlockChainType), Vec<u128>> = BTreeMap::new();
@@ -495,11 +501,11 @@ pub mod pallet {
 			}
 		}
 
-		// Validate if the off-chain worker with correct index to commit the query
-		// ---------------------
-		// Each off-chain worker has index in the off-chain worker queue
-		// Each query also has index in the query task queue
-		// The method used to check if the both index are matched or not
+		/// Validate if the off-chain worker with correct index to commit the query
+		/// ---------------------
+		/// Each off-chain worker has index in the off-chain worker queue
+		/// Each query also has index in the query task queue
+		/// The method used to check if the both index are matched or not
 		fn valid_commit_slot(account: T::AccountId, ocw_index: u32, data_source: urls::DataSource) -> dispatch::DispatchResult {
 			// account claimed the asset query
 			let ocw_account_index = Self::get_account_index(account)?;
