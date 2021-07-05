@@ -99,11 +99,15 @@ pub mod pallet {
 
 	#[pallet::hooks]
 	impl<T: Config> Hooks<BlockNumberFor<T>> for Pallet<T> {
+		/// The on_initialize don't need computation or DB access
+		/// It just return the weight of on_finalize
 		fn on_initialize(block_number: T::BlockNumber) -> Weight {
 			debug::info!("ocw on_initialize {:?}.", block_number);
 			1000
 		}
 
+		/// The on_finalize trigger the query result aggregation.
+		/// The argument block_number has big impact on the weight.
 		fn on_finalize(block_number: T::BlockNumber) {
 			debug::info!("ocw on_finalize.{:?}.", block_number);
 
@@ -120,8 +124,8 @@ pub mod pallet {
 			}
 		}
 
-		// TODO block N offchain_worker will be called after block N+1 finalize
-		// Trigger by offchain framework in each block
+		/// TODO block N offchain_worker will be called after block N+1 finalize
+		/// Trigger by offchain framework in each block
 		fn offchain_worker(block_number: T::BlockNumber) {
 			let query_session_length: usize = T::QuerySessionLength::get() as usize;
 
@@ -191,7 +195,22 @@ pub mod pallet {
 
 	#[pallet::call]
 	impl<T:Config> Pallet<T> {
-
+		/// Request the Litentry to query balances of linked Eth and BTC accounts.
+		///
+		/// This will alter `ClaimAccountSet` in storage. 
+		///
+		/// The dispatch origin for this call is `account`.
+		///
+		/// # <weight>
+		/// - Independent of the arguments.
+		/// - Contains a limited number of reads and writes.
+		/// ---------------------
+		/// - Base Weight:
+		///     - Creating: 27.56 µs
+		///     - Killing: 35.11 µs
+		/// - DB Weight: 1 Read, 1 Write
+		/// # </weight>
+		/// 
 		#[pallet::weight(<T as pallet::Config>::WeightInfo::asset_claim())]
 		pub fn asset_claim(origin: OriginFor<T>,) -> DispatchResultWithPostInfo {
 			let account = ensure_signed(origin)?;
@@ -204,8 +223,30 @@ pub mod pallet {
 			Ok(().into())
 		}
 
+		/// Offchain worker submit linked Eth and BTC balance via extrinsic.
+		///
+		/// Extrinsic Arguments.
+		/// account: the target account offchain-worker query data for. 
+		/// block_number: the block number for offchain-worker trigger the query.
+		/// data_source: the enum for different data source defined in urls.rs.
+		/// balance: the balance returned from data source.
+		/// 
+		/// This will alter `CommitAccountBalance` in storage. 
+		///
+		/// The dispatch origin for this call is `account`.
+		///
+		/// # <weight>
+		/// - Independent of the arguments.
+		/// - Contains a limited number of reads and writes.
+		/// ---------------------
+		/// - Base Weight:
+		///     - Creating: 27.56 µs
+		///     - Killing: 35.11 µs
+		/// - DB Weight: 1 Read, 1 Write
+		/// # </weight>
+		/// 
 		#[pallet::weight(<T as pallet::Config>::WeightInfo::submit_balance())]
-		fn submit_balance(origin: OriginFor<T>, account: T::AccountId, block_number: T::BlockNumber, data_source: urls::DataSource, balance: u128)-> DispatchResultWithPostInfo {
+		pub fn submit_balance(origin: OriginFor<T>, account: T::AccountId, block_number: T::BlockNumber, data_source: urls::DataSource, balance: u128)-> DispatchResultWithPostInfo {
 			let sender = ensure_signed(origin)?;
 
 			// Check data source
@@ -314,7 +355,17 @@ pub mod pallet {
 			};
 		}
 
-		// Aggregate query result and then record on chain
+		/// Aggregate query result and then record on chain
+		/// ---------------------
+		/// Algorithm description as following:
+		/// 1. collect all query result from `CommitAccountBalance`
+		/// 2. select the most frequence result as final, then store them on-chain
+		/// 3. store the successful commit according to off-chain worker account
+		/// 4. reward the off-chain worker based on its correct query and submit
+		/// 5. update the Eth and BTC balances on-chain
+		/// 6. remove old off-chain worker index and generate new one via convert map to vector
+		/// use vector's index as new off-chain worker index, make it variable and random
+		/// 7. finally, remove all intermediate on-chain storage, make it empty for next round query
 		fn aggregate_query_result() {
 			let mut result_map: BTreeMap<(T::AccountId, urls::BlockChainType, u128), u32> = BTreeMap::new();
 			let mut result_key: BTreeMap<(T::AccountId, urls::BlockChainType), Vec<u128>> = BTreeMap::new();
@@ -450,6 +501,11 @@ pub mod pallet {
 			}
 		}
 
+		/// Validate if the off-chain worker with correct index to commit the query
+		/// ---------------------
+		/// Each off-chain worker has index in the off-chain worker queue
+		/// Each query also has index in the query task queue
+		/// The method used to check if the both index are matched or not
 		fn valid_commit_slot(account: T::AccountId, ocw_index: u32, data_source: urls::DataSource) -> dispatch::DispatchResult {
 			// account claimed the asset query
 			let ocw_account_index = Self::get_account_index(account)?;
