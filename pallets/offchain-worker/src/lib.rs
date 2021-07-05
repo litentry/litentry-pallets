@@ -225,11 +225,11 @@ pub mod pallet {
 
 		/// Offchain worker submit linked Eth and BTC balance via extrinsic.
 		///
-		/// Extrinsic Arguments
-		/// account: the target account offchain-worker query data for 
-		/// block_number: the block number for offchain-worker trigger the query
-		/// data_source: the enum for different data source defined in urls.rs
-		/// balance: the balance returned from data source
+		/// Extrinsic Arguments.
+		/// account: the target account offchain-worker query data for. 
+		/// block_number: the block number for offchain-worker trigger the query.
+		/// data_source: the enum for different data source defined in urls.rs.
+		/// balance: the balance returned from data source.
 		/// 
 		/// This will alter `CommitAccountBalance` in storage. 
 		///
