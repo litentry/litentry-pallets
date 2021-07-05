@@ -1,0 +1,45 @@
+[package]
+authors = ['Litentry Dev']
+description = 'FRAME nft pallet'
+edition = '2018'
+homepage = 'https://litentry.com'
+license = 'Unlicense'
+name = 'pallet-nft'
+repository = 'https://github.com/litentry/litentry-pallets'
+version = '0.0.1'
+
+[dependencies]
+serde = { version = "1.0.124", optional = true }
+codec = { package = "parity-scale-codec", version = "2.0.0", default-features = false }
+enumflags2 = { version = "0.6.3" }
+
+frame-benchmarking = { default-features = false, version = '3.0.0', optional = true}
+frame-support = { default-features = false, version = '3.0.0' }
+frame-system = { default-features = false, version = '3.0.0' }
+sp-runtime = { default-features = false, version = '3.0.0' }
+sp-std = { default-features = false, version = '3.0.0' }
+sp-core = { default-features = false, version = '3.0.0' }
+
+orml-nft = { default-features = false, version = '0.4.0' }
+orml-traits = { default-features = false, version = '0.4.0' }
+
+[dev-dependencies]
+sp-core = { version = '3.0.0' }
+sp-io = { version = '3.0.0' }
+pallet-balances = { version = '3.0.0' }
+pallet-utility = { version = '3.0.0' }
+
+[features]
+default = ["std"]
+std = [
+	"serde",
+	"codec/std",
+	"enumflags2/serde",
+	"sp-std/std",
+	"sp-runtime/std",
+	"frame-support/std",
+	"frame-system/std",
+	"orml-traits/std",
+	"orml-nft/std",
+	"enumflags2/serde",
+]

@@ -1,0 +1,18 @@
+{
+  "name": "merkle-distributor",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.ts",
+  "scripts": {
+    "test": "ts-node distributor.ts"
+  },
+  "author": "Han Zhao - Litentry",
+  "license": "ISC",
+  "devDependencies": {
+    "@polkadot/api": "^2.10.1",
+    "ethereumjs-util": "^7.0.4",
+    "prettier": "^2.0.5",
+    "ts-node": "^8.5.4",
+    "typescript": "^3.7.3"
+  }
+}
