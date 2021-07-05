@@ -284,7 +284,7 @@ pub mod pallet {
 				end_block,
 				class_type,
 			};
-			orml_nft::Pallet::<T>::create_class(&who, metadata, data)?;
+			orml_nft::Pallet::<T>::create_class(&who, metadata.to_vec(), data)?;
 
 			Self::deposit_event(Event::CreatedClass(who, next_id));
 			Ok(().into())
@@ -411,7 +411,7 @@ pub mod pallet {
 			// TODO: if metadata can change?
 			let metadata = class_info.metadata;
 
-			orml_nft::Pallet::<T>::mint(&who, class_id, metadata, data)?;
+			orml_nft::Pallet::<T>::mint(&who, class_id, metadata.to_vec(), data)?;
 			Self::deposit_event(Event::ClaimedToken(who, class_id));
 			Ok(().into())
 		}
@@ -486,7 +486,7 @@ pub mod pallet {
 			// TODO: if metadata can change?
 			let metadata = merged_class_info.metadata;
 
-			orml_nft::Pallet::<T>::mint(&who, class_id, metadata, data)?;
+			orml_nft::Pallet::<T>::mint(&who, class_id, metadata.to_vec(), data)?;
 			Self::deposit_event(Event::MergedToken(who, class_id));
 
 			Ok(().into())
