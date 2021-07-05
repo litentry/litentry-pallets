@@ -39,11 +39,9 @@ fn test_invalid_expiring_block_number_btc() {
 
 		let (v, rs) = s.sign_recoverable(&message, &pair.0).serialize_compact();
 
-		let mut r = [0u8; 32];
-		let mut s = [0u8; 32];
-
-		r[..32].copy_from_slice(&rs[..32]);
-		s[..32].copy_from_slice(&rs[32..64]);
+		let mut sig = [0u8; 65];
+		sig[..64].copy_from_slice(&rs[..]);
+		sig[64] = v.to_i32() as u8;
 
 		assert_noop!(
 			AccountLinker::link_btc(
@@ -52,9 +50,7 @@ fn test_invalid_expiring_block_number_btc() {
 				0,
 				address.clone().to_string().as_bytes().to_vec(),
 				block_number,
-				r,
-				s,
-				v.to_i32() as u8),
+				sig),
 			AccountLinkerError::InvalidExpiringBlockNumber
 		);
 
@@ -92,11 +88,9 @@ fn test_btc_link_p2pkh() {
 
 		let (v, rs) = s.sign_recoverable(&message, &pair.0).serialize_compact();
 
-		let mut r = [0u8; 32];
-		let mut s = [0u8; 32];
-
-		r[..32].copy_from_slice(&rs[..32]);
-		s[..32].copy_from_slice(&rs[32..64]);
+		let mut sig = [0u8; 65];
+		sig[..64].copy_from_slice(&rs[..]);
+		sig[64] = v.to_i32() as u8;
 
         let addr_expected = address.clone().to_string().as_bytes().to_vec();
 
@@ -106,9 +100,7 @@ fn test_btc_link_p2pkh() {
 			0,
 			addr_expected.clone(),
 			block_number,
-			r,
-			s,
-			v.to_i32() as u8
+			sig
 		));
 
 		let addr_stored = String::from_utf8(AccountLinker::btc_addresses(&account)[0].clone()).unwrap();
@@ -157,11 +149,9 @@ fn test_btc_link_p2wpkh() {
 
 		let (v, rs) = s.sign_recoverable(&message, &pair.0).serialize_compact();
 
-		let mut r = [0u8; 32];
-		let mut s = [0u8; 32];
-
-		r[..32].copy_from_slice(&rs[..32]);
-		s[..32].copy_from_slice(&rs[32..64]);
+		let mut sig = [0u8; 65];
+		sig[..64].copy_from_slice(&rs[..]);
+		sig[64] = v.to_i32() as u8;
 
         let addr_expected = address.clone().to_string().as_bytes().to_vec();
 
@@ -171,9 +161,7 @@ fn test_btc_link_p2wpkh() {
 			0,
 			addr_expected.clone(),
 			block_number,
-			r,
-			s,
-			v.to_i32() as u8
+			sig
 		));
 
 		let addr_stored = String::from_utf8(AccountLinker::btc_addresses(&account)[0].clone()).unwrap();
