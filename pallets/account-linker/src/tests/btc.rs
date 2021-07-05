@@ -110,7 +110,7 @@ fn test_btc_link_p2pkh() {
 		assert_eq!(
 			events(),
 			[
-				Event::AccountLinker(crate::Event::BtcAddressLinked(account.clone(), addr_expected)),
+				Event::account_linker(crate::Event::BtcAddressLinked(account.clone(), addr_expected)),
 			]
 		);
 
@@ -171,7 +171,7 @@ fn test_btc_link_p2wpkh() {
         assert_eq!(
 			events(),
 			[
-				Event::AccountLinker(crate::Event::BtcAddressLinked(account.clone(), addr_expected)),
+				Event::account_linker(crate::Event::BtcAddressLinked(account.clone(), addr_expected)),
 			]
         );
 	});
