@@ -68,7 +68,7 @@ fn test_issue_and_claim_eth() {
 
 		assert_eq!(
 			events(),
-			[Event::nft(crate::Event::CreatedClass(
+			[Event::Nft(crate::Event::CreatedClass(
 				alice_account.clone(),
 				0
 			)),]

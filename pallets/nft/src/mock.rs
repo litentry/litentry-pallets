@@ -22,9 +22,9 @@ frame_support::construct_runtime!(
 		NodeBlock = Block,
 		UncheckedExtrinsic = UncheckedExtrinsic,
 	{
-		System: frame_system::{Module, Call, Config, Storage, Event<T>},
-		OrmlNFT: orml_nft::{Module, Storage, Config<T>},
-		Nft: nft::{Module, Call, Storage, Event<T>},
+		System: frame_system::{Pallet, Call, Config, Storage, Event<T>},
+		OrmlNFT: orml_nft::{Pallet, Storage, Config<T>},
+		Nft: nft::{Pallet, Call, Storage, Event<T>},
 	}
 );
 
@@ -56,6 +56,7 @@ impl system::Config for Test {
 	type OnKilledAccount = ();
 	type SystemWeightInfo = ();
 	type SS58Prefix = SS58Prefix;
+	type OnSetCode = ();
 }
 
 impl nft::Config for Test {
@@ -63,11 +64,18 @@ impl nft::Config for Test {
 	type WeightInfo = ();
 }
 
+parameter_types! {
+	pub const MaxClassMetadata: u32 = 1024;
+	pub const MaxTokenMetadata: u32 = 1024;
+}
+
 impl orml_nft::Config for Test {
 	type ClassId = u32;
 	type TokenId = u64;
 	type ClassData = ClassData<BlockNumberOf<Self>, ClassIdOf<Self>>;
 	type TokenData = TokenData;
+	type MaxClassMetadata = MaxClassMetadata;
+	type MaxTokenMetadata = MaxTokenMetadata;
 }
 
 pub type NftError = nft::Error<Test>;
