@@ -32,4 +32,4 @@ jobs:
       uses: JamesIves/github-pages-deploy-action@4.1.4
       with:
         branch: gh-pages
-        folder: target/doc/pallet_account_linker
+        folder: target/doc
