@@ -27,7 +27,7 @@ jobs:
     - name: Run unit tests
       run: cargo test --verbose
     - name: Docs
-      run: cargo doc --no-deps --all-features
+      run: cargo doc --no-deps 
     - name: Deploy
       uses: JamesIves/github-pages-deploy-action@4.1.4
       with:
