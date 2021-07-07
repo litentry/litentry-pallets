@@ -8,3 +8,4 @@ This repository collets all Litentry pallets. Currently it includes:
 * nft
 * offchain-worker
 
+Documentation can be found under [Litentry Pallets Rust Documentation](https://litentry.github.io/litentry-pallets/)
