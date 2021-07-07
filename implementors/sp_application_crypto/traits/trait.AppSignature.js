@@ -1,0 +1,3 @@
+(function() {var implementors = {};
+implementors["pallet_offchain_worker"] = [{"text":"impl AppSignature for <a class=\"struct\" href=\"pallet_offchain_worker/pallet/crypto/struct.Signature.html\" title=\"struct pallet_offchain_worker::pallet::crypto::Signature\">Signature</a>","synthetic":false,"types":["pallet_offchain_worker::pallet::crypto::Signature"]}];
+if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()

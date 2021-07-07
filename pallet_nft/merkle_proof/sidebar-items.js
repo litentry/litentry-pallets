@@ -1,0 +1,1 @@
+initSidebarItems({"fn":[["proof_verify","Verify the given Merkle proof and Merkle root"]]});

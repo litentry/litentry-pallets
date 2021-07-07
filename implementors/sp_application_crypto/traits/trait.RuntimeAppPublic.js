@@ -1,0 +1,3 @@
+(function() {var implementors = {};
+implementors["pallet_offchain_worker"] = [{"text":"impl RuntimeAppPublic for <a class=\"struct\" href=\"pallet_offchain_worker/pallet/crypto/struct.Public.html\" title=\"struct pallet_offchain_worker::pallet::crypto::Public\">Public</a> <span class=\"where fmt-newline\">where<br>&nbsp;&nbsp;&nbsp;&nbsp;Public: RuntimePublic&lt;Signature = Signature&gt;,&nbsp;</span>","synthetic":false,"types":["pallet_offchain_worker::pallet::crypto::Public"]}];
+if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()

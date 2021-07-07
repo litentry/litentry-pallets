@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["SubstrateWeight","Weights for module_nft using the Acala node and recommended hardware."]],"trait":[["WeightInfo","Weight functions needed for module_nft."]]});
