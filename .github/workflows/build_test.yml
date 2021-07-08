@@ -26,3 +26,12 @@ jobs:
       run: cargo build
     - name: Run unit tests
       run: cargo test --verbose
+    - name: Docs
+      run: |
+        cargo doc --no-deps # --all-features
+        echo "<meta http-equiv=\"refresh\" content=\"0; URL=pallet_account_linker/index.html\"/>" > target/doc/index.html
+    - name: Deploy
+      uses: JamesIves/github-pages-deploy-action@4.1.4
+      with:
+        branch: gh-pages
+        folder: target/doc
