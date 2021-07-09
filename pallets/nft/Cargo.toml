@@ -1,0 +1,45 @@
+[package]
+authors = ['Litentry Dev']
+description = 'FRAME nft pallet'
+edition = '2018'
+homepage = 'https://litentry.com'
+license = 'Unlicense'
+name = 'pallet-nft'
+repository = 'https://github.com/litentry/litentry-pallets'
+version = '0.0.1'
+
+[dependencies]
+serde = { version = "1.0.119", optional = true }
+codec = { package = "parity-scale-codec", version = "2.0.0", default-features = false }
+enumflags2 = { version = "0.6.3" }
+
+frame-benchmarking = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.7", default-features = false, optional = true}
+frame-support = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.7", default-features = false }
+frame-system = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.7", default-features = false }
+sp-runtime = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.7", default-features = false }
+sp-std = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.7", default-features = false }
+sp-core = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.7", default-features = false }
+
+orml-nft = { git = "https://github.com/open-web3-stack/open-runtime-module-library", default-features = false, rev = "9e5e78488496c221142678f60161659b1805d04d" }
+orml-traits = { git = "https://github.com/open-web3-stack/open-runtime-module-library", default-features = false, rev = "9e5e78488496c221142678f60161659b1805d04d" }
+
+[dev-dependencies]
+sp-core = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.7" }
+sp-io = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.7" }
+pallet-balances = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.7" }
+pallet-utility = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.7" }
+
+[features]
+default = ["std"]
+std = [
+	"serde",
+	"codec/std",
+	"enumflags2/serde",
+	"sp-std/std",
+	"sp-runtime/std",
+	"frame-support/std",
+	"frame-system/std",
+	"orml-traits/std",
+	"orml-nft/std",
+	"enumflags2/serde",
+]
