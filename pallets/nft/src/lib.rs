@@ -47,6 +47,7 @@ mod mock;
 #[cfg(test)]
 mod tests;
 pub mod weights;
+pub mod benchmarking;
 
 pub mod merkle_proof;
 
