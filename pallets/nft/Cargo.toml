@@ -43,3 +43,4 @@ std = [
 	"orml-nft/std",
 	"enumflags2/serde",
 ]
+runtime-benchmarks = ["frame-benchmarking"]
