@@ -46,6 +46,7 @@ use sp_std::marker::PhantomData;
 pub trait WeightInfo {
 	fn asset_claim() -> Weight;
 	fn submit_balance() -> Weight;
+	fn dummy() -> Weight;
 }
 
 /// Weights for pallet_offchain_worker using the Substrate node and recommended hardware.
@@ -61,6 +62,12 @@ impl<T: frame_system::Config> WeightInfo for SubstrateWeight<T> {
 			.saturating_add(T::DbWeight::get().reads(3 as Weight))
 			.saturating_add(T::DbWeight::get().writes(1 as Weight))
 	}
+
+	fn dummy() -> Weight {
+		(3_614_259_000 as Weight)
+			.saturating_add(T::DbWeight::get().reads(398 as Weight))
+			.saturating_add(T::DbWeight::get().writes(298 as Weight))
+	}
 }
 
 // For backwards compatibility and tests
@@ -74,5 +81,11 @@ impl WeightInfo for () {
 		(75_000_000 as Weight)
 			.saturating_add(RocksDbWeight::get().reads(3 as Weight))
 			.saturating_add(RocksDbWeight::get().writes(1 as Weight))
+	}
+
+	fn dummy() -> Weight {
+		(3_614_259_000 as Weight)
+			.saturating_add(RocksDbWeight::get().reads(398 as Weight))
+			.saturating_add(RocksDbWeight::get().writes(298 as Weight))
 	}
 }

@@ -34,8 +34,8 @@ pub mod pallet {
 	/// Unique key for query
 	#[derive(Encode, Decode, Default, Debug)]
 	pub struct QueryKey<AccountId> {
-		account: AccountId,
-		data_source: urls::DataSource,
+		pub account: AccountId,
+		pub data_source: urls::DataSource,
 	}
 	
 	pub mod crypto {
@@ -103,14 +103,13 @@ pub mod pallet {
 		/// It just return the weight of on_finalize
 		fn on_initialize(block_number: T::BlockNumber) -> Weight {
 			log::info!("ocw on_initialize {:?}.", block_number);
-			1000
+			<T as pallet::Config>::WeightInfo::dummy()
 		}
 
 		/// The on_finalize trigger the query result aggregation.
 		/// The argument block_number has big impact on the weight.
 		fn on_finalize(block_number: T::BlockNumber) {
 			log::info!("ocw on_finalize.{:?}.", block_number);
-
 			Self::do_finalize(block_number);
 		}
 
@@ -254,7 +253,7 @@ pub mod pallet {
 			Ok(().into())
 		}
 
-		#[pallet::weight(0)]
+		#[pallet::weight(<T as pallet::Config>::WeightInfo::dummy())]
 		// dummy used to compute the weight of on_finalize
 		pub fn dummy(origin: OriginFor<T>, block_number: T::BlockNumber)-> DispatchResultWithPostInfo {
 			ensure_signed(origin)?;
