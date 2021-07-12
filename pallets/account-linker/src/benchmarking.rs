@@ -32,9 +32,9 @@ benchmarks!{
     }: _(RawOrigin::Signed(caller), linked_account, index)
 
     accept_polkadot {
-        let caller = account("caller", 0, 0);
+        let caller: T::AccountId = account("caller", 0, 0);
         let linked_account: T::AccountId = account("Alice", 0, SEED);
         let index: u32 = 0;
-        crate::Pallet::<T>::link_polkadot(RawOrigin::Signed(caller).into(), account_id, index)?;
+        crate::Pallet::<T>::link_polkadot(RawOrigin::Signed(caller.clone()).into(), linked_account.clone(), index)?;
     }: _(RawOrigin::Signed(linked_account), caller)
 }
