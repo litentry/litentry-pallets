@@ -32,4 +32,17 @@ benchmarks!{
         let v: u8 = 0_u8;
             
     }:  link_btc(RawOrigin::Signed(caller), account_id.clone(), index, addr_expected, expiring_block_number.into(), r, s, v)
+
+    link_polkadot {
+        let caller = account("caller", 0, 0);
+        let linked_account: T::AccountId = account("Alice", 0, SEED);
+        let index: u32 = 0;
+    }: _(RawOrigin::Signed(caller), linked_account, index)
+
+    accept_polkadot {
+        let caller = account("caller", 0, 0);
+        let linked_account: T::AccountId = account("Alice", 0, SEED);
+        let index: u32 = 0;
+        crate::Pallet::<T>::link_polkadot(RawOrigin::Signed(caller).into(), account_id, index)?;
+    }: _(RawOrigin::Signed(linked_account), caller)
 }
