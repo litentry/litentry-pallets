@@ -2,10 +2,10 @@
 
 use sp_std::prelude::*;
 use sp_std::vec;
-
-use frame_benchmarking::{account, benchmarks};
+use frame_benchmarking::{account, benchmarks, impl_benchmark_test_suite};
 use frame_system::RawOrigin;
 use sp_runtime::traits::StaticLookup;
+use crate::Pallet as NFT;
 
 pub use crate::*;
 
@@ -157,3 +157,9 @@ benchmarks! {
 	}: _(RawOrigin::Signed(bob), (0u32.into(), 0u32.into()))
 
 }
+
+impl_benchmark_test_suite!(
+    NFT,
+    crate::mock::new_test_ext(),
+    crate::mock::Test,
+);
