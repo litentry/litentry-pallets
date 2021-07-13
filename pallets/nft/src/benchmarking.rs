@@ -81,7 +81,7 @@ benchmarks! {
     // merge two simple NFT instances
     merge {
         let total = 1000;
-        let i in 1 .. 1000;
+        let i in 0 .. 999;
 
 		let alice: T::AccountId = account("alice", 0, SEED);
 		let bob: T::AccountId = account("bob", 0, SEED);
