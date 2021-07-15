@@ -1,8 +1,8 @@
 [workspace]
 members = [
-    'pallets/account-linker',
-    'pallets/nft',
-    'pallets/offchain-worker',
+    # 'pallets/account-linker',
+    # 'pallets/nft',
+    # 'pallets/offchain-worker',
     'pallets/sgx-account-linker',
 ]
 
