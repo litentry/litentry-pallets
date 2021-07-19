@@ -20,22 +20,22 @@ version = '2.0.0'
 
 [dependencies]
 
-frame-support = { git = "https://github.com/paritytech/substrate",  branch = "master", default-features = false }
-frame-system = { git = "https://github.com/paritytech/substrate",  branch = "master", default-features = false }
-sp-io = { git = "https://github.com/paritytech/substrate",  branch = "master", default-features = false }
-sp-std = { git = "https://github.com/paritytech/substrate",  branch = "master", default-features = false }
-sp-runtime = { git = "https://github.com/paritytech/substrate",  branch = "master", default-features = false, optional = true }
-frame-benchmarking = { git = "https://github.com/paritytech/substrate",  branch = "master", default-features = false, optional = true }
-sp-core = { git = "https://github.com/paritytech/substrate",  branch = "master", default-features = false, optional = true }
+frame-support = {  version = "3.0.0", default-features = false }
+frame-system = {  version = "3.0.0", default-features = false }
+sp-io = {  version = "3.0.0", default-features = false }
+sp-std = {  version = "3.0.0", default-features = false }
+sp-runtime = {  version = "3.0.0", default-features = false, optional = true }
+# frame-benchmarking = {  version = "3.0.0", default-features = false, optional = true }
+sp-core = {  version = "3.0.0", default-features = false, optional = true }
 
 log = { version = "0.4.14", default-features = false }
 sha2 = { default-features = false, version = "0.9.5" }
 ripemd160 = {default-features = false, version = "0.9.1" }
 
 [dev-dependencies]
-sp-core = { git = "https://github.com/paritytech/substrate",  branch = "master", default-features = false }
-sp-runtime = { git = "https://github.com/paritytech/substrate",  branch = "master", default-features = false }
-frame-benchmarking = { git = "https://github.com/paritytech/substrate",  branch = "master" }
+sp-core = {  version = "3.0.0", default-features = false }
+sp-runtime = {  version = "3.0.0", default-features = false }
+# frame-benchmarking = {  version = "3.0.0" }
 
 parity-crypto = {version = "0.8.0", features = ["publickey"] }
 bitcoin = { version = "0.25.2", features = ["rand"] }
@@ -53,6 +53,6 @@ std = [
     "sha2/std",
     "ripemd160/std",
     "log/std",
-    "frame-benchmarking/std",
+    # "frame-benchmarking/std",
 ]
-runtime-benchmarks = ["sp-runtime", "frame-benchmarking", "sp-core"]
+# runtime-benchmarks = ["sp-runtime", "frame-benchmarking", "sp-core"]
