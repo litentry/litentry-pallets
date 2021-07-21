@@ -273,7 +273,7 @@ pub mod pallet {
 
 			// Get my ocw index
 			let ocw_account_index = match offchain_worker_account.get::<T::AccountId>() {
-				Some(Some(account)) => Self::get_ocw_index(Some(&account)),
+				Ok(Some(account)) => Self::get_ocw_index(Some(&account)),
 				_ => Self::get_ocw_index(None),
 			};
 
@@ -327,7 +327,7 @@ pub mod pallet {
 		// Clear claim accounts in last session
 		fn clear_claim() {
 			// Remove all account index in last session
-			<ClaimAccountIndex<T>>::remove_all();
+			<ClaimAccountIndex<T>>::remove_all(None);
 
 			let accounts: Vec<T::AccountId> = <ClaimAccountSet::<T>>::iter().map(|(k, _)| k).collect();
 
@@ -337,7 +337,7 @@ pub mod pallet {
 			}
 
 			// Remove all claimed accounts
-			<ClaimAccountSet::<T>>::remove_all();
+			<ClaimAccountSet::<T>>::remove_all(None);
 		}
 
 		// Start new round of offchain worker
@@ -345,7 +345,7 @@ pub mod pallet {
 			let local_token = StorageValueRef::persistent(b"offchain-worker::token");
 
 			match local_token.get::<urls::TokenInfo>() {
-				Some(Some(token)) => {
+				Ok(Some(token)) => {
 					Self::query(block_number, &token);
 				},
 				_ => {
@@ -450,7 +450,7 @@ pub mod pallet {
 			}
 
 			// Remove all old ocw index
-			<OcwAccountIndex<T>>::remove_all();
+			<OcwAccountIndex<T>>::remove_all(None);
 
 			let mut account_index = 0_u32;
 			let mut total_imbalance = <PositiveImbalanceOf<T>>::zero();
@@ -491,7 +491,7 @@ pub mod pallet {
 			T::Reward::on_unbalanced(total_imbalance);
 
 			// Remove all ocw commit in this session after aggregation
-			<CommitAccountBalance<T>>::remove_all();
+			<CommitAccountBalance<T>>::remove_all(None);
 		}
 
 		fn increment_total_claims() {
