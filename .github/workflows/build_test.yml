@@ -26,7 +26,7 @@ jobs:
     - name: Build
       run: cargo build
     - name: Run unit tests
-      run: cargo test --verbose
+      run: cargo test --verbose --features runtime-benchmarks
 
   deploy:
 
