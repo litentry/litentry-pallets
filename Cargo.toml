@@ -1,9 +1,9 @@
 [workspace]
 members = [
-    # 'pallets/account-linker',
+    'pallets/account-linker',
     # 'pallets/nft',
     # 'pallets/offchain-worker',
-    'pallets/sgx-account-linker',
+    #'pallets/sgx-account-linker',
 ]
 
 [profile.dev]
@@ -49,3 +49,4 @@ panic = 'unwind'
 incremental = false
 codegen-units = 16
 rpath = false
+
