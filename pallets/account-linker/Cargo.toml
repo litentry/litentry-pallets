@@ -22,40 +22,34 @@ version = '2.0.0'
 default-features = false
 git = "https://github.com/paritytech/substrate.git"
 branch = "master"
-version = '3.0.0'
 
 [dependencies.frame-system]
 default-features = false
 package = 'frame-system'
 git = "https://github.com/paritytech/substrate.git"
 branch = "master"
-version = '3.0.0'
 
 [dependencies.sp-io]
 default-features = false
 git = "https://github.com/paritytech/substrate.git"
 branch = "master"
-version = '3.0.0'
 
 [dependencies.sp-core]
 default-features = false
 optional = true
 git = "https://github.com/paritytech/substrate.git"
 branch = "master"
-version = '3.0.0'
 
 [dependencies.sp-runtime]
 default-features = false
 optional = true
 git = "https://github.com/paritytech/substrate.git"
 branch = "master"
-version = '3.0.0'
 
 [dependencies.sp-std]
 default-features = false
 git = "https://github.com/paritytech/substrate.git"
 branch = "master"
-version = '3.0.0'
 
 ## benchmarking stuff
 [dependencies.frame-benchmarking]
@@ -63,26 +57,22 @@ default-features = false
 optional = true
 git = "https://github.com/paritytech/substrate.git"
 branch = "master"
-version = '3.1.0'
 
 [dev-dependencies.sp-core]
 default-features = false
 git = "https://github.com/paritytech/substrate.git"
 branch = "master"
-version = '3.0.0'
 
 [dev-dependencies.sp-runtime]
 default-features = false
 git = "https://github.com/paritytech/substrate.git"
 branch = "master"
-version = '3.0.0'
 
 ## benchmarking stuff
 [dev-dependencies.frame-benchmarking]
 default-features = false
 git = "https://github.com/paritytech/substrate.git"
 branch = "master"
-version = '3.1.0'
 
 [dependencies]
 

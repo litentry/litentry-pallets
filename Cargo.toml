@@ -3,7 +3,7 @@ members = [
     'pallets/account-linker',
     # 'pallets/nft',
     # 'pallets/offchain-worker',
-    'pallets/sgx-account-linker',
+    #'pallets/sgx-account-linker',
 ]
 
 [profile.dev]
