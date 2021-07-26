@@ -33,6 +33,9 @@
 
 use enumflags2::BitFlags;
 use frame_support::{pallet_prelude::*, transactional};
+use frame_support::traits::{
+	Currency, Get, ExistenceRequirement::KeepAlive,
+};
 use frame_system::pallet_prelude::*;
 use orml_traits::NFT;
 #[cfg(feature = "std")]
@@ -125,6 +128,8 @@ pub enum ClassType<ID> {
 pub type TokenIdOf<T> = <T as orml_nft::Config>::TokenId;
 pub type ClassIdOf<T> = <T as orml_nft::Config>::ClassId;
 pub type BlockNumberOf<T> = <T as frame_system::Config>::BlockNumber;
+pub type BalanceOf<T> =
+	<<T as Config>::Currency as Currency<<T as frame_system::Config>::AccountId>>::Balance;
 
 #[frame_support::pallet]
 pub mod pallet {
@@ -138,10 +143,21 @@ pub mod pallet {
 			TokenData = TokenData,
 		>
 	{
+
+		/// The the currency to pay NFT class creation fee.
+		type Currency: Currency<Self::AccountId>;
+
+		/// The overarching event type.
 		type Event: From<Event<Self>> + IsType<<Self as frame_system::Config>::Event>;
 
 		/// Weight information for the extrinsics in this module.
 		type WeightInfo: WeightInfo;
+
+		/// The amount of fee to pay to create an NFT class.
+		type ClassCreationFee: Get<BalanceOf<Self>>;
+
+		/// Treasury address
+		type Pot: Get<Self::AccountId>;
 	}
 
 	#[pallet::error]
@@ -176,6 +192,8 @@ pub mod pallet {
 		TokenAlreadyClaimed,
 		/// user claim verification fails
 		UserNotInClaimList,
+		/// user cannot pay NFT class creation fee
+		CreationFeeNotPaid,
 	}
 
 	#[pallet::event]
@@ -242,7 +260,9 @@ pub mod pallet {
 			let who = ensure_signed(origin)?;
 			let next_id = orml_nft::Pallet::<T>::next_class_id();
 
-			// TODO charge
+			let fee = T::ClassCreationFee::get();
+			T::Currency::transfer(&who, &T::Pot::get(), fee, KeepAlive)
+				.map_err(|_| Error::<T>::CreationFeeNotPaid)?;
 
 			match class_type {
 				ClassType::Merge(id1, id2, burn) => {
