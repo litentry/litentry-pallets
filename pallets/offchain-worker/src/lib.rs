@@ -135,6 +135,8 @@ pub mod pallet {
 
 			// Start query at second block of a session
 			if index_in_session == 1 {
+                // TODO make use of the returned value of start,
+                //      and adjust the logics of OCW accordingly
 				let _ = Self::start(block_number);
 			}
 		}
