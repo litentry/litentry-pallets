@@ -23,6 +23,7 @@ frame_support::construct_runtime!(
 		UncheckedExtrinsic = UncheckedExtrinsic,
 	{
 		System: frame_system::{Pallet, Call, Config, Storage, Event<T>},
+		Balances: pallet_balances::{Pallet, Call, Storage, Config<T>, Event<T>},
 		OrmlNFT: orml_nft::{Pallet, Storage, Config<T>},
 		Nft: nft::{Pallet, Call, Storage, Event<T>},
 	}
@@ -51,7 +52,7 @@ impl system::Config for Test {
 	type BlockHashCount = BlockHashCount;
 	type Version = ();
 	type PalletInfo = PalletInfo;
-	type AccountData = ();
+	type AccountData = pallet_balances::AccountData<u64>;
 	type OnNewAccount = ();
 	type OnKilledAccount = ();
 	type SystemWeightInfo = ();
@@ -59,9 +60,35 @@ impl system::Config for Test {
 	type OnSetCode = ();
 }
 
+parameter_types! {
+	pub const ExistentialDeposit: u64 = 1;
+	pub const MaxLocks: u32 = 10;
+}
+
+impl pallet_balances::Config for Test {
+	type MaxReserves = ();
+	type ReserveIdentifier = [u8; 8];
+	type MaxLocks = MaxLocks;
+	type Balance = u64;
+	type Event = Event;
+	type DustRemoval = ();
+	type ExistentialDeposit = ExistentialDeposit;
+	type AccountStore = System;
+	type WeightInfo = ();
+}
+
+parameter_types! {
+	pub const ClassCreationFee: u64 = 100;
+	pub const Pot: AccountId32 = AccountId32::new([9u8; 32]);
+}
+
 impl nft::Config for Test {
+	type Currency = Balances;
 	type Event = Event;
 	type WeightInfo = ();
+	type ClassCreationFee = ClassCreationFee;
+	type Pot = Pot;
+	
 }
 
 parameter_types! {
