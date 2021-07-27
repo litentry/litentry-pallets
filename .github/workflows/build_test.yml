@@ -38,7 +38,7 @@ jobs:
     - uses: actions/checkout@v2
     - name: Docs
       run: |
-        cargo doc --no-deps # --all-features
+        cargo doc --no-deps --all-features
         echo "<meta http-equiv=\"refresh\" content=\"0; URL=pallet_account_linker/index.html\"/>" > target/doc/index.html
     - name: Deploy
       uses: JamesIves/github-pages-deploy-action@4.1.4
