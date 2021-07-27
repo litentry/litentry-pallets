@@ -44,8 +44,7 @@ use sp_core::hashing::keccak_256;
 use sp_runtime::{traits::StaticLookup, DispatchResult, RuntimeDebug};
 use sp_std::vec::Vec;
 
-#[cfg(test)]
-mod mock;
+#[cfg(test)]mod mock;
 
 #[cfg(test)]
 mod tests;
@@ -60,6 +59,8 @@ pub use weights::WeightInfo;
 pub type CID = Vec<u8>;
 
 pub type HashByte32 = [u8; 32];
+
+pub const CREATION_FEE: u32 = 100;
 
 #[repr(u8)]
 #[derive(Encode, Decode, Clone, Copy, BitFlags, RuntimeDebug, PartialEq, Eq)]
