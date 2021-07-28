@@ -155,9 +155,11 @@ pub mod pallet {
 		type WeightInfo: WeightInfo;
 
 		/// The amount of fee to pay to create an NFT class.
+		#[pallet::constant]
 		type ClassCreationFee: Get<BalanceOf<Self>>;
 
 		/// Treasury address
+		#[pallet::constant]
 		type Pot: Get<Self::AccountId>;
 	}
 
