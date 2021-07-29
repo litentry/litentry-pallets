@@ -35,11 +35,13 @@
 // --output=./pallets/account-linker/src/weights.rs
 // --template=./.maintain/frame-weight-template.hbs
 
-
 #![allow(unused_parens)]
 #![allow(unused_imports)]
 
-use frame_support::{traits::Get, weights::{Weight, constants::RocksDbWeight}};
+use frame_support::{
+	traits::Get,
+	weights::{constants::RocksDbWeight, Weight},
+};
 use sp_std::marker::PhantomData;
 
 /// Weight functions needed for pallet_account_linker.
@@ -64,13 +66,12 @@ impl<T: frame_system::Config> WeightInfo for SubstrateWeight<T> {
 			.saturating_add(T::DbWeight::get().writes(1 as Weight))
 	}
 	fn link_polkadot() -> Weight {
-		(335_000_000 as Weight)
-			.saturating_add(T::DbWeight::get().reads(1 as Weight))
+		(335_000_000 as Weight).saturating_add(T::DbWeight::get().reads(1 as Weight))
 	}
 	fn accept_polkadot() -> Weight {
 		(335_000_000 as Weight)
-		.saturating_add(T::DbWeight::get().reads(1 as Weight))
-		.saturating_add(T::DbWeight::get().writes(1 as Weight))
+			.saturating_add(T::DbWeight::get().reads(1 as Weight))
+			.saturating_add(T::DbWeight::get().writes(1 as Weight))
 	}
 }
 
@@ -87,12 +88,11 @@ impl WeightInfo for () {
 			.saturating_add(RocksDbWeight::get().writes(1 as Weight))
 	}
 	fn link_polkadot() -> Weight {
-		(335_000_000 as Weight)
-			.saturating_add(RocksDbWeight::get().reads(1 as Weight))
+		(335_000_000 as Weight).saturating_add(RocksDbWeight::get().reads(1 as Weight))
 	}
 	fn accept_polkadot() -> Weight {
 		(335_000_000 as Weight)
-		.saturating_add(RocksDbWeight::get().reads(1 as Weight))
-		.saturating_add(RocksDbWeight::get().writes(1 as Weight))
+			.saturating_add(RocksDbWeight::get().reads(1 as Weight))
+			.saturating_add(RocksDbWeight::get().writes(1 as Weight))
 	}
 }

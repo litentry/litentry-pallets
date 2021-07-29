@@ -1,11 +1,10 @@
 #![cfg(feature = "runtime-benchmarks")]
 
-use sp_std::prelude::*;
-use sp_std::vec;
+use crate::Pallet as NFT;
 use frame_benchmarking::{account, benchmarks, impl_benchmark_test_suite};
 use frame_system::RawOrigin;
 use sp_runtime::traits::StaticLookup;
-use crate::Pallet as NFT;
+use sp_std::{prelude::*, vec};
 
 pub use crate::*;
 
@@ -15,8 +14,8 @@ benchmarks! {
 	// create simple NFT class
 	create_class {
 		let alice: T::AccountId = account("alice", 0, SEED);
-	}: _(RawOrigin::Signed(alice), 
-			vec![1], 
+	}: _(RawOrigin::Signed(alice),
+			vec![1],
 			Properties(ClassProperty::Transferable | ClassProperty::Burnable),
 			None,
 			None,
@@ -32,8 +31,8 @@ benchmarks! {
 		let bob_lookup = T::Lookup::unlookup(bob);
 
 		crate::Pallet::<T>::create_class(
-			RawOrigin::Signed(alice.clone()).into(), 
-			vec![1], 
+			RawOrigin::Signed(alice.clone()).into(),
+			vec![1],
 			Properties(ClassProperty::Transferable | ClassProperty::Burnable),
 			None,
 			None,
@@ -69,8 +68,8 @@ benchmarks! {
 		]];
 
 		crate::Pallet::<T>::create_class(
-			RawOrigin::Signed(alice.clone()).into(), 
-			vec![1], 
+			RawOrigin::Signed(alice.clone()).into(),
+			vec![1],
 			Properties(ClassProperty::Transferable | ClassProperty::Burnable),
 			None,
 			None,
@@ -88,8 +87,8 @@ benchmarks! {
 		let bob_lookup = T::Lookup::unlookup(bob.clone());
 
 		crate::Pallet::<T>::create_class(
-			RawOrigin::Signed(alice.clone()).into(), 
-			vec![1], 
+			RawOrigin::Signed(alice.clone()).into(),
+			vec![1],
 			Properties(ClassProperty::Transferable | ClassProperty::Burnable),
 			None,
 			None,
@@ -97,24 +96,24 @@ benchmarks! {
 		)?;
 
 		crate::Pallet::<T>::create_class(
-			RawOrigin::Signed(alice.clone()).into(), 
-			vec![1], 
+			RawOrigin::Signed(alice.clone()).into(),
+			vec![1],
 			Properties(ClassProperty::Transferable | ClassProperty::Burnable),
 			None,
 			None,
 			ClassType::Simple(999999999)
-		)?; 
+		)?;
 
 		crate::Pallet::<T>::mint(RawOrigin::Signed(alice.clone()).into(), bob_lookup.clone(), 0u32.into(), vec![1], total)?;
 
 		crate::Pallet::<T>::create_class(
-			RawOrigin::Signed(alice.clone()).into(), 
-			vec![1], 
+			RawOrigin::Signed(alice.clone()).into(),
+			vec![1],
 			Properties(ClassProperty::Transferable | ClassProperty::Burnable),
 			None,
 			None,
 			ClassType::Merge(0u32.into(), 1u32.into(), false)
-		)?; 
+		)?;
 
 		crate::Pallet::<T>::mint(RawOrigin::Signed(alice).into(), bob_lookup, 1u32.into(), vec![1], total)?;
 
@@ -128,8 +127,8 @@ benchmarks! {
 		let bob_lookup = T::Lookup::unlookup(bob.clone());
 
 		crate::Pallet::<T>::create_class(
-			RawOrigin::Signed(alice.clone()).into(), 
-			vec![1], 
+			RawOrigin::Signed(alice.clone()).into(),
+			vec![1],
 			Properties(ClassProperty::Transferable | ClassProperty::Burnable),
 			None,
 			None,
@@ -146,20 +145,16 @@ benchmarks! {
 		let bob_lookup = T::Lookup::unlookup(bob.clone());
 
 		crate::Pallet::<T>::create_class(
-			RawOrigin::Signed(alice.clone()).into(), 
-			vec![1], 
+			RawOrigin::Signed(alice.clone()).into(),
+			vec![1],
 			Properties(ClassProperty::Transferable | ClassProperty::Burnable),
 			None,
 			None,
 			ClassType::Simple(999999999)
-		)?;		
+		)?;
 		crate::Pallet::<T>::mint(RawOrigin::Signed(alice).into(), bob_lookup, 0u32.into(), vec![1], 1)?;
 	}: _(RawOrigin::Signed(bob), (0u32.into(), 0u32.into()))
 
 }
 
-impl_benchmark_test_suite!(
-	NFT,
-	crate::mock::new_test_ext(),
-	crate::mock::Test,
-);
+impl_benchmark_test_suite!(NFT, crate::mock::new_test_ext(), crate::mock::Test,);

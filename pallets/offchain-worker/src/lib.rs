@@ -12,8 +12,8 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 
 // everything define in pallet mod must be public
+use codec::{Codec, Decode, Encode};
 pub use pallet::*;
-use codec::{Codec, Encode, Decode};
 use sp_core::crypto::KeyTypeId;
 
 pub mod urls;
@@ -37,24 +37,30 @@ pub mod pallet {
 		account: AccountId,
 		data_source: urls::DataSource,
 	}
-	
+
 	pub mod crypto {
 		use super::KEY_TYPE;
+		use sp_core::sr25519::Signature as Sr25519Signature;
 		use sp_runtime::{
 			app_crypto::{app_crypto, sr25519},
-			traits::Verify, MultiSignature, MultiSigner,
+			traits::Verify,
+			MultiSignature, MultiSigner,
 		};
-		use sp_core::sr25519::Signature as Sr25519Signature;
 		app_crypto!(sr25519, KEY_TYPE);
-	
+
 		pub struct TestAuthId;
 		impl frame_system::offchain::AppCrypto<MultiSigner, MultiSignature> for TestAuthId {
 			type RuntimeAppPublic = Public;
 			type GenericSignature = sp_core::sr25519::Signature;
 			type GenericPublic = sp_core::sr25519::Public;
 		}
-	
-		impl frame_system::offchain::AppCrypto<<Sr25519Signature as Verify>::Signer, Sr25519Signature> for TestAuthId {
+
+		impl
+			frame_system::offchain::AppCrypto<
+				<Sr25519Signature as Verify>::Signer,
+				Sr25519Signature,
+			> for TestAuthId
+		{
 			type RuntimeAppPublic = Public;
 			type GenericSignature = sp_core::sr25519::Signature;
 			type GenericPublic = sp_core::sr25519::Public;
@@ -62,28 +68,44 @@ pub mod pallet {
 	}
 
 	use crate::*;
-	use frame_system::pallet_prelude::*;
-	use core::{convert::TryInto,};
-	use sp_std::{prelude::*, fmt::Debug, collections::btree_map::{BTreeMap, Entry,}};
+	use core::convert::TryInto;
+	use frame_support::{dispatch::DispatchResultWithPostInfo, pallet_prelude::*};
 	use frame_system::{
-	ensure_signed,
-	offchain::{CreateSignedTransaction, Signer, AppCrypto, SendSignedTransaction,},
+		ensure_signed,
+		offchain::{AppCrypto, CreateSignedTransaction, SendSignedTransaction, Signer},
+		pallet_prelude::*,
 	};
-	use frame_support::{dispatch::DispatchResultWithPostInfo, pallet_prelude::*,
-		};
-	
-	use frame_support::{dispatch, traits::{Currency, OnUnbalanced, Imbalance},};
-	use sp_runtime::offchain::{storage::StorageValueRef,};
-	use sp_runtime::traits::{AtLeast32BitUnsigned, Member, MaybeSerializeDeserialize,};
+	use sp_std::{
+		collections::btree_map::{BTreeMap, Entry},
+		fmt::Debug,
+		prelude::*,
+	};
+
+	use frame_support::{
+		dispatch,
+		traits::{Currency, Imbalance, OnUnbalanced},
+	};
+	use sp_runtime::{
+		offchain::storage::StorageValueRef,
+		traits::{AtLeast32BitUnsigned, MaybeSerializeDeserialize, Member},
+	};
 	use weights::WeightInfo;
 
-	type PositiveImbalanceOf<T> =
-	<<T as Config>::Currency as Currency<<T as frame_system::Config>::AccountId>>::PositiveImbalance;
+	type PositiveImbalanceOf<T> = <<T as Config>::Currency as Currency<
+		<T as frame_system::Config>::AccountId,
+	>>::PositiveImbalance;
 
 	#[pallet::config]
-	pub trait Config: frame_system::Config + account_linker::Config + CreateSignedTransaction<Call<Self>> {
-		type Balance: Parameter + Member + AtLeast32BitUnsigned + Codec + Default + Copy +
-			MaybeSerializeDeserialize;
+	pub trait Config:
+		frame_system::Config + account_linker::Config + CreateSignedTransaction<Call<Self>>
+	{
+		type Balance: Parameter
+			+ Member
+			+ AtLeast32BitUnsigned
+			+ Codec
+			+ Default
+			+ Copy
+			+ MaybeSerializeDeserialize;
 		type Event: From<Event<Self>> + IsType<<Self as frame_system::Config>::Event>;
 		type Call: From<Call<Self>>;
 		type AuthorityId: AppCrypto<Self::Public, Self::Signature>;
@@ -112,7 +134,8 @@ pub mod pallet {
 			log::info!("ocw on_finalize.{:?}.", block_number);
 
 			let query_session_length: usize = T::QuerySessionLength::get() as usize;
-			let index_in_session = TryInto::<usize>::try_into(block_number).map_or(query_session_length, |bn| bn % query_session_length);
+			let index_in_session = TryInto::<usize>::try_into(block_number)
+				.map_or(query_session_length, |bn| bn % query_session_length);
 			let last_block_number = query_session_length - 1;
 
 			// Clear claim at the first block of a session
@@ -129,7 +152,8 @@ pub mod pallet {
 		fn offchain_worker(block_number: T::BlockNumber) {
 			let query_session_length: usize = T::QuerySessionLength::get() as usize;
 
-			let index_in_session = TryInto::<usize>::try_into(block_number).map_or(query_session_length, |bn| bn % query_session_length);
+			let index_in_session = TryInto::<usize>::try_into(block_number)
+				.map_or(query_session_length, |bn| bn % query_session_length);
 
 			// Start query at second block of a session
 			if index_in_session == 1 {
@@ -143,7 +167,7 @@ pub mod pallet {
 	pub enum Event<T: Config> {
 		BalanceGot(T::AccountId, T::BlockNumber, Option<u128>, Option<u128>),
 	}
-	
+
 	// Errors inform users that something went wrong.
 	#[pallet::error]
 	pub enum Error<T> {
@@ -170,34 +194,45 @@ pub mod pallet {
 	#[pallet::storage]
 	#[pallet::getter(fn total_claims)]
 	pub(super) type TotalClaims<T: Config> = StorageValue<_, u64>;
-	
+
 	#[pallet::storage]
 	#[pallet::getter(fn query_account_set)]
-	pub(super) type ClaimAccountSet<T: Config> =  StorageMap<_, Blake2_128Concat, T::AccountId, (), ValueQuery>;
+	pub(super) type ClaimAccountSet<T: Config> =
+		StorageMap<_, Blake2_128Concat, T::AccountId, (), ValueQuery>;
 
 	#[pallet::storage]
 	#[pallet::getter(fn claim_account_index)]
-	pub(super) type ClaimAccountIndex<T: Config> =  StorageMap<_, Blake2_128Concat, T::AccountId, Option<u32>, ValueQuery>;
-	
+	pub(super) type ClaimAccountIndex<T: Config> =
+		StorageMap<_, Blake2_128Concat, T::AccountId, Option<u32>, ValueQuery>;
+
 	#[pallet::storage]
 	#[pallet::getter(fn account_balance)]
-	pub(super) type AccountBalance<T: Config> =  StorageMap<_, Blake2_128Concat, T::AccountId, (Option<u128>, Option<u128>), ValueQuery>;
+	pub(super) type AccountBalance<T: Config> =
+		StorageMap<_, Blake2_128Concat, T::AccountId, (Option<u128>, Option<u128>), ValueQuery>;
 
 	/// Record account's btc and ethereum balance
 	#[pallet::storage]
 	#[pallet::getter(fn commit_account_balance)]
-	pub(super) type CommitAccountBalance<T: Config> =  StorageDoubleMap<_, Blake2_128Concat, T::AccountId, Blake2_128Concat, QueryKey<T::AccountId>, Option<u128>, ValueQuery>;
+	pub(super) type CommitAccountBalance<T: Config> = StorageDoubleMap<
+		_,
+		Blake2_128Concat,
+		T::AccountId,
+		Blake2_128Concat,
+		QueryKey<T::AccountId>,
+		Option<u128>,
+		ValueQuery,
+	>;
 
 	#[pallet::storage]
 	#[pallet::getter(fn ocw_account_index)]
-	pub(super) type OcwAccountIndex<T: Config> =  StorageMap<_, Blake2_128Concat, T::AccountId, Option<u32>, ValueQuery>;
-
+	pub(super) type OcwAccountIndex<T: Config> =
+		StorageMap<_, Blake2_128Concat, T::AccountId, Option<u32>, ValueQuery>;
 
 	#[pallet::call]
-	impl<T:Config> Pallet<T> {
+	impl<T: Config> Pallet<T> {
 		/// Request the Litentry to query balances of linked Eth and BTC accounts.
 		///
-		/// This will alter `ClaimAccountSet` in storage. 
+		/// This will alter `ClaimAccountSet` in storage.
 		///
 		/// The dispatch origin for this call is `account`.
 		///
@@ -210,13 +245,16 @@ pub mod pallet {
 		///     - Killing: 35.11 µs
 		/// - DB Weight: 1 Read, 1 Write
 		/// # </weight>
-		/// 
+		///
 		#[pallet::weight(<T as pallet::Config>::WeightInfo::asset_claim())]
-		pub fn asset_claim(origin: OriginFor<T>,) -> DispatchResultWithPostInfo {
+		pub fn asset_claim(origin: OriginFor<T>) -> DispatchResultWithPostInfo {
 			let account = ensure_signed(origin)?;
 
 			// If the same claim already in set
-			ensure!(!<ClaimAccountSet<T>>::contains_key(&account), Error::<T>::AccountAlreadyInClaimlist);
+			ensure!(
+				!<ClaimAccountSet<T>>::contains_key(&account),
+				Error::<T>::AccountAlreadyInClaimlist
+			);
 
 			<ClaimAccountSet<T>>::insert(&account, ());
 
@@ -226,12 +264,12 @@ pub mod pallet {
 		/// Offchain worker submit linked Eth and BTC balance via extrinsic.
 		///
 		/// Extrinsic Arguments.
-		/// account: the target account offchain-worker query data for. 
+		/// account: the target account offchain-worker query data for.
 		/// block_number: the block number for offchain-worker trigger the query.
 		/// data_source: the enum for different data source defined in urls.rs.
 		/// balance: the balance returned from data source.
-		/// 
-		/// This will alter `CommitAccountBalance` in storage. 
+		///
+		/// This will alter `CommitAccountBalance` in storage.
 		///
 		/// The dispatch origin for this call is `account`.
 		///
@@ -244,22 +282,39 @@ pub mod pallet {
 		///     - Killing: 35.11 µs
 		/// - DB Weight: 1 Read, 1 Write
 		/// # </weight>
-		/// 
+		///
 		#[pallet::weight(<T as pallet::Config>::WeightInfo::submit_balance())]
-		pub fn submit_balance(origin: OriginFor<T>, account: T::AccountId, block_number: T::BlockNumber, data_source: urls::DataSource, balance: u128)-> DispatchResultWithPostInfo {
+		pub fn submit_balance(
+			origin: OriginFor<T>,
+			account: T::AccountId,
+			block_number: T::BlockNumber,
+			data_source: urls::DataSource,
+			balance: u128,
+		) -> DispatchResultWithPostInfo {
 			let sender = ensure_signed(origin)?;
 
 			// Check data source
 			Self::valid_data_source(data_source)?;
 
 			// Check block number
-			Self::valid_commit_block_number(block_number, <frame_system::Pallet<T>>::block_number())?;
+			Self::valid_commit_block_number(
+				block_number,
+				<frame_system::Pallet<T>>::block_number(),
+			)?;
 
 			// Check the commit slot
-			Self::valid_commit_slot(account.clone(), Self::get_ocw_index(Some(&account)), data_source)?;
+			Self::valid_commit_slot(
+				account.clone(),
+				Self::get_ocw_index(Some(&account)),
+				data_source,
+			)?;
 
 			// put query result on chain
-			CommitAccountBalance::<T>::insert(&sender, &QueryKey{account, data_source}, Some(balance));
+			CommitAccountBalance::<T>::insert(
+				&sender,
+				&QueryKey { account, data_source },
+				Some(balance),
+			);
 
 			Ok(().into())
 		}
@@ -289,47 +344,61 @@ pub mod pallet {
 				let account: T::AccountId = item.0;
 				match item.1 {
 					Some(account_index) => {
-
 						let mut source_index = 0;
 						for source in &urls::DATA_SOURCE_LIST {
-							let task_index = urls::TOTAL_DATA_SOURCE_NUMBER * account_index + source_index;
+							let task_index =
+								urls::TOTAL_DATA_SOURCE_NUMBER * account_index + source_index;
 							if task_index % ocw_length == ocw_account_index {
 								match source {
-									urls::DataSource::EthEtherScan => {
+									urls::DataSource::EthEtherScan =>
 										match Self::get_balance_from_etherscan(&account, info) {
-											Some(balance) => Self::offchain_signed_tx(account.clone(), block_number, urls::DataSource::EthEtherScan, balance),
-											None => ()
-										}
-									},
-									urls::DataSource::EthInfura => {
+											Some(balance) => Self::offchain_signed_tx(
+												account.clone(),
+												block_number,
+												urls::DataSource::EthEtherScan,
+												balance,
+											),
+											None => (),
+										},
+									urls::DataSource::EthInfura =>
 										match Self::get_balance_from_infura(&account, info) {
-											Some(balance) => Self::offchain_signed_tx(account.clone(), block_number, urls::DataSource::EthInfura, balance),
-											None => ()
-										}
-									},
-									urls::DataSource::BtcBlockChain => {
-										match Self::get_balance_from_blockchain_info(&account, info) {
-											Some(balance) => Self::offchain_signed_tx(account.clone(), block_number, urls::DataSource::BtcBlockChain, balance),
-											None => ()
-										}
-									},
+											Some(balance) => Self::offchain_signed_tx(
+												account.clone(),
+												block_number,
+												urls::DataSource::EthInfura,
+												balance,
+											),
+											None => (),
+										},
+									urls::DataSource::BtcBlockChain =>
+										match Self::get_balance_from_blockchain_info(&account, info)
+										{
+											Some(balance) => Self::offchain_signed_tx(
+												account.clone(),
+												block_number,
+												urls::DataSource::BtcBlockChain,
+												balance,
+											),
+											None => (),
+										},
 									_ => (),
 								};
 							}
 							source_index = source_index + 1;
-					}	
-				},
-				None => (),
+						}
+					},
+					None => (),
+				}
 			}
 		}
-	}
 
 		// Clear claim accounts in last session
 		fn clear_claim() {
 			// Remove all account index in last session
 			<ClaimAccountIndex<T>>::remove_all(None);
 
-			let accounts: Vec<T::AccountId> = <ClaimAccountSet::<T>>::iter().map(|(k, _)| k).collect();
+			let accounts: Vec<T::AccountId> =
+				<ClaimAccountSet<T>>::iter().map(|(k, _)| k).collect();
 
 			// Set account index
 			for (index, account) in accounts.iter().enumerate() {
@@ -337,7 +406,7 @@ pub mod pallet {
 			}
 
 			// Remove all claimed accounts
-			<ClaimAccountSet::<T>>::remove_all(None);
+			<ClaimAccountSet<T>>::remove_all(None);
 		}
 
 		// Start new round of offchain worker
@@ -367,28 +436,32 @@ pub mod pallet {
 		/// use vector's index as new off-chain worker index, make it variable and random
 		/// 7. finally, remove all intermediate on-chain storage, make it empty for next round query
 		fn aggregate_query_result() {
-			let mut result_map: BTreeMap<(T::AccountId, urls::BlockChainType, u128), u32> = BTreeMap::new();
-			let mut result_key: BTreeMap<(T::AccountId, urls::BlockChainType), Vec<u128>> = BTreeMap::new();
+			let mut result_map: BTreeMap<(T::AccountId, urls::BlockChainType, u128), u32> =
+				BTreeMap::new();
+			let mut result_key: BTreeMap<(T::AccountId, urls::BlockChainType), Vec<u128>> =
+				BTreeMap::new();
 			// Statistics for result
 			for result in <CommitAccountBalance<T>>::iter() {
-
 				let account: T::AccountId = result.1.account;
 				let data_source: urls::DataSource = result.1.data_source;
-				let block_type: urls::BlockChainType = urls::data_source_to_block_chain_type(data_source);
+				let block_type: urls::BlockChainType =
+					urls::data_source_to_block_chain_type(data_source);
 
 				match result.2 {
 					Some(balance) => {
 						let map_key = (account.clone(), block_type, balance);
 
 						result_map.entry(map_key.clone()).or_insert(1_32);
-		
+
 						match result_map.entry(map_key.clone()) {
 							Entry::Occupied(mut entry) => {
 								*entry.get_mut() = entry.get() + 1;
 							},
-							Entry::Vacant(v) => {v.insert(1_u32);} ,
+							Entry::Vacant(v) => {
+								v.insert(1_u32);
+							},
 						};
-		
+
 						let key_key = (account, block_type);
 						match result_key.get(&key_key) {
 							Some(balance_vec) => {
@@ -396,7 +469,7 @@ pub mod pallet {
 								for item in balance_vec.iter() {
 									if *item == balance {
 										found = true;
-										break;
+										break
 									}
 								}
 								if !found {
@@ -405,7 +478,9 @@ pub mod pallet {
 									result_key.insert(key_key, new_balance_vec);
 								}
 							},
-							None => {result_key.insert(key_key, vec![balance]);},
+							None => {
+								result_key.insert(key_key, vec![balance]);
+							},
 						};
 					},
 					None => (),
@@ -413,10 +488,11 @@ pub mod pallet {
 			}
 
 			// Store on chain, record_map will used to reward ocw.
-			let mut record_map: BTreeMap<(T::AccountId, urls::BlockChainType), u128> = BTreeMap::new();
+			let mut record_map: BTreeMap<(T::AccountId, urls::BlockChainType), u128> =
+				BTreeMap::new();
 			for result in result_key.iter() {
-				let account: T::AccountId = result.0.0.clone();
-				let block_type: urls::BlockChainType = result.0.1;
+				let account: T::AccountId = result.0 .0.clone();
+				let block_type: urls::BlockChainType = result.0 .1;
 
 				let mut most_value = 0_u128;
 				let mut most_times = 0_u32;
@@ -424,12 +500,11 @@ pub mod pallet {
 				for balance in result.1 {
 					let key = (account.clone(), block_type, *balance);
 					match result_map.get(&key) {
-						Some(frequence) => {
+						Some(frequence) =>
 							if *frequence > most_times {
 								most_times = *frequence;
 								most_value = *balance;
-							}
-						},
+							},
 						None => {},
 					}
 				}
@@ -437,14 +512,10 @@ pub mod pallet {
 
 				// Update balance on chain
 				if block_type == urls::BlockChainType::ETH {
-					<AccountBalance<T>>::mutate(account,
-						|value| value.1 = Some(most_value)
-					);
+					<AccountBalance<T>>::mutate(account, |value| value.1 = Some(most_value));
 					Self::increment_total_claims();
 				} else if block_type == urls::BlockChainType::BTC {
-					<AccountBalance<T>>::mutate(account,
-						|value| value.0 = Some(most_value)
-					);
+					<AccountBalance<T>>::mutate(account, |value| value.0 = Some(most_value));
 					Self::increment_total_claims();
 				}
 			}
@@ -460,7 +531,8 @@ pub mod pallet {
 				let ocw_account: T::AccountId = result.0;
 				let query_account: T::AccountId = result.1.account;
 				let data_source: urls::DataSource = result.1.data_source;
-				let block_type: urls::BlockChainType = urls::data_source_to_block_chain_type(data_source);
+				let block_type: urls::BlockChainType =
+					urls::data_source_to_block_chain_type(data_source);
 
 				match result.2 {
 					Some(committed_balance) => {
@@ -469,7 +541,11 @@ pub mod pallet {
 							Some(balance) => {
 								// balance matched
 								if *balance == committed_balance {
-									let r = T::Currency::deposit_into_existing(&ocw_account, T::OcwQueryReward::get()).ok();
+									let r = T::Currency::deposit_into_existing(
+										&ocw_account,
+										T::OcwQueryReward::get(),
+									)
+									.ok();
 									total_imbalance.maybe_subsume(r);
 								}
 							},
@@ -485,7 +561,7 @@ pub mod pallet {
 						}
 					},
 					None => (),
-				}				
+				}
 			}
 
 			T::Reward::on_unbalanced(total_imbalance);
@@ -506,7 +582,11 @@ pub mod pallet {
 		/// Each off-chain worker has index in the off-chain worker queue
 		/// Each query also has index in the query task queue
 		/// The method used to check if the both index are matched or not
-		fn valid_commit_slot(account: T::AccountId, ocw_index: u32, data_source: urls::DataSource) -> dispatch::DispatchResult {
+		fn valid_commit_slot(
+			account: T::AccountId,
+			ocw_index: u32,
+			data_source: urls::DataSource,
+		) -> dispatch::DispatchResult {
 			// account claimed the asset query
 			let ocw_account_index = Self::get_account_index(account)?;
 
@@ -530,10 +610,12 @@ pub mod pallet {
 			let query_task_redudancy: u32 = T::QueryTaskRedundancy::get();
 
 			// task number per round
-			let total_task_per_round = urls::TOTAL_DATA_SOURCE_NUMBER * Self::get_claim_account_length();
+			let total_task_per_round =
+				urls::TOTAL_DATA_SOURCE_NUMBER * Self::get_claim_account_length();
 
 			// task index in the first round
-			let task_base_index = data_source_index + ocw_account_index * urls::TOTAL_DATA_SOURCE_NUMBER;
+			let task_base_index =
+				data_source_index + ocw_account_index * urls::TOTAL_DATA_SOURCE_NUMBER;
 
 			let mut round: u32 = 0;
 			while round < query_task_redudancy {
@@ -570,23 +652,31 @@ pub mod pallet {
 		}
 
 		// Check the block number
-		fn valid_commit_block_number(commit_block_number: T::BlockNumber, current_block_number: T::BlockNumber) -> dispatch::DispatchResult {
+		fn valid_commit_block_number(
+			commit_block_number: T::BlockNumber,
+			current_block_number: T::BlockNumber,
+		) -> dispatch::DispatchResult {
 			let zero_block: u32 = 0;
-			let commit_block_number: u32 = TryInto::<usize>::try_into(commit_block_number).map_or(zero_block, |block_number| block_number as u32);
-			let current_block_number: u32 = TryInto::<usize>::try_into(current_block_number).map_or(zero_block, |block_number| block_number as u32);
+			let commit_block_number: u32 = TryInto::<usize>::try_into(commit_block_number)
+				.map_or(zero_block, |block_number| block_number as u32);
+			let current_block_number: u32 = TryInto::<usize>::try_into(current_block_number)
+				.map_or(zero_block, |block_number| block_number as u32);
 
 			// Basic check for both block number
 			if commit_block_number == 0 || current_block_number == 0 {
-				return Err(<Error<T>>::InvalidCommitBlockNumber.into());
+				return Err(<Error<T>>::InvalidCommitBlockNumber.into())
 			}
 
 			// Compute the scope of session
-			let sesseion_start_block = commit_block_number -  commit_block_number % T::QuerySessionLength::get() ;
+			let sesseion_start_block =
+				commit_block_number - commit_block_number % T::QuerySessionLength::get();
 			let sesseion_end_block = sesseion_start_block + T::QuerySessionLength::get();
 
 			// If commit block number out of the scope of session.
-			if current_block_number >= sesseion_end_block || current_block_number <= sesseion_start_block {
-				return Err(<Error<T>>::InvalidCommitBlockNumber.into());
+			if current_block_number >= sesseion_end_block ||
+				current_block_number <= sesseion_start_block
+			{
+				return Err(<Error<T>>::InvalidCommitBlockNumber.into())
 			}
 
 			Ok(())
@@ -605,15 +695,18 @@ pub mod pallet {
 
 		// Get the length of accounts
 		fn get_ocw_length() -> u32 {
-			<OcwAccountIndex::<T>>::iter().collect::<Vec<_>>().len() as u32
+			<OcwAccountIndex<T>>::iter().collect::<Vec<_>>().len() as u32
 		}
 
 		// Get the length of accounts
 		fn get_claim_account_length() -> u32 {
-			<ClaimAccountIndex::<T>>::iter().collect::<Vec<_>>().len() as u32
+			<ClaimAccountIndex<T>>::iter().collect::<Vec<_>>().len() as u32
 		}
 
-		fn get_balance_from_etherscan(account: &T::AccountId, info: &urls::TokenInfo) -> Option<u128> {
+		fn get_balance_from_etherscan(
+			account: &T::AccountId,
+			info: &urls::TokenInfo,
+		) -> Option<u128> {
 			if info.etherscan.len() == 0 {
 				None
 			} else {
@@ -630,7 +723,9 @@ pub mod pallet {
 						Self::fetch_balances(
 							<account_linker::Pallet<T>>::eth_addresses(account),
 							urls::HttpRequest::GET(get),
-							&urls::parse_etherscan_balances).ok()
+							&urls::parse_etherscan_balances,
+						)
+						.ok()
 					},
 					Err(_) => None,
 				}
@@ -638,7 +733,6 @@ pub mod pallet {
 		}
 
 		fn get_balance_from_infura(account: &T::AccountId, info: &urls::TokenInfo) -> Option<u128> {
-
 			if info.infura.len() == 0 {
 				None
 			} else {
@@ -655,7 +749,9 @@ pub mod pallet {
 						Self::fetch_balances(
 							<account_linker::Pallet<T>>::eth_addresses(account),
 							urls::HttpRequest::POST(post),
-							&urls::parse_blockchain_info_balances).ok()
+							&urls::parse_blockchain_info_balances,
+						)
+						.ok()
 					},
 					Err(_) => None,
 				}
@@ -663,22 +759,28 @@ pub mod pallet {
 		}
 
 		// TODO account not input request parameter
-		fn get_balance_from_blockchain_info(_account: &T::AccountId, info: &urls::TokenInfo) -> Option<u128> {
+		fn get_balance_from_blockchain_info(
+			_account: &T::AccountId,
+			info: &urls::TokenInfo,
+		) -> Option<u128> {
 			if info.blockchain.len() == 0 {
 				None
 			} else {
 				match core::str::from_utf8(&info.blockchain) {
 					Ok(token) => {
 						let get = urls::HttpGet {
-								blockchain: urls::BlockChainType::BTC,
-								prefix: "https://blockchain.info/balance?active=",
-								delimiter: "%7C",
-								postfix: "",
-								api_token: token,
+							blockchain: urls::BlockChainType::BTC,
+							prefix: "https://blockchain.info/balance?active=",
+							delimiter: "%7C",
+							postfix: "",
+							api_token: token,
 						};
-						Self::fetch_balances(Vec::new(),
+						Self::fetch_balances(
+							Vec::new(),
 							urls::HttpRequest::GET(get),
-							&urls::parse_blockchain_info_balances).ok()
+							&urls::parse_blockchain_info_balances,
+						)
+						.ok()
 					},
 					Err(_) => None,
 				}
@@ -686,23 +788,36 @@ pub mod pallet {
 		}
 
 		// Sign the query result
-		fn offchain_signed_tx(account: T::AccountId, block_number: T::BlockNumber, data_source: urls::DataSource, balance: u128) {
-			log::info!("ocw sign tx: account {:?}, block number {:?}, data_source {:?}, balance {:?}",
-				account.clone(), block_number, data_source, balance);
+		fn offchain_signed_tx(
+			account: T::AccountId,
+			block_number: T::BlockNumber,
+			data_source: urls::DataSource,
+			balance: u128,
+		) {
+			log::info!(
+				"ocw sign tx: account {:?}, block number {:?}, data_source {:?}, balance {:?}",
+				account.clone(),
+				block_number,
+				data_source,
+				balance
+			);
 			// Get signer from ocw
 			let signer = Signer::<T, T::AuthorityId>::any_account();
 
 			let result = signer.send_signed_transaction(|_acct|
 				// This is the on-chain function
-				Call::submit_balance(account.clone(), block_number, data_source, balance)
-			);
+				Call::submit_balance(account.clone(), block_number, data_source, balance));
 
 			// Display error if the signed tx fails.
 			if let Some((acc, res)) = result {
 				if res.is_err() {
 					log::error!("failure: offchain_signed_tx: tx sent: {:?}", acc.id);
 				} else {
-					log::info!("successful: offchain_signed_tx: tx sent: {:?} index is {:?}", acc.id, acc.index);
+					log::info!(
+						"successful: offchain_signed_tx: tx sent: {:?} index is {:?}",
+						acc.id,
+						acc.index
+					);
 				}
 
 				// Record the account in local storage then we can know my index
@@ -714,8 +829,11 @@ pub mod pallet {
 		}
 
 		// Generic function to fetch balance for specific link type
-		pub fn fetch_balances(wallet_accounts: Vec<[u8; 20]>, request: urls::HttpRequest,
-			parser: &dyn Fn(&str) -> Option<Vec<u128>>) -> Result<u128, Error<T>> {
+		pub fn fetch_balances(
+			wallet_accounts: Vec<[u8; 20]>,
+			request: urls::HttpRequest,
+			parser: &dyn Fn(&str) -> Option<Vec<u128>>,
+		) -> Result<u128, Error<T>> {
 			// Return if no account linked
 			if wallet_accounts.len() == 0 {
 				return Ok(0_u128)
@@ -729,7 +847,7 @@ pub mod pallet {
 
 					for (i, each_account) in wallet_accounts.iter().enumerate() {
 						// Append delimiter if there are more than one accounts in the account_vec
-						if i >=1 {
+						if i >= 1 {
 							link.extend(get_req.delimiter.as_bytes());
 						};
 
@@ -754,7 +872,7 @@ pub mod pallet {
 
 					for (i, each_account) in wallet_accounts.iter().enumerate() {
 						// Append delimiter if there are more than one accounts in the account_vec
-						if i >=1 {
+						if i >= 1 {
 							body.extend(post_req.delimiter.as_bytes());
 						};
 
@@ -763,11 +881,13 @@ pub mod pallet {
 					body.extend(post_req.postfix.as_bytes());
 
 					// Fetch json response via http post
-					urls::fetch_json_http_post(&link[..], &body[..]).map_err(|_| Error::<T>::InvalidNumber)?
+					urls::fetch_json_http_post(&link[..], &body[..])
+						.map_err(|_| Error::<T>::InvalidNumber)?
 				},
 			};
 
-			let response = sp_std::str::from_utf8(&result).map_err(|_| Error::<T>::InvalidNumber)?;
+			let response =
+				sp_std::str::from_utf8(&result).map_err(|_| Error::<T>::InvalidNumber)?;
 			let balances = parser(response);
 
 			match balances {

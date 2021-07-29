@@ -1,15 +1,15 @@
 use super::*;
+use crate as nft;
 use frame_support::{
 	parameter_types,
 	traits::{OnFinalize, OnInitialize},
 };
 use frame_system as system;
-use crate as nft;
 use sp_core::H256;
 use sp_runtime::{
+	generic,
 	traits::{BlakeTwo256, IdentityLookup},
 	AccountId32,
-	generic,
 };
 
 type UncheckedExtrinsic = frame_system::mocking::MockUncheckedExtrinsic<Test>;
@@ -82,19 +82,16 @@ pub type NftError = nft::Error<Test>;
 
 // Build genesis storage according to the mock runtime.
 pub fn new_test_ext() -> sp_io::TestExternalities {
-	system::GenesisConfig::default()
-		.build_storage::<Test>()
-		.unwrap()
-		.into()
+	system::GenesisConfig::default().build_storage::<Test>().unwrap().into()
 }
 
 pub fn run_to_block(n: u32) {
 	while System::block_number() < n {
-		<Nft as OnFinalize::<u32>>::on_finalize(System::block_number());
-		<System as OnFinalize::<u32>>::on_finalize(System::block_number());
+		<Nft as OnFinalize<u32>>::on_finalize(System::block_number());
+		<System as OnFinalize<u32>>::on_finalize(System::block_number());
 		System::set_block_number(System::block_number() + 1);
-		<System as OnInitialize::<u32>>::on_initialize(System::block_number());
-		<Nft as OnInitialize::<u32>>::on_initialize(System::block_number());
+		<System as OnInitialize<u32>>::on_initialize(System::block_number());
+		<Nft as OnInitialize<u32>>::on_initialize(System::block_number());
 	}
 }
 
