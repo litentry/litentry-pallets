@@ -44,7 +44,8 @@ use sp_core::hashing::keccak_256;
 use sp_runtime::{traits::StaticLookup, DispatchResult, RuntimeDebug};
 use sp_std::vec::Vec;
 
-#[cfg(test)]mod mock;
+#[cfg(test)]
+mod mock;
 
 #[cfg(test)]
 mod tests;
