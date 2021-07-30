@@ -19,13 +19,13 @@ frame-system = { git = "https://github.com/paritytech/substrate", branch = "polk
 sp-runtime = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.8", default-features = false }
 sp-std = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.8", default-features = false }
 sp-core = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.8", default-features = false }
+sp-io = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.8", default-features = false }
 
 orml-nft = { git = "https://github.com/open-web3-stack/open-runtime-module-library", default-features = false, rev = "ca054d3078a8d157d0c176ed319d6ff49f38d349" }
 orml-traits = { git = "https://github.com/open-web3-stack/open-runtime-module-library", default-features = false, rev = "ca054d3078a8d157d0c176ed319d6ff49f38d349" }
 
 [dev-dependencies]
 sp-core = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.8" }
-sp-io = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.8" }
 pallet-balances = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.8" }
 pallet-utility = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.8" }
 
@@ -36,6 +36,7 @@ std = [
 	"codec/std",
 	"enumflags2/serde",
 	"sp-std/std",
+	"sp-io/std",
 	"sp-runtime/std",
 	"frame-support/std",
 	"frame-system/std",
