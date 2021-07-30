@@ -88,7 +88,6 @@ impl nft::Config for Test {
 	type WeightInfo = ();
 	type ClassCreationFee = ClassCreationFee;
 	type Pot = Pot;
-	
 }
 
 parameter_types! {

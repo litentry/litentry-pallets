@@ -4,8 +4,6 @@ use crate::Pallet as NFT;
 use frame_benchmarking::{account, benchmarks, impl_benchmark_test_suite};
 use frame_system::RawOrigin;
 use sp_runtime::traits::StaticLookup;
-use crate::CREATION_FEE;
-use crate::Pallet as NFT;
 
 pub use crate::*;
 
@@ -16,8 +14,8 @@ benchmarks! {
 	create_class {
 		let alice: T::AccountId = account("alice", 0, SEED);
 		<T as pallet::Config>::Currency::make_free_balance_be(&alice, (CREATION_FEE + 10).into());
-	}: _(RawOrigin::Signed(alice), 
-			vec![1], 
+	}: _(RawOrigin::Signed(alice),
+			vec![1],
 			Properties(ClassProperty::Transferable | ClassProperty::Burnable),
 			None,
 			None,

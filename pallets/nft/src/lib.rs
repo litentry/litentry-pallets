@@ -32,9 +32,10 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 
 use enumflags2::BitFlags;
-use frame_support::{pallet_prelude::*, transactional};
-use frame_support::traits::{
-	Currency, Get, ExistenceRequirement::KeepAlive,
+use frame_support::{
+	pallet_prelude::*,
+	traits::{Currency, ExistenceRequirement::KeepAlive, Get},
+	transactional,
 };
 use frame_system::pallet_prelude::*;
 use orml_traits::NFT;
@@ -143,7 +144,6 @@ pub mod pallet {
 			TokenData = TokenData,
 		>
 	{
-
 		/// The the currency to pay NFT class creation fee.
 		type Currency: Currency<Self::AccountId>;
 
