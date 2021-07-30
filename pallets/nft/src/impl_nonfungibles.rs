@@ -3,11 +3,9 @@
 
 use super::*;
 use frame_support::{
-	traits::tokens::nonfungibles::{Inspect, InspectEnumerable, Mutate, Transfer},
-	BoundedSlice,
+	traits::tokens::nonfungibles::{Inspect, Transfer},
 };
 use sp_runtime::DispatchResult;
-use sp_std::convert::TryFrom;
 
 impl<T: Config> Inspect<<T as frame_system::Config>::AccountId> for Pallet<T> {
 	type InstanceId = T::TokenId;
@@ -18,7 +16,6 @@ impl<T: Config> Inspect<<T as frame_system::Config>::AccountId> for Pallet<T> {
 		instance: &Self::InstanceId,
 	) -> Option<<T as frame_system::Config>::AccountId> {
         orml_nft::Pallet::<T>::tokens(class, instance).map(|a| a.owner)
-		// <T as orml_nft::Config>::Tokens::<T>::get(class, instance).map(|a| a.owner)
 	}
 
 	fn class_owner(class: &Self::ClassId) -> Option<<T as frame_system::Config>::AccountId> {
@@ -68,20 +65,6 @@ impl<T: Config> Inspect<<T as frame_system::Config>::AccountId> for Pallet<T> {
 	}
 }
 
-// impl<T: Config<I>, I: 'static> Mutate<<T as SystemConfig>::AccountId> for Pallet<T, I> {
-// 	fn mint_into(
-// 		class: &Self::ClassId,
-// 		instance: &Self::InstanceId,
-// 		who: &T::AccountId,
-// 	) -> DispatchResult {
-// 		Self::do_mint(class.clone(), instance.clone(), who.clone(), |_| Ok(()))
-// 	}
-
-// 	fn burn_from(class: &Self::ClassId, instance: &Self::InstanceId) -> DispatchResult {
-// 		Self::do_burn(class.clone(), instance.clone(), |_, _| Ok(()))
-// 	}
-// }
-
 impl<T: Config> Transfer<T::AccountId> for Pallet<T> {
 	fn transfer(
 		class: &Self::ClassId,
@@ -93,36 +76,3 @@ impl<T: Config> Transfer<T::AccountId> for Pallet<T> {
         Ok(())
 	}
 }
-
-// impl<T: Config<I>, I: 'static> InspectEnumerable<T::AccountId> for Pallet<T, I> {
-// 	/// Returns an iterator of the asset classes in existence.
-// 	///
-// 	/// NOTE: iterating this list invokes a storage read per item.
-// 	fn classes() -> Box<dyn Iterator<Item = Self::ClassId>> {
-// 		Box::new(ClassMetadataOf::<T, I>::iter_keys())
-// 	}
-
-// 	/// Returns an iterator of the instances of an asset `class` in existence.
-// 	///
-// 	/// NOTE: iterating this list invokes a storage read per item.
-// 	fn instances(class: &Self::ClassId) -> Box<dyn Iterator<Item = Self::InstanceId>> {
-// 		Box::new(InstanceMetadataOf::<T, I>::iter_key_prefix(class))
-// 	}
-
-// 	/// Returns an iterator of the asset instances of all classes owned by `who`.
-// 	///
-// 	/// NOTE: iterating this list invokes a storage read per item.
-// 	fn owned(who: &T::AccountId) -> Box<dyn Iterator<Item = (Self::ClassId, Self::InstanceId)>> {
-// 		Box::new(Account::<T, I>::iter_key_prefix((who,)))
-// 	}
-
-// 	/// Returns an iterator of the asset instances of `class` owned by `who`.
-// 	///
-// 	/// NOTE: iterating this list invokes a storage read per item.
-// 	fn owned_in_class(
-// 		class: &Self::ClassId,
-// 		who: &T::AccountId,
-// 	) -> Box<dyn Iterator<Item = Self::InstanceId>> {
-// 		Box::new(Account::<T, I>::iter_key_prefix((who, class)))
-// 	}
-// }
