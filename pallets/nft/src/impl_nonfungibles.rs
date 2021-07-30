@@ -82,15 +82,17 @@ impl<T: Config> Inspect<<T as frame_system::Config>::AccountId> for Pallet<T> {
 // 	}
 // }
 
-// impl<T: Config<I>, I: 'static> Transfer<T::AccountId> for Pallet<T, I> {
-// 	fn transfer(
-// 		class: &Self::ClassId,
-// 		instance: &Self::InstanceId,
-// 		destination: &T::AccountId,
-// 	) -> DispatchResult {
-// 		Self::do_transfer(class.clone(), instance.clone(), destination.clone(), |_, _| Ok(()))
-// 	}
-// }
+impl<T: Config> Transfer<T::AccountId> for Pallet<T> {
+	fn transfer(
+		class: &Self::ClassId,
+		instance: &Self::InstanceId,
+		destination: &T::AccountId,
+	) -> DispatchResult {
+        let from = orml_nft::Pallet::<T>::tokens(class, instance).map(|a| a.owner).ok_or(Error::<T>::TokenIdNotFound)?;
+		Self::do_transfer(&from, &destination, (*class, *instance))?;
+        Ok(())
+	}
+}
 
 // impl<T: Config<I>, I: 'static> InspectEnumerable<T::AccountId> for Pallet<T, I> {
 // 	/// Returns an iterator of the asset classes in existence.
