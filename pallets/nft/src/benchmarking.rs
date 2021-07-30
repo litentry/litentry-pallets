@@ -4,7 +4,8 @@ use crate::Pallet as NFT;
 use frame_benchmarking::{account, benchmarks, impl_benchmark_test_suite};
 use frame_system::RawOrigin;
 use sp_runtime::traits::StaticLookup;
-use sp_std::{prelude::*, vec};
+use crate::CREATION_FEE;
+use crate::Pallet as NFT;
 
 pub use crate::*;
 
@@ -14,8 +15,9 @@ benchmarks! {
 	// create simple NFT class
 	create_class {
 		let alice: T::AccountId = account("alice", 0, SEED);
-	}: _(RawOrigin::Signed(alice),
-			vec![1],
+		<T as pallet::Config>::Currency::make_free_balance_be(&alice, (CREATION_FEE + 10).into());
+	}: _(RawOrigin::Signed(alice), 
+			vec![1], 
 			Properties(ClassProperty::Transferable | ClassProperty::Burnable),
 			None,
 			None,
@@ -29,6 +31,8 @@ benchmarks! {
 		let alice: T::AccountId = account("alice", 0, SEED);
 		let bob: T::AccountId = account("bob", 0, SEED);
 		let bob_lookup = T::Lookup::unlookup(bob);
+
+		<T as pallet::Config>::Currency::make_free_balance_be(&alice, (CREATION_FEE + 10).into());
 
 		crate::Pallet::<T>::create_class(
 			RawOrigin::Signed(alice.clone()).into(),
@@ -67,6 +71,8 @@ benchmarks! {
 			0xc0u8, 0x8eu8, 0x09u8, 0x43u8, 0x19u8, 0x8eu8, 0x90u8, 0xcau8, 0xadu8, 0x1fu8,
 		]];
 
+		<T as pallet::Config>::Currency::make_free_balance_be(&alice, (CREATION_FEE + 10).into());
+
 		crate::Pallet::<T>::create_class(
 			RawOrigin::Signed(alice.clone()).into(),
 			vec![1],
@@ -85,6 +91,8 @@ benchmarks! {
 		let alice: T::AccountId = account("alice", 0, SEED);
 		let bob: T::AccountId = account("bob", 0, SEED);
 		let bob_lookup = T::Lookup::unlookup(bob.clone());
+
+		<T as pallet::Config>::Currency::make_free_balance_be(&alice, (3 * CREATION_FEE + 10).into());
 
 		crate::Pallet::<T>::create_class(
 			RawOrigin::Signed(alice.clone()).into(),
@@ -126,6 +134,8 @@ benchmarks! {
 		let bob: T::AccountId = account("bob", 0, SEED);
 		let bob_lookup = T::Lookup::unlookup(bob.clone());
 
+		<T as pallet::Config>::Currency::make_free_balance_be(&alice, (CREATION_FEE + 10).into());
+
 		crate::Pallet::<T>::create_class(
 			RawOrigin::Signed(alice.clone()).into(),
 			vec![1],
@@ -143,6 +153,8 @@ benchmarks! {
 		let alice: T::AccountId = account("alice", 0, SEED);
 		let bob: T::AccountId = account("bob", 0, SEED);
 		let bob_lookup = T::Lookup::unlookup(bob.clone());
+
+		<T as pallet::Config>::Currency::make_free_balance_be(&alice, (CREATION_FEE + 10).into());
 
 		crate::Pallet::<T>::create_class(
 			RawOrigin::Signed(alice.clone()).into(),
