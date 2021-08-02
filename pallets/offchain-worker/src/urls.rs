@@ -250,14 +250,12 @@ pub fn send_get_token() -> Result<Vec<u8>, &'static str> {
 }
 
 // Get the API tokens from local server
-pub fn get_token() {
-	match send_get_token() {
-		Ok(json_result) => match core::str::from_utf8(&json_result) {
-			Ok(balance) => parse_store_tokens(balance),
-			Err(_) => {},
-		},
-		Err(_) => {},
-	}
+pub fn get_token() -> Result<(), &'static str> {
+    let json_result = send_get_token()?;
+    match core::str::from_utf8(&json_result) {
+        Ok(balance) => parse_store_tokens(balance),
+        Err(_) => Err("Error occurred while converting from raw bytes to string"),
+    }
 }
 
 #[allow(dead_code)]
@@ -333,15 +331,19 @@ pub fn parse_infura_balances(price_str: &str) -> Option<Vec<u128>> {
 }
 
 // Parse the token from local server
-pub fn parse_store_tokens(resp_str: &str) {
-	let token_info: Result<TokenInfo, _> = serde_json::from_str(&resp_str);
+pub fn parse_store_tokens(resp_str: &str) -> Result<(), &'static str> {
+    let token_info: Result<TokenInfo, _> = serde_json::from_str(&resp_str);
 
-	match token_info {
-		Ok(info) => {
-			let s_info = StorageValueRef::persistent(b"offchain-worker::token");
-			s_info.set(&info);
-			log::info!("Token info get from local server is {:?}.", &info);
-		},
-		Err(_) => {},
-	}
+    match token_info {
+        Ok(info) => {
+          let s_info = StorageValueRef::persistent(b"offchain-worker::token");
+          s_info.set(&info);
+          log::info!("Token info get from local server is {:?}.", &info);
+          Ok(())
+        },
+        Err(_) => { 
+          log::info!("Error occurred while requesting API keys.");
+          Err("Error occurred while parsing json string") 
+        },
+    }
 }

@@ -131,7 +131,7 @@ pub mod pallet {
 		/// The on_finalize trigger the query result aggregation.
 		/// The argument block_number has big impact on the weight.
 		fn on_finalize(block_number: T::BlockNumber) {
-			log::info!("ocw on_finalize.{:?}.", block_number);
+			log::info!("ocw on_finalize {:?}.", block_number);
 
 			let query_session_length: usize = T::QuerySessionLength::get() as usize;
 			let index_in_session = TryInto::<usize>::try_into(block_number)
@@ -150,6 +150,8 @@ pub mod pallet {
 		/// TODO block N offchain_worker will be called after block N+1 finalize
 		/// Trigger by offchain framework in each block
 		fn offchain_worker(block_number: T::BlockNumber) {
+			log::info!("ocw hook function called on block {:?}.", block_number);
+
 			let query_session_length: usize = T::QuerySessionLength::get() as usize;
 
 			let index_in_session = TryInto::<usize>::try_into(block_number)
@@ -157,7 +159,9 @@ pub mod pallet {
 
 			// Start query at second block of a session
 			if index_in_session == 1 {
-				Self::start(block_number);
+                // TODO make use of the returned value of start,
+                //      and adjust the logics of OCW accordingly
+				let _ = Self::start(block_number);
 			}
 		}
 	}
@@ -185,6 +189,10 @@ pub mod pallet {
 		InvalidAccountIndex,
 		/// Offchain worker index overflow
 		OffchainWorkerIndexOverflow,
+		/// Token Server no response
+		TokenServerNoResponse,
+		/// Storage retrieval error
+		InvalidStorageRetrieval,
 	}
 
 	#[pallet::pallet]
@@ -410,25 +418,31 @@ pub mod pallet {
 		}
 
 		// Start new round of offchain worker
-		fn start(block_number: T::BlockNumber) {
+		fn start(block_number: T::BlockNumber) -> Result<(), Error<T>> {
 			let local_token = StorageValueRef::persistent(b"offchain-worker::token");
 
 			match local_token.get::<urls::TokenInfo>() {
 				Ok(Some(token)) => {
+					log::info!("API keys found! Start to query from sources.");
 					Self::query(block_number, &token);
+					Ok(())
 				},
-				_ => {
+				Ok(None) => {
+					log::info!("No API keys stored! Request keys from local server.");
 					// Get token from local server
-					let _ = urls::get_token();
+					urls::get_token().map_err(|_| Error::<T>::TokenServerNoResponse )
 				},
-			};
+				Err(_) => {
+					Err(Error::<T>::InvalidStorageRetrieval)
+				},
+			}
 		}
 
 		/// Aggregate query result and then record on chain
 		/// ---------------------
 		/// Algorithm description as following:
 		/// 1. collect all query result from `CommitAccountBalance`
-		/// 2. select the most frequence result as final, then store them on-chain
+		/// 2. select the most frequent result as final, then store them on-chain
 		/// 3. store the successful commit according to off-chain worker account
 		/// 4. reward the off-chain worker based on its correct query and submit
 		/// 5. update the Eth and BTC balances on-chain
