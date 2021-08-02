@@ -52,6 +52,7 @@ mod tests;
 pub mod weights;
 pub mod benchmarking;
 
+mod impl_nonfungibles;
 pub mod merkle_proof;
 
 pub use pallet::*;
