@@ -1,6 +1,7 @@
 use crate::HashByte32;
 use sp_core::hash::H256;
 use sp_io::hashing::keccak_256;
+use sp_std::vec::Vec;
 
 /// Verify the given Merkle proof and Merkle root
 /// - Each pair of leaves and each pair of pre-images are assumed to be sorted.
