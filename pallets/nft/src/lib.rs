@@ -41,7 +41,7 @@ use frame_system::pallet_prelude::*;
 use orml_traits::NFT;
 #[cfg(feature = "std")]
 use serde::{Deserialize, Serialize};
-use sp_core::hashing::keccak_256;
+use sp_io::hashing::keccak_256;
 use sp_runtime::{traits::StaticLookup, DispatchResult, RuntimeDebug};
 use sp_std::vec::Vec;
 
@@ -53,6 +53,7 @@ pub mod benchmarking;
 mod tests;
 pub mod weights;
 
+mod impl_nonfungibles;
 pub mod merkle_proof;
 
 pub use pallet::*;
