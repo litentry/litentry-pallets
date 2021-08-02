@@ -23,10 +23,12 @@
 <span id="20">20</span>
 <span id="21">21</span>
 <span id="22">22</span>
+<span id="23">23</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::HashByte32</span>;
 <span class="kw">use</span> <span class="ident">sp_core::hash::H256</span>;
-<span class="kw">use</span> <span class="ident">sp_core::hashing::keccak_256</span>;
+<span class="kw">use</span> <span class="ident">sp_io::hashing::keccak_256</span>;
+<span class="kw">use</span> <span class="ident">sp_std::vec::Vec</span>;
 
 <span class="doccomment">/// Verify the given Merkle proof and Merkle root</span>
 <span class="doccomment">/// - Each pair of leaves and each pair of pre-images are assumed to be sorted.</span>
