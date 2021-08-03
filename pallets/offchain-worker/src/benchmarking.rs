@@ -2,15 +2,14 @@
 
 use super::*;
 
-use frame_benchmarking::{benchmarks, account};
+use frame_benchmarking::{account, benchmarks};
 use frame_system::RawOrigin;
 use sp_std::prelude::*;
 
-benchmarks!{
+benchmarks! {
 
-    asset_claim {
+	asset_claim {
         let caller = account("caller", 0, 0);
-        
     }: asset_claim(RawOrigin::Signed(caller))
 
     submit_balance {
@@ -42,4 +41,3 @@ benchmarks!{
 
     }: dummy(RawOrigin::Signed(caller), block_number.into())
 }
-

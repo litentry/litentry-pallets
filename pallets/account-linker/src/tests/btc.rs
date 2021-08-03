@@ -1,15 +1,15 @@
-use crate::{mock::*};
+use crate::mock::*;
 
 use codec::Encode;
+use frame_support::{assert_noop, assert_ok};
 use parity_crypto::Keccak256;
-use frame_support::{assert_ok, assert_noop};
 use sp_runtime::AccountId32;
 
-use bitcoin::network::constants::Network;
-use bitcoin::util::address::Address;
-use bitcoin::util::key;
-use bitcoin::secp256k1::{Secp256k1, Message as BTCMessage};
-use bitcoin::secp256k1::rand::thread_rng;
+use bitcoin::{
+	network::constants::Network,
+	secp256k1::{rand::thread_rng, Message as BTCMessage, Secp256k1},
+	util::{address::Address, key},
+};
 
 #[test]
 fn test_invalid_expiring_block_number_btc() {
@@ -17,10 +17,7 @@ fn test_invalid_expiring_block_number_btc() {
 		// Generate random key pair
 		let s = Secp256k1::new();
 		let pair = s.generate_keypair(&mut thread_rng());
-		let public_key = key::PublicKey {
-			compressed: true,
-			key: pair.1,
-		};
+		let public_key = key::PublicKey { compressed: true, key: pair.1 };
 
 		// Generate pay-to-pubkey-hash address
 		let address = Address::p2pkh(&public_key, Network::Bitcoin);
@@ -50,26 +47,22 @@ fn test_invalid_expiring_block_number_btc() {
 				0,
 				address.clone().to_string().as_bytes().to_vec(),
 				block_number,
-				sig),
+				sig
+			),
 			AccountLinkerError::InvalidExpiringBlockNumber
 		);
-
 	});
 }
 
 #[test]
 fn test_btc_link_p2pkh() {
 	new_test_ext().execute_with(|| {
-
-        run_to_block(1);
+		run_to_block(1);
 
 		// Generate random key pair
 		let s = Secp256k1::new();
 		let pair = s.generate_keypair(&mut thread_rng());
-		let public_key = key::PublicKey {
-			compressed: true,
-			key: pair.1,
-		};
+		let public_key = key::PublicKey { compressed: true, key: pair.1 };
 
 		// Generate pay-to-pubkey-hash address
 		let address = Address::p2pkh(&public_key, Network::Bitcoin);
@@ -92,7 +85,7 @@ fn test_btc_link_p2pkh() {
 		sig[..64].copy_from_slice(&rs[..]);
 		sig[64] = v.to_i32() as u8;
 
-        let addr_expected = address.clone().to_string().as_bytes().to_vec();
+		let addr_expected = address.clone().to_string().as_bytes().to_vec();
 
 		assert_ok!(AccountLinker::link_btc(
 			Origin::signed(account.clone()),
@@ -103,33 +96,27 @@ fn test_btc_link_p2pkh() {
 			sig
 		));
 
-		let addr_stored = String::from_utf8(AccountLinker::btc_addresses(&account)[0].clone()).unwrap();
+		let addr_stored =
+			String::from_utf8(AccountLinker::btc_addresses(&account)[0].clone()).unwrap();
 
 		assert_eq!(addr_stored, address.to_string());
 
 		assert_eq!(
 			events(),
-			[
-				Event::AccountLinker(crate::Event::BtcAddressLinked(account.clone(), addr_expected)),
-			]
+			[Event::AccountLinker(crate::Event::BtcAddressLinked(account.clone(), addr_expected)),]
 		);
-
 	});
 }
 
 #[test]
 fn test_btc_link_p2wpkh() {
 	new_test_ext().execute_with(|| {
-
-        run_to_block(1);
+		run_to_block(1);
 
 		// Generate random key pair
 		let s = Secp256k1::new();
 		let pair = s.generate_keypair(&mut thread_rng());
-		let public_key = key::PublicKey {
-			compressed: true,
-			key: pair.1,
-		};
+		let public_key = key::PublicKey { compressed: true, key: pair.1 };
 
 		// Generate pay-to-pubkey-hash address
 		let address = Address::p2wpkh(&public_key, Network::Bitcoin).unwrap();
@@ -153,7 +140,7 @@ fn test_btc_link_p2wpkh() {
 		sig[..64].copy_from_slice(&rs[..]);
 		sig[64] = v.to_i32() as u8;
 
-        let addr_expected = address.clone().to_string().as_bytes().to_vec();
+		let addr_expected = address.clone().to_string().as_bytes().to_vec();
 
 		assert_ok!(AccountLinker::link_btc(
 			Origin::signed(account.clone()),
@@ -164,15 +151,14 @@ fn test_btc_link_p2wpkh() {
 			sig
 		));
 
-		let addr_stored = String::from_utf8(AccountLinker::btc_addresses(&account)[0].clone()).unwrap();
+		let addr_stored =
+			String::from_utf8(AccountLinker::btc_addresses(&account)[0].clone()).unwrap();
 
-        assert_eq!(addr_stored, address.to_string());
+		assert_eq!(addr_stored, address.to_string());
 
-        assert_eq!(
+		assert_eq!(
 			events(),
-			[
-				Event::AccountLinker(crate::Event::BtcAddressLinked(account.clone(), addr_expected)),
-			]
-        );
+			[Event::AccountLinker(crate::Event::BtcAddressLinked(account.clone(), addr_expected)),]
+		);
 	});
 }

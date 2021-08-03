@@ -18,13 +18,10 @@
 use crate::*;
 use crate as offchain_worker;
 use frame_support::{parameter_types, weights::Weight};
-use sp_core::{ H256, sr25519::Signature,};
+use sp_core::{sr25519::Signature, H256};
 use sp_runtime::{
 	testing::{Header, TestXt},
-	traits::{
-		BlakeTwo256, IdentityLookup, Extrinsic as ExtrinsicT,
-		IdentifyAccount, Verify,
-	},
+	traits::{BlakeTwo256, Extrinsic as ExtrinsicT, IdentifyAccount, IdentityLookup, Verify},
 };
 
 type UncheckedExtrinsic = frame_system::mocking::MockUncheckedExtrinsic<Test>;
@@ -101,14 +98,16 @@ impl frame_system::offchain::SigningTypes for Test {
 	type Signature = Signature;
 }
 
-impl<LocalCall> frame_system::offchain::SendTransactionTypes<LocalCall> for Test where
+impl<LocalCall> frame_system::offchain::SendTransactionTypes<LocalCall> for Test
+where
 	Call: From<LocalCall>,
 {
 	type OverarchingCall = Call;
 	type Extrinsic = Extrinsic;
 }
 
-impl<LocalCall> frame_system::offchain::CreateSignedTransaction<LocalCall> for Test where
+impl<LocalCall> frame_system::offchain::CreateSignedTransaction<LocalCall> for Test
+where
 	Call: From<LocalCall>,
 {
 	fn create_transaction<C: frame_system::offchain::AppCrypto<Self::Public, Self::Signature>>(
@@ -151,7 +150,9 @@ impl Config for Test {
 
 #[test]
 fn test_chars_to_u128() {
-	let correct_balance = vec!['5', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0'];
+	let correct_balance = vec![
+		'5', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0',
+	];
 	assert_eq!(Ok(500000000000000000_u128), utils::chars_to_u128(&correct_balance));
 
 	let correct_balance = vec!['a', '2'];
@@ -164,7 +165,6 @@ fn test_chars_to_u128() {
 	let correct_balance = vec!['0', 'x'];
 	assert_eq!(Ok(0_u128), utils::chars_to_u128(&correct_balance));
 }
-
 
 #[test]
 fn test_parse_etherscan_balances() {
@@ -248,12 +248,11 @@ fn test_parse_infura_balances_2() {
 	"#;
 	let token_info: Vec<urls::InfuraBalance> = serde_json::from_str(double_balances).unwrap();
 	assert_eq!(token_info[0].id, 1);
-
 }
 
 // fetch_balances only executed in offchain worker context, need investigate how to call it in test
 // #[test]
-// fn test_fetch_balances() {	
+// fn test_fetch_balances() {
 // 	let get = urls::HttpGet {
 // 		blockchain: urls::BlockChainType::ETH,
 // 		prefix: "https://api-ropsten.etherscan.io/api?module=account&action=balancemulti&address=0x",
@@ -265,7 +264,7 @@ fn test_parse_infura_balances_2() {
 // 	let test_account = "4d88dc5D528A33E4b8bE579e9476715F60060582".as_bytes();
 // 	let mut test_account_byte_array = [0u8; 20];
 // 	test_account_byte_array.copy_from_slice(&test_account[0..20]);
-	
+
 // 	let mut accounts: Vec<[u8; 20]> = Vec::new();
 // 	accounts.push(test_account_byte_array);
 

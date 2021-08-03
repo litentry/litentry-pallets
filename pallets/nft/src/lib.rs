@@ -15,26 +15,27 @@
 //! ### Dispatchable Functions
 //! #### Class Issuance
 //! * `create_class` - Create an NFT class (think the whole CryptoKitties or Hashmask each as a class)
-//! 
+//!
 //! #### Instance Generation
 //! * `mint` - Mint specified number of instance of `Simple(u32)` type
 //! * `claim` - Whitelisted user claim an instance of `Claim(HashByte32)`, with a Merkle proof whose root
 //! is the HashByte32
 //! * `merge` - From two NFT instance, mint a new NFT instance of `Merge(ID, ID, bool)` type
-//! 
+//!
 //! #### Daily User Actions
 //! * `transfer` - Transfer ownership of a transferable NFT
 //! * `burn` - Burn a burnable NFT
-//! 
+//!
 //! [`Call`]: ./enum.Call.html
 //! [`Config`]: ./trait.Config.html
 
 #![cfg_attr(not(feature = "std"), no_std)]
 
 use enumflags2::BitFlags;
-use frame_support::{pallet_prelude::*, transactional};
-use frame_support::traits::{
-	Currency, Get, ExistenceRequirement::KeepAlive,
+use frame_support::{
+	pallet_prelude::*,
+	traits::{Currency, ExistenceRequirement::KeepAlive, Get},
+	transactional,
 };
 use frame_system::pallet_prelude::*;
 use orml_traits::NFT;
@@ -47,10 +48,10 @@ use sp_std::vec::Vec;
 #[cfg(test)]
 mod mock;
 
+pub mod benchmarking;
 #[cfg(test)]
 mod tests;
 pub mod weights;
-pub mod benchmarking;
 
 mod impl_nonfungibles;
 pub mod merkle_proof;
@@ -86,9 +87,7 @@ impl Encode for Properties {
 impl Decode for Properties {
 	fn decode<I: codec::Input>(input: &mut I) -> sp_std::result::Result<Self, codec::Error> {
 		let field = u8::decode(input)?;
-		Ok(Self(
-			<BitFlags<ClassProperty>>::from_bits(field as u8).map_err(|_| "invalid value")?,
-		))
+		Ok(Self(<BitFlags<ClassProperty>>::from_bits(field as u8).map_err(|_| "invalid value")?))
 	}
 }
 
@@ -125,7 +124,7 @@ pub enum ClassType<ID> {
 	Claim(HashByte32),
 	/// A class that is merged from two class ID and ID
 	/// if true, burn the two instances
-	Merge(ID, ID, bool), 
+	Merge(ID, ID, bool),
 }
 
 pub type TokenIdOf<T> = <T as orml_nft::Config>::TokenId;
@@ -146,7 +145,6 @@ pub mod pallet {
 			TokenData = TokenData,
 		>
 	{
-
 		/// The the currency to pay NFT class creation fee.
 		type Currency: Currency<Self::AccountId>;
 
@@ -211,7 +209,7 @@ pub mod pallet {
 		/// Claimed NFT token. \[claimer, class_id\]
 		ClaimedToken(T::AccountId, ClassIdOf<T>),
 		/// Merged NFT token. \[owner, class_id\]
-		MergedToken(T::AccountId, ClassIdOf<T>),	
+		MergedToken(T::AccountId, ClassIdOf<T>),
 		/// Transferred NFT token. \[from, to, class_id, token_id\]
 		TransferredToken(T::AccountId, T::AccountId, ClassIdOf<T>, TokenIdOf<T>),
 		/// Burned NFT token. \[owner, class_id, token_id\]
@@ -227,7 +225,7 @@ pub mod pallet {
 
 	#[pallet::storage]
 	#[pallet::getter(fn claimed_list)]
-	/// Claimed index vec for `Claim(HashByte32)` type NFT class, 
+	/// Claimed index vec for `Claim(HashByte32)` type NFT class,
 	/// to guarantee each user claims once.
 	/// maximal index of claiming user is 2^16 which is more than enough
 	pub(super) type ClaimedList<T: Config> =
@@ -243,14 +241,14 @@ pub mod pallet {
 		/// 1. Each instance is directly issued by the corresponding third party: Simple(u32)
 		/// 2. At issuance, a list of user is provided and only these users may claim: Claim(HashByte32)
 		/// 3. Can be minted only when the user have 2 specific base non fungible assets: Merge(ID, ID, bool)
-		/// 
+		///
 		/// Parameters:
 		/// - `metadata`: CID identifier of the class's metadata
 		/// - `properties`: Class property, include `Transferable` `Burnable`
 		/// - `start_block`: From when the instances can be minted (None if no restriction)
 		/// - `end_block`: Till when the instances can be minted (None if no restriction)
 		/// - `class_type`: Type of this class (refer to `ClassType`)
-		/// 
+		///
 		/// Emits `CreatedClass` event when successful.
 		#[pallet::weight(<T as Config>::WeightInfo::create_class())]
 		#[transactional]
@@ -270,7 +268,7 @@ pub mod pallet {
 				.map_err(|_| Error::<T>::CreationFeeNotPaid)?;
 
 			match class_type {
-				ClassType::Merge(id1, id2, burn) => {
+				ClassType::Merge(id1, id2, burn) =>
 					if !burn {
 						ensure!(
 							<orml_nft::Pallet<T>>::classes(id1).is_some(),
@@ -296,20 +294,14 @@ pub mod pallet {
 							data2.properties.0.contains(ClassProperty::Burnable),
 							Error::<T>::NonBurnable
 						);
-					}
-				}
+					},
 				ClassType::Claim(_) => {
 					ClaimedList::<T>::insert(next_id, Vec::<u16>::new());
-				}
-				_ => {}
+				},
+				_ => {},
 			}
 
-			let data = ClassData {
-				properties,
-				start_block,
-				end_block,
-				class_type,
-			};
+			let data = ClassData { properties, start_block, end_block, class_type };
 			orml_nft::Pallet::<T>::create_class(&who, metadata.to_vec(), data)?;
 
 			Self::deposit_event(Event::CreatedClass(who, next_id));
@@ -317,13 +309,13 @@ pub mod pallet {
 		}
 
 		/// Mint `Simple(u32)` NFT instances from the class owner
-		/// 
+		///
 		/// Parameters:
 		/// - `to`: The receiver of the minted NFTs
 		/// - `class_id`: Identifier of the NFT class to mint
 		/// - `metadata`: CID identifier of the instance's metadata
 		/// - `quantity`: number of NFT to mint
-		/// 
+		///
 		/// Emits `MintedToken` event when successful
 		#[pallet::weight(<T as Config>::WeightInfo::mint(*quantity))]
 		#[transactional]
@@ -340,10 +332,7 @@ pub mod pallet {
 			let class_info =
 				orml_nft::Pallet::<T>::classes(class_id).ok_or(Error::<T>::ClassIdNotFound)?;
 			ensure!(who == class_info.owner, Error::<T>::NoPermission);
-			ensure!(
-				Self::check_time(&class_info.data),
-				Error::<T>::OutOfCampaignPeriod
-			);
+			ensure!(Self::check_time(&class_info.data), Error::<T>::OutOfCampaignPeriod);
 
 			match class_info.data.class_type {
 				ClassType::Simple(max_num) => {
@@ -351,15 +340,12 @@ pub mod pallet {
 					if TokenIdOf::<T>::from(quantity) + issued > TokenIdOf::<T>::from(max_num) {
 						Err(Error::<T>::QuantityOverflow)?
 					}
-				}
+				},
 				_ => Err(Error::<T>::WrongClassType)?,
 			}
 
 			// TODO: adjustible rarity
-			let data = TokenData {
-				used: false,
-				rarity: 0,
-			};
+			let data = TokenData { used: false, rarity: 0 };
 			for _ in 0..quantity {
 				orml_nft::Pallet::<T>::mint(&to, class_id, metadata.clone(), data.clone())?;
 			}
@@ -371,12 +357,12 @@ pub mod pallet {
 		/// Claim a `Claim(HashByte32)` by a whitelisted user,
 		/// with a Merkle proof that proves the user's account
 		/// is in the Merkle tree of the given root
-		/// 
+		///
 		/// Parameters:
 		/// - `index`: Index of user's Merkle proof
 		/// - `class_id`: Identifier of the NFT class to mint
 		/// - `proof`: Merkle proof
-		/// 
+		///
 		/// Emits `ClaimedToken` event when successful
 		#[pallet::weight(<T as Config>::WeightInfo::mint(1))]
 		#[transactional]
@@ -390,15 +376,9 @@ pub mod pallet {
 			let class_info =
 				orml_nft::Pallet::<T>::classes(class_id).ok_or(Error::<T>::ClassIdNotFound)?;
 
-			ensure!(
-				ClaimedList::<T>::contains_key(class_id),
-				Error::<T>::ClassClaimedListNotFound
-			);
+			ensure!(ClaimedList::<T>::contains_key(class_id), Error::<T>::ClassClaimedListNotFound);
 
-			ensure!(
-				Self::check_time(&class_info.data),
-				Error::<T>::OutOfCampaignPeriod
-			);
+			ensure!(Self::check_time(&class_info.data), Error::<T>::OutOfCampaignPeriod);
 
 			match class_info.data.class_type {
 				ClassType::Claim(merkle_root) => {
@@ -423,16 +403,13 @@ pub mod pallet {
 						merkle_proof::proof_verify(&computed_hash, &proof, &merkle_root),
 						Error::<T>::UserNotInClaimList
 					);
-				}
+				},
 
 				_ => Err(Error::<T>::WrongClassType)?,
 			}
 
 			// TODO: adjustable rarity
-			let data = TokenData {
-				used: false,
-				rarity: 0,
-			};
+			let data = TokenData { used: false, rarity: 0 };
 
 			// TODO: if metadata can change?
 			let metadata = class_info.metadata;
@@ -444,12 +421,12 @@ pub mod pallet {
 
 		/// Merge from two NFT instances and generate a new NFT
 		/// of type `Merge(ID, ID, bool)`
-		/// 
+		///
 		/// Parameters:
 		/// - `class_id`: Identifier of the NFT class to mint
 		/// - `token1`: First NFT of the merge base
 		/// - `token2`: Seconde NFT of the merge base
-		/// 
+		///
 		/// Emits `MergedToken` event when successful
 		#[pallet::weight(<T as Config>::WeightInfo::mint(1))]
 		#[transactional]
@@ -463,17 +440,14 @@ pub mod pallet {
 			let merged_class_info =
 				orml_nft::Pallet::<T>::classes(class_id).ok_or(Error::<T>::ClassIdNotFound)?;
 
-			ensure!(
-				Self::check_time(&merged_class_info.data),
-				Error::<T>::OutOfCampaignPeriod
-			);
+			ensure!(Self::check_time(&merged_class_info.data), Error::<T>::OutOfCampaignPeriod);
 
 			let mut burn = false;
 
 			if let ClassType::Merge(id1, id2, b) = merged_class_info.data.class_type {
 				ensure!(
-					((id1 == token1.0) && (id2 == token2.0))
-						|| ((id1 == token2.0) && (id2 == token1.0)),
+					((id1 == token1.0) && (id2 == token2.0)) ||
+						((id1 == token2.0) && (id2 == token1.0)),
 					Error::<T>::WrongMergeBase,
 				);
 				burn = b;
@@ -492,10 +466,7 @@ pub mod pallet {
 				Self::do_burn(&who, token1)?;
 				Self::do_burn(&who, token2)?;
 			} else {
-				ensure!(
-					!token_info1.data.used && !token_info2.data.used,
-					Error::<T>::TokenUsed
-				);
+				ensure!(!token_info1.data.used && !token_info2.data.used, Error::<T>::TokenUsed);
 				token_info1.data.used = true;
 				token_info2.data.used = true;
 				orml_nft::Tokens::<T>::insert(token1.0, token1.1, token_info1);
@@ -504,10 +475,7 @@ pub mod pallet {
 
 			// mint new token
 			// TODO: adjustible rarity
-			let data = TokenData {
-				used: false,
-				rarity: 0,
-			};
+			let data = TokenData { used: false, rarity: 0 };
 
 			// TODO: if metadata can change?
 			let metadata = merged_class_info.metadata;
@@ -523,7 +491,7 @@ pub mod pallet {
 		/// Parameters:
 		/// - `to`: Receiver of the token
 		/// - `token`: NFT instance to transfer
-		/// 
+		///
 		/// Emits `TransferredToken` event when successful
 		#[pallet::weight(<T as Config>::WeightInfo::transfer())]
 		#[transactional]
@@ -542,7 +510,7 @@ pub mod pallet {
 		///
 		/// Parameters:
 		/// - `token`: NFT instance to burn
-		/// 
+		///
 		/// Emits `BurnedToken` event when successful
 		#[pallet::weight(<T as Config>::WeightInfo::burn())]
 		#[transactional]
@@ -576,12 +544,7 @@ impl<T: Config> Pallet<T> {
 
 		orml_nft::Pallet::<T>::transfer(from, to, token)?;
 
-		Self::deposit_event(Event::TransferredToken(
-			from.clone(),
-			to.clone(),
-			token.0,
-			token.1,
-		));
+		Self::deposit_event(Event::TransferredToken(from.clone(), to.clone(), token.0, token.1));
 		Ok(())
 	}
 
@@ -591,10 +554,7 @@ impl<T: Config> Pallet<T> {
 		let class_info =
 			orml_nft::Pallet::<T>::classes(token.0).ok_or(Error::<T>::ClassIdNotFound)?;
 		let data = class_info.data;
-		ensure!(
-			data.properties.0.contains(ClassProperty::Burnable),
-			Error::<T>::NonBurnable
-		);
+		ensure!(data.properties.0.contains(ClassProperty::Burnable), Error::<T>::NonBurnable);
 
 		let token_info =
 			orml_nft::Pallet::<T>::tokens(token.0, token.1).ok_or(Error::<T>::TokenIdNotFound)?;
@@ -607,18 +567,18 @@ impl<T: Config> Pallet<T> {
 }
 
 impl<T: Config> Pallet<T> {
-	/// check if current block time is in the range of the time span given by the 
+	/// check if current block time is in the range of the time span given by the
 	/// token class info
 	fn check_time(token_info: &ClassData<BlockNumberOf<T>, ClassIdOf<T>>) -> bool {
 		let current_block_number = <frame_system::Pallet<T>>::block_number();
 		if let Some(start_block) = token_info.start_block {
 			if start_block > current_block_number {
-				return false;
+				return false
 			}
 		}
 		if let Some(end_block) = token_info.end_block {
 			if end_block < current_block_number {
-				return false;
+				return false
 			}
 		}
 		true
