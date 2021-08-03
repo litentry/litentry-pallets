@@ -271,14 +271,6 @@
 <span id="268">268</span>
 <span id="269">269</span>
 <span id="270">270</span>
-<span id="271">271</span>
-<span id="272">272</span>
-<span id="273">273</span>
-<span id="274">274</span>
-<span id="275">275</span>
-<span id="276">276</span>
-<span id="277">277</span>
-<span id="278">278</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! Based on https://github.com/sipa/bech32/tree/master/ref/rust</span>
 <span class="doccomment">//! // Copyright (c) 2017 Clark Moody</span>
@@ -304,117 +296,114 @@
 <span class="kw">use</span> <span class="ident">sp_std::prelude</span>::<span class="kw-2">*</span>;
 
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">WitnessProgram</span> {
-    <span class="doccomment">/// Witness program version</span>
-    <span class="kw">pub</span> <span class="ident">version</span>: <span class="ident">u8</span>,
-    <span class="doccomment">/// Witness program content</span>
-    <span class="kw">pub</span> <span class="ident">program</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>
+	<span class="doccomment">/// Witness program version</span>
+	<span class="kw">pub</span> <span class="ident">version</span>: <span class="ident">u8</span>,
+	<span class="doccomment">/// Witness program content</span>
+	<span class="kw">pub</span> <span class="ident">program</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>,
 }
 
 <span class="kw">impl</span> <span class="ident">WitnessProgram</span> {
-    <span class="doccomment">/// Converts a Witness Program to a SegWit Address</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">to_address</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">hrp</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>, <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span><span class="op">&gt;</span> {
-        <span class="comment">// Verify that the program is valid</span>
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">data</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span> <span class="op">=</span> <span class="macro">vec!</span>[<span class="self">self</span>.<span class="ident">version</span>];
-        <span class="comment">// Convert 8-bit program into 5-bit</span>
-        <span class="kw">let</span> <span class="ident">p5</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">program</span>.<span class="ident">to_base32</span>();
-        <span class="comment">// let p5 = convert_bits(self.program.to_vec(), 8, 5, true)?;</span>
-        <span class="ident">data</span>.<span class="ident">extend_from_slice</span>(<span class="kw-2">&amp;</span><span class="ident">p5</span>);
-        <span class="kw">let</span> <span class="ident">b32</span> <span class="op">=</span> <span class="ident">data</span>.<span class="ident">encode</span>(<span class="ident">hrp</span>)<span class="question-mark">?</span>;
-        <span class="prelude-val">Ok</span>(<span class="ident">b32</span>)
-    }
+	<span class="doccomment">/// Converts a Witness Program to a SegWit Address</span>
+	<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">to_address</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">hrp</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>, <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span><span class="op">&gt;</span> {
+		<span class="comment">// Verify that the program is valid</span>
+		<span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">data</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span> <span class="op">=</span> <span class="macro">vec!</span>[<span class="self">self</span>.<span class="ident">version</span>];
+		<span class="comment">// Convert 8-bit program into 5-bit</span>
+		<span class="kw">let</span> <span class="ident">p5</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">program</span>.<span class="ident">to_base32</span>();
+		<span class="comment">// let p5 = convert_bits(self.program.to_vec(), 8, 5, true)?;</span>
+		<span class="ident">data</span>.<span class="ident">extend_from_slice</span>(<span class="kw-2">&amp;</span><span class="ident">p5</span>);
+		<span class="kw">let</span> <span class="ident">b32</span> <span class="op">=</span> <span class="ident">data</span>.<span class="ident">encode</span>(<span class="ident">hrp</span>)<span class="question-mark">?</span>;
+		<span class="prelude-val">Ok</span>(<span class="ident">b32</span>)
+	}
 
-    <span class="doccomment">/// Extracts a WitnessProgram out of a provided script public key</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_scriptpubkey</span>(<span class="ident">pubkey</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span><span class="op">&gt;</span> {
-        <span class="comment">// We need a version byte and a program length byte, with a program at </span>
-        <span class="comment">// least 2 bytes long.</span>
-        <span class="kw">if</span> <span class="ident">pubkey</span>.<span class="ident">len</span>() <span class="op">&lt;</span> <span class="number">4</span> {
-            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="string">&quot;TooShort&quot;</span>)
-        }
-        <span class="kw">let</span> <span class="ident">proglen</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="ident">pubkey</span>[<span class="number">1</span>] <span class="kw">as</span> <span class="ident">usize</span>;
-        <span class="comment">// Check that program length byte is consistent with pubkey length</span>
-        <span class="kw">if</span> <span class="ident">pubkey</span>.<span class="ident">len</span>() <span class="op">!</span><span class="op">=</span> <span class="number">2</span> <span class="op">+</span> <span class="ident">proglen</span> {
-            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="string">&quot;InvalidLengthByte&quot;</span>)
-        }
-        <span class="comment">// Process script version</span>
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">v</span>: <span class="ident">u8</span> <span class="op">=</span> <span class="ident">pubkey</span>[<span class="number">0</span>];
-        <span class="kw">if</span> <span class="ident">v</span> <span class="op">&gt;</span> <span class="number">0x50</span> {
-            <span class="ident">v</span> <span class="op">-</span><span class="op">=</span> <span class="number">0x50</span>;
-        }
-        <span class="kw">let</span> <span class="ident">program</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">pubkey</span>[<span class="number">2</span>..];
-        <span class="prelude-val">Ok</span>(<span class="ident">WitnessProgram</span> {
-            <span class="ident">version</span>: <span class="ident">v</span>,
-            <span class="ident">program</span>: <span class="ident">program</span>.<span class="ident">to_vec</span>()
-        })
-    }
+	<span class="doccomment">/// Extracts a WitnessProgram out of a provided script public key</span>
+	<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_scriptpubkey</span>(<span class="ident">pubkey</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span><span class="op">&gt;</span> {
+		<span class="comment">// We need a version byte and a program length byte, with a program at</span>
+		<span class="comment">// least 2 bytes long.</span>
+		<span class="kw">if</span> <span class="ident">pubkey</span>.<span class="ident">len</span>() <span class="op">&lt;</span> <span class="number">4</span> {
+			<span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="string">&quot;TooShort&quot;</span>)
+		}
+		<span class="kw">let</span> <span class="ident">proglen</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="ident">pubkey</span>[<span class="number">1</span>] <span class="kw">as</span> <span class="ident">usize</span>;
+		<span class="comment">// Check that program length byte is consistent with pubkey length</span>
+		<span class="kw">if</span> <span class="ident">pubkey</span>.<span class="ident">len</span>() <span class="op">!</span><span class="op">=</span> <span class="number">2</span> <span class="op">+</span> <span class="ident">proglen</span> {
+			<span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="string">&quot;InvalidLengthByte&quot;</span>)
+		}
+		<span class="comment">// Process script version</span>
+		<span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">v</span>: <span class="ident">u8</span> <span class="op">=</span> <span class="ident">pubkey</span>[<span class="number">0</span>];
+		<span class="kw">if</span> <span class="ident">v</span> <span class="op">&gt;</span> <span class="number">0x50</span> {
+			<span class="ident">v</span> <span class="op">-</span><span class="op">=</span> <span class="number">0x50</span>;
+		}
+		<span class="kw">let</span> <span class="ident">program</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">pubkey</span>[<span class="number">2</span>..];
+		<span class="prelude-val">Ok</span>(<span class="ident">WitnessProgram</span> { <span class="ident">version</span>: <span class="ident">v</span>, <span class="ident">program</span>: <span class="ident">program</span>.<span class="ident">to_vec</span>() })
+	}
 }
 
 <span class="kw">const</span> <span class="ident">SEP</span>: <span class="ident">u8</span> <span class="op">=</span> <span class="string">b&#39;1&#39;</span>;
 <span class="kw">const</span> <span class="ident">ALPHABET</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> [<span class="ident">u8</span>] <span class="op">=</span> <span class="string">b&quot;qpzry9x8gf2tvdw0s3jn54khce6mua7l&quot;</span>;
 
 <span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">Bech32</span> {
-    <span class="kw">fn</span> <span class="ident">encode</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">hrp</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>, <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span><span class="op">&gt;</span>;
+	<span class="kw">fn</span> <span class="ident">encode</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">hrp</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>, <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span><span class="op">&gt;</span>;
 }
 
 <span class="kw">impl</span> <span class="ident">Bech32</span> <span class="kw">for</span> [<span class="ident">u8</span>] {
-    <span class="kw">fn</span> <span class="ident">encode</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">hrp</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>, <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span><span class="op">&gt;</span> {
-        <span class="kw">if</span> <span class="ident">hrp</span>.<span class="ident">len</span>() <span class="op">&lt;</span> <span class="number">1</span> {
-            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="string">&quot;invalidData&quot;</span>)
-        }
+	<span class="kw">fn</span> <span class="ident">encode</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">hrp</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>, <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span><span class="op">&gt;</span> {
+		<span class="kw">if</span> <span class="ident">hrp</span>.<span class="ident">len</span>() <span class="op">&lt;</span> <span class="number">1</span> {
+			<span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="string">&quot;invalidData&quot;</span>)
+		}
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">combined</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">clone</span>().<span class="ident">to_vec</span>();
-        <span class="ident">combined</span>.<span class="ident">extend_from_slice</span>(<span class="kw-2">&amp;</span><span class="ident">create_checksum</span>(<span class="kw-2">&amp;</span><span class="ident">hrp</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">to_vec</span>()));
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">encoded</span> <span class="op">=</span> <span class="ident">hrp</span>;
-        <span class="ident">encoded</span>.<span class="ident">push</span>(<span class="ident">SEP</span>);
-        <span class="kw">for</span> <span class="ident">p</span> <span class="kw">in</span> <span class="ident">combined</span> {
-            <span class="kw">if</span> <span class="ident">p</span> <span class="op">&gt;</span><span class="op">=</span> <span class="number">32</span> {
-                <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="string">&quot;invalidData&quot;</span>)
-            }
-            <span class="ident">encoded</span>.<span class="ident">push</span>(<span class="ident">ALPHABET</span>[<span class="ident">p</span> <span class="kw">as</span> <span class="ident">usize</span>]);
-        }
-        <span class="prelude-val">Ok</span>(<span class="ident">encoded</span>)
-    }
+		<span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">combined</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">clone</span>().<span class="ident">to_vec</span>();
+		<span class="ident">combined</span>.<span class="ident">extend_from_slice</span>(<span class="kw-2">&amp;</span><span class="ident">create_checksum</span>(<span class="kw-2">&amp;</span><span class="ident">hrp</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">to_vec</span>()));
+		<span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">encoded</span> <span class="op">=</span> <span class="ident">hrp</span>;
+		<span class="ident">encoded</span>.<span class="ident">push</span>(<span class="ident">SEP</span>);
+		<span class="kw">for</span> <span class="ident">p</span> <span class="kw">in</span> <span class="ident">combined</span> {
+			<span class="kw">if</span> <span class="ident">p</span> <span class="op">&gt;</span><span class="op">=</span> <span class="number">32</span> {
+				<span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="string">&quot;invalidData&quot;</span>)
+			}
+			<span class="ident">encoded</span>.<span class="ident">push</span>(<span class="ident">ALPHABET</span>[<span class="ident">p</span> <span class="kw">as</span> <span class="ident">usize</span>]);
+		}
+		<span class="prelude-val">Ok</span>(<span class="ident">encoded</span>)
+	}
 }
 
 <span class="kw">const</span> <span class="ident">GEN</span>: [<span class="ident">u32</span>; <span class="number">5</span>] <span class="op">=</span> [<span class="number">0x3b6a57b2</span>, <span class="number">0x26508e6d</span>, <span class="number">0x1ea119fa</span>, <span class="number">0x3d4233dd</span>, <span class="number">0x2a1462b3</span>];
 
 <span class="kw">fn</span> <span class="ident">hrp_expand</span>(<span class="ident">hrp</span>: <span class="kw-2">&amp;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">v</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">Vec::new</span>();
-    <span class="kw">for</span> <span class="ident">b</span> <span class="kw">in</span> <span class="ident">hrp</span> {
-        <span class="ident">v</span>.<span class="ident">push</span>(<span class="kw-2">*</span><span class="ident">b</span> <span class="op">&gt;</span><span class="op">&gt;</span> <span class="number">5</span>);
-    }
-    <span class="ident">v</span>.<span class="ident">push</span>(<span class="number">0</span>);
-    <span class="kw">for</span> <span class="ident">b</span> <span class="kw">in</span> <span class="ident">hrp</span> {
-        <span class="ident">v</span>.<span class="ident">push</span>(<span class="kw-2">*</span><span class="ident">b</span> <span class="op">&amp;</span> <span class="number">0x1f</span>);
-    }
-    <span class="ident">v</span>
+	<span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">v</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">Vec::new</span>();
+	<span class="kw">for</span> <span class="ident">b</span> <span class="kw">in</span> <span class="ident">hrp</span> {
+		<span class="ident">v</span>.<span class="ident">push</span>(<span class="kw-2">*</span><span class="ident">b</span> <span class="op">&gt;</span><span class="op">&gt;</span> <span class="number">5</span>);
+	}
+	<span class="ident">v</span>.<span class="ident">push</span>(<span class="number">0</span>);
+	<span class="kw">for</span> <span class="ident">b</span> <span class="kw">in</span> <span class="ident">hrp</span> {
+		<span class="ident">v</span>.<span class="ident">push</span>(<span class="kw-2">*</span><span class="ident">b</span> <span class="op">&amp;</span> <span class="number">0x1f</span>);
+	}
+	<span class="ident">v</span>
 }
 
 <span class="kw">fn</span> <span class="ident">create_checksum</span>(<span class="ident">hrp</span>: <span class="kw-2">&amp;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>, <span class="ident">data</span>: <span class="kw-2">&amp;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">values</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">hrp_expand</span>(<span class="ident">hrp</span>);
-    <span class="ident">values</span>.<span class="ident">extend_from_slice</span>(<span class="ident">data</span>);
-    <span class="comment">// Pad with 6 zeros</span>
-    <span class="ident">values</span>.<span class="ident">extend_from_slice</span>(<span class="kw-2">&amp;</span>[<span class="number">0u8</span>; <span class="number">6</span>]);
-    <span class="kw">let</span> <span class="ident">plm</span>: <span class="ident">u32</span> <span class="op">=</span> <span class="ident">polymod</span>(<span class="ident">values</span>) <span class="op">^</span> <span class="number">1</span>;
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">checksum</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">Vec::new</span>();
-    <span class="kw">for</span> <span class="ident">p</span> <span class="kw">in</span> <span class="number">0</span>..<span class="number">6</span> {
-        <span class="ident">checksum</span>.<span class="ident">push</span>(((<span class="ident">plm</span> <span class="op">&gt;</span><span class="op">&gt;</span> <span class="number">5</span> <span class="op">*</span> (<span class="number">5</span> <span class="op">-</span> <span class="ident">p</span>)) <span class="op">&amp;</span> <span class="number">0x1f</span>) <span class="kw">as</span> <span class="ident">u8</span>);
-    }
-    <span class="ident">checksum</span>
+	<span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">values</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">hrp_expand</span>(<span class="ident">hrp</span>);
+	<span class="ident">values</span>.<span class="ident">extend_from_slice</span>(<span class="ident">data</span>);
+	<span class="comment">// Pad with 6 zeros</span>
+	<span class="ident">values</span>.<span class="ident">extend_from_slice</span>(<span class="kw-2">&amp;</span>[<span class="number">0u8</span>; <span class="number">6</span>]);
+	<span class="kw">let</span> <span class="ident">plm</span>: <span class="ident">u32</span> <span class="op">=</span> <span class="ident">polymod</span>(<span class="ident">values</span>) <span class="op">^</span> <span class="number">1</span>;
+	<span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">checksum</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">Vec::new</span>();
+	<span class="kw">for</span> <span class="ident">p</span> <span class="kw">in</span> <span class="number">0</span>..<span class="number">6</span> {
+		<span class="ident">checksum</span>.<span class="ident">push</span>(((<span class="ident">plm</span> <span class="op">&gt;</span><span class="op">&gt;</span> <span class="number">5</span> <span class="op">*</span> (<span class="number">5</span> <span class="op">-</span> <span class="ident">p</span>)) <span class="op">&amp;</span> <span class="number">0x1f</span>) <span class="kw">as</span> <span class="ident">u8</span>);
+	}
+	<span class="ident">checksum</span>
 }
 
 <span class="kw">fn</span> <span class="ident">polymod</span>(<span class="ident">values</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">u32</span> {
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">chk</span>: <span class="ident">u32</span> <span class="op">=</span> <span class="number">1</span>;
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">b</span>: <span class="ident">u8</span>;
-    <span class="kw">for</span> <span class="ident">v</span> <span class="kw">in</span> <span class="ident">values</span> {
-        <span class="ident">b</span> <span class="op">=</span> (<span class="ident">chk</span> <span class="op">&gt;</span><span class="op">&gt;</span> <span class="number">25</span>) <span class="kw">as</span> <span class="ident">u8</span>;
-        <span class="ident">chk</span> <span class="op">=</span> (<span class="ident">chk</span> <span class="op">&amp;</span> <span class="number">0x1ffffff</span>) <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">5</span> <span class="op">^</span> (<span class="ident">v</span> <span class="kw">as</span> <span class="ident">u32</span>);
-        <span class="kw">for</span> <span class="ident">i</span> <span class="kw">in</span> <span class="number">0</span>..<span class="number">5</span> {
-            <span class="kw">if</span> (<span class="ident">b</span> <span class="op">&gt;</span><span class="op">&gt;</span> <span class="ident">i</span>) <span class="op">&amp;</span> <span class="number">1</span> <span class="op">=</span><span class="op">=</span> <span class="number">1</span> {
-                <span class="ident">chk</span> <span class="op">^</span><span class="op">=</span> <span class="ident">GEN</span>[<span class="ident">i</span>]
-            }
-        }
-    }
-    <span class="ident">chk</span>
+	<span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">chk</span>: <span class="ident">u32</span> <span class="op">=</span> <span class="number">1</span>;
+	<span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">b</span>: <span class="ident">u8</span>;
+	<span class="kw">for</span> <span class="ident">v</span> <span class="kw">in</span> <span class="ident">values</span> {
+		<span class="ident">b</span> <span class="op">=</span> (<span class="ident">chk</span> <span class="op">&gt;</span><span class="op">&gt;</span> <span class="number">25</span>) <span class="kw">as</span> <span class="ident">u8</span>;
+		<span class="ident">chk</span> <span class="op">=</span> (<span class="ident">chk</span> <span class="op">&amp;</span> <span class="number">0x1ffffff</span>) <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">5</span> <span class="op">^</span> (<span class="ident">v</span> <span class="kw">as</span> <span class="ident">u32</span>);
+		<span class="kw">for</span> <span class="ident">i</span> <span class="kw">in</span> <span class="number">0</span>..<span class="number">5</span> {
+			<span class="kw">if</span> (<span class="ident">b</span> <span class="op">&gt;</span><span class="op">&gt;</span> <span class="ident">i</span>) <span class="op">&amp;</span> <span class="number">1</span> <span class="op">=</span><span class="op">=</span> <span class="number">1</span> {
+				<span class="ident">chk</span> <span class="op">^</span><span class="op">=</span> <span class="ident">GEN</span>[<span class="ident">i</span>]
+			}
+		}
+	}
+	<span class="ident">chk</span>
 }
 
 <span class="doccomment">/// A trait for converting a value to base58 encoded string.</span>
@@ -424,76 +413,74 @@
 }
 
 <span class="kw">impl</span> <span class="ident">ToBase32</span> <span class="kw">for</span> [<span class="ident">u8</span>] {
-    <span class="comment">// /// Convert between bit sizes</span>
-    <span class="comment">// fn to_base32(&amp;self) -&gt; Vec&lt;u8&gt; {</span>
-    <span class="comment">//     let from: u32 = 8;</span>
-    <span class="comment">//     let to: u32 = 5;</span>
+	<span class="comment">// /// Convert between bit sizes</span>
+	<span class="comment">// fn to_base32(&amp;self) -&gt; Vec&lt;u8&gt; {</span>
+	<span class="comment">//     let from: u32 = 8;</span>
+	<span class="comment">//     let to: u32 = 5;</span>
 
-    <span class="comment">//     let mut acc: u32 = 0;</span>
-    <span class="comment">//     let mut bits: u32 = 0;</span>
-    <span class="comment">//     let mut ret: Vec&lt;u8&gt; = Vec::new();</span>
-    <span class="comment">//     let maxv: u32 = (1&lt;&lt;to) - 1;</span>
-    <span class="comment">//     for &amp;value in self.into_iter() {</span>
-    <span class="comment">//         let v: u32 = value as u32;</span>
+	<span class="comment">//     let mut acc: u32 = 0;</span>
+	<span class="comment">//     let mut bits: u32 = 0;</span>
+	<span class="comment">//     let mut ret: Vec&lt;u8&gt; = Vec::new();</span>
+	<span class="comment">//     let maxv: u32 = (1&lt;&lt;to) - 1;</span>
+	<span class="comment">//     for &amp;value in self.into_iter() {</span>
+	<span class="comment">//         let v: u32 = value as u32;</span>
 
-    <span class="comment">//         acc = (acc &lt;&lt; from) | v;</span>
-    <span class="comment">//         bits += from;</span>
-    <span class="comment">//         while bits &gt;= to {</span>
-    <span class="comment">//             bits -= to;</span>
-    <span class="comment">//             ret.push(((acc &gt;&gt; bits) &amp; maxv) as u8);</span>
-    <span class="comment">//         }</span>
-    <span class="comment">//     }</span>
-    <span class="comment">//     if bits &gt; 0 {</span>
-    <span class="comment">//         ret.push(((acc &lt;&lt; (to - bits)) &amp; maxv) as u8);</span>
-    <span class="comment">//     }</span>
+	<span class="comment">//         acc = (acc &lt;&lt; from) | v;</span>
+	<span class="comment">//         bits += from;</span>
+	<span class="comment">//         while bits &gt;= to {</span>
+	<span class="comment">//             bits -= to;</span>
+	<span class="comment">//             ret.push(((acc &gt;&gt; bits) &amp; maxv) as u8);</span>
+	<span class="comment">//         }</span>
+	<span class="comment">//     }</span>
+	<span class="comment">//     if bits &gt; 0 {</span>
+	<span class="comment">//         ret.push(((acc &lt;&lt; (to - bits)) &amp; maxv) as u8);</span>
+	<span class="comment">//     }</span>
 
-    <span class="comment">//     ret</span>
-    <span class="comment">// }</span>
+	<span class="comment">//     ret</span>
+	<span class="comment">// }</span>
 
 	<span class="kw">fn</span> <span class="ident">to_base32</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span> {
-        <span class="comment">// Amount of bits left over from last round, stored in buffer.</span>
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">buffer_bits</span> <span class="op">=</span> <span class="number">0u32</span>;
-        <span class="comment">// Holds all unwritten bits left over from last round. The bits are stored beginning from</span>
-        <span class="comment">// the most significant bit. E.g. if buffer_bits=3, then the byte with bits a, b and c will</span>
-        <span class="comment">// look as follows: [a, b, c, 0, 0, 0, 0, 0]</span>
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">buffer</span>: <span class="ident">u8</span> <span class="op">=</span> <span class="number">0</span>;
+		<span class="comment">// Amount of bits left over from last round, stored in buffer.</span>
+		<span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">buffer_bits</span> <span class="op">=</span> <span class="number">0u32</span>;
+		<span class="comment">// Holds all unwritten bits left over from last round. The bits are stored beginning from</span>
+		<span class="comment">// the most significant bit. E.g. if buffer_bits=3, then the byte with bits a, b and c will</span>
+		<span class="comment">// look as follows: [a, b, c, 0, 0, 0, 0, 0]</span>
+		<span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">buffer</span>: <span class="ident">u8</span> <span class="op">=</span> <span class="number">0</span>;
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">Vec::new</span>();
+		<span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">Vec::new</span>();
 
+		<span class="kw">for</span> <span class="ident">b</span> <span class="kw">in</span> <span class="self">self</span>.<span class="ident">into_iter</span>() {
+			<span class="comment">// Write first u5 if we have to write two u5s this round. That only happens if the</span>
+			<span class="comment">// buffer holds too many bits, so we don&#39;t have to combine buffer bits with new bits</span>
+			<span class="comment">// from this rounds byte.</span>
+			<span class="kw">if</span> <span class="ident">buffer_bits</span> <span class="op">&gt;</span><span class="op">=</span> <span class="number">5</span> {
+				<span class="ident">result</span>.<span class="ident">push</span>((<span class="ident">buffer</span> <span class="op">&amp;</span> <span class="number">0b1111_1000</span>) <span class="op">&gt;</span><span class="op">&gt;</span> <span class="number">3</span>);
+				<span class="ident">buffer</span> <span class="op">&lt;</span><span class="op">&lt;</span><span class="op">=</span> <span class="number">5</span>;
+				<span class="ident">buffer_bits</span> <span class="op">-</span><span class="op">=</span> <span class="number">5</span>;
+			}
 
-        <span class="kw">for</span> <span class="ident">b</span> <span class="kw">in</span> <span class="self">self</span>.<span class="ident">into_iter</span>() {
-            <span class="comment">// Write first u5 if we have to write two u5s this round. That only happens if the</span>
-            <span class="comment">// buffer holds too many bits, so we don&#39;t have to combine buffer bits with new bits</span>
-            <span class="comment">// from this rounds byte.</span>
-            <span class="kw">if</span> <span class="ident">buffer_bits</span> <span class="op">&gt;</span><span class="op">=</span> <span class="number">5</span> {
-                <span class="ident">result</span>.<span class="ident">push</span>((<span class="ident">buffer</span> <span class="op">&amp;</span> <span class="number">0b1111_1000</span>) <span class="op">&gt;</span><span class="op">&gt;</span> <span class="number">3</span>);
-                <span class="ident">buffer</span> <span class="op">&lt;</span><span class="op">&lt;</span><span class="op">=</span> <span class="number">5</span>;
-                <span class="ident">buffer_bits</span> <span class="op">-</span><span class="op">=</span> <span class="number">5</span>;
-            }
+			<span class="comment">// Combine all bits from buffer with enough bits from this rounds byte so that they fill</span>
+			<span class="comment">// a u5. Save remaining bits from byte to buffer.</span>
+			<span class="kw">let</span> <span class="ident">from_buffer</span> <span class="op">=</span> <span class="ident">buffer</span> <span class="op">&gt;</span><span class="op">&gt;</span> <span class="number">3</span>;
+			<span class="kw">let</span> <span class="ident">from_byte</span> <span class="op">=</span> <span class="ident">b</span> <span class="op">&gt;</span><span class="op">&gt;</span> (<span class="number">3</span> <span class="op">+</span> <span class="ident">buffer_bits</span>); <span class="comment">// buffer_bits &lt;= 4</span>
 
-            <span class="comment">// Combine all bits from buffer with enough bits from this rounds byte so that they fill</span>
-            <span class="comment">// a u5. Save remaining bits from byte to buffer.</span>
-            <span class="kw">let</span> <span class="ident">from_buffer</span> <span class="op">=</span> <span class="ident">buffer</span> <span class="op">&gt;</span><span class="op">&gt;</span> <span class="number">3</span>;
-            <span class="kw">let</span> <span class="ident">from_byte</span> <span class="op">=</span> <span class="ident">b</span> <span class="op">&gt;</span><span class="op">&gt;</span> (<span class="number">3</span> <span class="op">+</span> <span class="ident">buffer_bits</span>); <span class="comment">// buffer_bits &lt;= 4</span>
+			<span class="ident">result</span>.<span class="ident">push</span>(<span class="ident">from_buffer</span> <span class="op">|</span> <span class="ident">from_byte</span>);
+			<span class="ident">buffer</span> <span class="op">=</span> <span class="ident">b</span> <span class="op">&lt;</span><span class="op">&lt;</span> (<span class="number">5</span> <span class="op">-</span> <span class="ident">buffer_bits</span>);
+			<span class="ident">buffer_bits</span> <span class="op">+</span><span class="op">=</span> <span class="number">3</span>;
+		}
 
-            <span class="ident">result</span>.<span class="ident">push</span>(<span class="ident">from_buffer</span> <span class="op">|</span> <span class="ident">from_byte</span>);
-            <span class="ident">buffer</span> <span class="op">=</span> <span class="ident">b</span> <span class="op">&lt;</span><span class="op">&lt;</span> (<span class="number">5</span> <span class="op">-</span> <span class="ident">buffer_bits</span>);
-            <span class="ident">buffer_bits</span> <span class="op">+</span><span class="op">=</span> <span class="number">3</span>;
-        }
+		<span class="comment">// There can be at most two u5s left in the buffer after processing all bytes, write them.</span>
+		<span class="kw">if</span> <span class="ident">buffer_bits</span> <span class="op">&gt;</span><span class="op">=</span> <span class="number">5</span> {
+			<span class="ident">result</span>.<span class="ident">push</span>((<span class="ident">buffer</span> <span class="op">&amp;</span> <span class="number">0b1111_1000</span>) <span class="op">&gt;</span><span class="op">&gt;</span> <span class="number">3</span>);
+			<span class="ident">buffer</span> <span class="op">&lt;</span><span class="op">&lt;</span><span class="op">=</span> <span class="number">5</span>;
+			<span class="ident">buffer_bits</span> <span class="op">-</span><span class="op">=</span> <span class="number">5</span>;
+		}
 
-        <span class="comment">// There can be at most two u5s left in the buffer after processing all bytes, write them.</span>
-        <span class="kw">if</span> <span class="ident">buffer_bits</span> <span class="op">&gt;</span><span class="op">=</span> <span class="number">5</span> {
-            <span class="ident">result</span>.<span class="ident">push</span>((<span class="ident">buffer</span> <span class="op">&amp;</span> <span class="number">0b1111_1000</span>) <span class="op">&gt;</span><span class="op">&gt;</span> <span class="number">3</span>);
-            <span class="ident">buffer</span> <span class="op">&lt;</span><span class="op">&lt;</span><span class="op">=</span> <span class="number">5</span>;
-            <span class="ident">buffer_bits</span> <span class="op">-</span><span class="op">=</span> <span class="number">5</span>;
-        }
+		<span class="kw">if</span> <span class="ident">buffer_bits</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span> {
+			<span class="ident">result</span>.<span class="ident">push</span>(<span class="ident">buffer</span> <span class="op">&gt;</span><span class="op">&gt;</span> <span class="number">3</span>);
+		}
 
-        <span class="kw">if</span> <span class="ident">buffer_bits</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span> {
-            <span class="ident">result</span>.<span class="ident">push</span>(<span class="ident">buffer</span> <span class="op">&gt;</span><span class="op">&gt;</span> <span class="number">3</span>);
-        }
-
-        <span class="ident">result</span>
-
+		<span class="ident">result</span>
 	}
 }
 
@@ -504,59 +491,57 @@
 
 	<span class="attribute">#[<span class="ident">test</span>]</span>
 	<span class="kw">fn</span> <span class="ident">test_to_base32_basic</span>() {
-		<span class="macro">assert_eq!</span>(<span class="ident">from_utf8</span>(<span class="kw-2">&amp;</span><span class="macro">vec!</span>[<span class="number">0x00</span>, <span class="number">0x01</span>, <span class="number">0x02</span>].<span class="ident">encode</span>(<span class="string">b&quot;bech32&quot;</span>.<span class="ident">to_vec</span>()).<span class="ident">unwrap</span>()).<span class="ident">unwrap</span>(), <span class="string">&quot;bech321qpz4nc4pe&quot;</span>);
-    }
+		<span class="macro">assert_eq!</span>(
+			<span class="ident">from_utf8</span>(<span class="kw-2">&amp;</span><span class="macro">vec!</span>[<span class="number">0x00</span>, <span class="number">0x01</span>, <span class="number">0x02</span>].<span class="ident">encode</span>(<span class="string">b&quot;bech32&quot;</span>.<span class="ident">to_vec</span>()).<span class="ident">unwrap</span>()).<span class="ident">unwrap</span>(),
+			<span class="string">&quot;bech321qpz4nc4pe&quot;</span>
+		);
+	}
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">valid_address</span>() {
-        <span class="kw">let</span> <span class="ident">pairs</span>: <span class="ident">Vec</span><span class="op">&lt;</span>(<span class="kw-2">&amp;</span><span class="ident">str</span>, <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>)<span class="op">&gt;</span> <span class="op">=</span> <span class="macro">vec!</span>[
-            (
-                <span class="string">&quot;BC1QW508D6QEJXTDG4Y5R3ZARVARY0C5XW7KV8F3T4&quot;</span>,
-                <span class="macro">vec!</span>[
-                    <span class="number">0x00</span>, <span class="number">0x14</span>, <span class="number">0x75</span>, <span class="number">0x1e</span>, <span class="number">0x76</span>, <span class="number">0xe8</span>, <span class="number">0x19</span>, <span class="number">0x91</span>, <span class="number">0x96</span>, <span class="number">0xd4</span>, <span class="number">0x54</span>,
-                    <span class="number">0x94</span>, <span class="number">0x1c</span>, <span class="number">0x45</span>, <span class="number">0xd1</span>, <span class="number">0xb3</span>, <span class="number">0xa3</span>, <span class="number">0x23</span>, <span class="number">0xf1</span>, <span class="number">0x43</span>, <span class="number">0x3b</span>, <span class="number">0xd6</span>
-                ]
-            ),
-            (
-                <span class="string">&quot;bc1pw508d6qejxtdg4y5r3zarvary0c5xw7kw508d6qejxtdg4y5r3zarvary0c5xw7k7grplx&quot;</span>,
-                <span class="macro">vec!</span>[
-                    <span class="number">0x51</span>, <span class="number">0x28</span>, <span class="number">0x75</span>, <span class="number">0x1e</span>, <span class="number">0x76</span>, <span class="number">0xe8</span>, <span class="number">0x19</span>, <span class="number">0x91</span>, <span class="number">0x96</span>, <span class="number">0xd4</span>, <span class="number">0x54</span>,
-                    <span class="number">0x94</span>, <span class="number">0x1c</span>, <span class="number">0x45</span>, <span class="number">0xd1</span>, <span class="number">0xb3</span>, <span class="number">0xa3</span>, <span class="number">0x23</span>, <span class="number">0xf1</span>, <span class="number">0x43</span>, <span class="number">0x3b</span>, <span class="number">0xd6</span>,
-                    <span class="number">0x75</span>, <span class="number">0x1e</span>, <span class="number">0x76</span>, <span class="number">0xe8</span>, <span class="number">0x19</span>, <span class="number">0x91</span>, <span class="number">0x96</span>, <span class="number">0xd4</span>, <span class="number">0x54</span>, <span class="number">0x94</span>, <span class="number">0x1c</span>,
-                    <span class="number">0x45</span>, <span class="number">0xd1</span>, <span class="number">0xb3</span>, <span class="number">0xa3</span>, <span class="number">0x23</span>, <span class="number">0xf1</span>, <span class="number">0x43</span>, <span class="number">0x3b</span>, <span class="number">0xd6</span>
-                ]
-            ),
-            (
-                <span class="string">&quot;BC1SW50QA3JX3S&quot;</span>,
-                <span class="macro">vec!</span>[
-                   <span class="number">0x60</span>, <span class="number">0x02</span>, <span class="number">0x75</span>, <span class="number">0x1e</span>
-                ]
-            ),
-            (
-                <span class="string">&quot;bc1zw508d6qejxtdg4y5r3zarvaryvg6kdaj&quot;</span>,
-                <span class="macro">vec!</span>[
-                    <span class="number">0x52</span>, <span class="number">0x10</span>, <span class="number">0x75</span>, <span class="number">0x1e</span>, <span class="number">0x76</span>, <span class="number">0xe8</span>, <span class="number">0x19</span>, <span class="number">0x91</span>, <span class="number">0x96</span>, <span class="number">0xd4</span>, <span class="number">0x54</span>,
-                    <span class="number">0x94</span>, <span class="number">0x1c</span>, <span class="number">0x45</span>, <span class="number">0xd1</span>, <span class="number">0xb3</span>, <span class="number">0xa3</span>, <span class="number">0x23</span>
-                ]
-            ),
-        ];
-        <span class="kw">for</span> <span class="ident">p</span> <span class="kw">in</span> <span class="ident">pairs</span> {
-            <span class="kw">let</span> (<span class="ident">address</span>, <span class="ident">scriptpubkey</span>) <span class="op">=</span> <span class="ident">p</span>;
+	<span class="attribute">#[<span class="ident">test</span>]</span>
+	<span class="kw">fn</span> <span class="ident">valid_address</span>() {
+		<span class="kw">let</span> <span class="ident">pairs</span>: <span class="ident">Vec</span><span class="op">&lt;</span>(<span class="kw-2">&amp;</span><span class="ident">str</span>, <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>)<span class="op">&gt;</span> <span class="op">=</span> <span class="macro">vec!</span>[
+			(
+				<span class="string">&quot;BC1QW508D6QEJXTDG4Y5R3ZARVARY0C5XW7KV8F3T4&quot;</span>,
+				<span class="macro">vec!</span>[
+					<span class="number">0x00</span>, <span class="number">0x14</span>, <span class="number">0x75</span>, <span class="number">0x1e</span>, <span class="number">0x76</span>, <span class="number">0xe8</span>, <span class="number">0x19</span>, <span class="number">0x91</span>, <span class="number">0x96</span>, <span class="number">0xd4</span>, <span class="number">0x54</span>, <span class="number">0x94</span>, <span class="number">0x1c</span>,
+					<span class="number">0x45</span>, <span class="number">0xd1</span>, <span class="number">0xb3</span>, <span class="number">0xa3</span>, <span class="number">0x23</span>, <span class="number">0xf1</span>, <span class="number">0x43</span>, <span class="number">0x3b</span>, <span class="number">0xd6</span>,
+				],
+			),
+			(
+				<span class="string">&quot;bc1pw508d6qejxtdg4y5r3zarvary0c5xw7kw508d6qejxtdg4y5r3zarvary0c5xw7k7grplx&quot;</span>,
+				<span class="macro">vec!</span>[
+					<span class="number">0x51</span>, <span class="number">0x28</span>, <span class="number">0x75</span>, <span class="number">0x1e</span>, <span class="number">0x76</span>, <span class="number">0xe8</span>, <span class="number">0x19</span>, <span class="number">0x91</span>, <span class="number">0x96</span>, <span class="number">0xd4</span>, <span class="number">0x54</span>, <span class="number">0x94</span>, <span class="number">0x1c</span>,
+					<span class="number">0x45</span>, <span class="number">0xd1</span>, <span class="number">0xb3</span>, <span class="number">0xa3</span>, <span class="number">0x23</span>, <span class="number">0xf1</span>, <span class="number">0x43</span>, <span class="number">0x3b</span>, <span class="number">0xd6</span>, <span class="number">0x75</span>, <span class="number">0x1e</span>, <span class="number">0x76</span>, <span class="number">0xe8</span>,
+					<span class="number">0x19</span>, <span class="number">0x91</span>, <span class="number">0x96</span>, <span class="number">0xd4</span>, <span class="number">0x54</span>, <span class="number">0x94</span>, <span class="number">0x1c</span>, <span class="number">0x45</span>, <span class="number">0xd1</span>, <span class="number">0xb3</span>, <span class="number">0xa3</span>, <span class="number">0x23</span>, <span class="number">0xf1</span>,
+					<span class="number">0x43</span>, <span class="number">0x3b</span>, <span class="number">0xd6</span>,
+				],
+			),
+			(<span class="string">&quot;BC1SW50QA3JX3S&quot;</span>, <span class="macro">vec!</span>[<span class="number">0x60</span>, <span class="number">0x02</span>, <span class="number">0x75</span>, <span class="number">0x1e</span>]),
+			(
+				<span class="string">&quot;bc1zw508d6qejxtdg4y5r3zarvaryvg6kdaj&quot;</span>,
+				<span class="macro">vec!</span>[
+					<span class="number">0x52</span>, <span class="number">0x10</span>, <span class="number">0x75</span>, <span class="number">0x1e</span>, <span class="number">0x76</span>, <span class="number">0xe8</span>, <span class="number">0x19</span>, <span class="number">0x91</span>, <span class="number">0x96</span>, <span class="number">0xd4</span>, <span class="number">0x54</span>, <span class="number">0x94</span>, <span class="number">0x1c</span>,
+					<span class="number">0x45</span>, <span class="number">0xd1</span>, <span class="number">0xb3</span>, <span class="number">0xa3</span>, <span class="number">0x23</span>,
+				],
+			),
+		];
+		<span class="kw">for</span> <span class="ident">p</span> <span class="kw">in</span> <span class="ident">pairs</span> {
+			<span class="kw">let</span> (<span class="ident">address</span>, <span class="ident">scriptpubkey</span>) <span class="op">=</span> <span class="ident">p</span>;
 
-            <span class="kw">let</span> <span class="ident">hrp</span> <span class="op">=</span> <span class="string">b&quot;bc&quot;</span>.<span class="ident">to_vec</span>();
+			<span class="kw">let</span> <span class="ident">hrp</span> <span class="op">=</span> <span class="string">b&quot;bc&quot;</span>.<span class="ident">to_vec</span>();
 
-            <span class="kw">let</span> <span class="ident">spk_result</span> <span class="op">=</span> <span class="ident">WitnessProgram::from_scriptpubkey</span>(<span class="kw-2">&amp;</span><span class="ident">scriptpubkey</span>);
-            <span class="macro">assert!</span>(<span class="ident">spk_result</span>.<span class="ident">is_ok</span>());
-            <span class="kw">let</span> <span class="ident">prog</span> <span class="op">=</span> <span class="ident">spk_result</span>.<span class="ident">unwrap</span>();
+			<span class="kw">let</span> <span class="ident">spk_result</span> <span class="op">=</span> <span class="ident">WitnessProgram::from_scriptpubkey</span>(<span class="kw-2">&amp;</span><span class="ident">scriptpubkey</span>);
+			<span class="macro">assert!</span>(<span class="ident">spk_result</span>.<span class="ident">is_ok</span>());
+			<span class="kw">let</span> <span class="ident">prog</span> <span class="op">=</span> <span class="ident">spk_result</span>.<span class="ident">unwrap</span>();
 
-            <span class="kw">let</span> <span class="ident">enc_result</span> <span class="op">=</span> <span class="ident">prog</span>.<span class="ident">to_address</span>(<span class="ident">hrp</span>);
-            <span class="macro">assert!</span>(<span class="ident">enc_result</span>.<span class="ident">is_ok</span>());
+			<span class="kw">let</span> <span class="ident">enc_result</span> <span class="op">=</span> <span class="ident">prog</span>.<span class="ident">to_address</span>(<span class="ident">hrp</span>);
+			<span class="macro">assert!</span>(<span class="ident">enc_result</span>.<span class="ident">is_ok</span>());
 
-            <span class="kw">let</span> <span class="ident">enc_address</span> <span class="op">=</span> <span class="ident">enc_result</span>.<span class="ident">unwrap</span>();
-            <span class="macro">assert_eq!</span>(<span class="ident">address</span>.<span class="ident">to_lowercase</span>(), <span class="ident">from_utf8</span>(<span class="kw-2">&amp;</span><span class="ident">enc_address</span>).<span class="ident">unwrap</span>().<span class="ident">to_lowercase</span>());
-        }
-    }
-    
-}</pre></div>
+			<span class="kw">let</span> <span class="ident">enc_address</span> <span class="op">=</span> <span class="ident">enc_result</span>.<span class="ident">unwrap</span>();
+			<span class="macro">assert_eq!</span>(<span class="ident">address</span>.<span class="ident">to_lowercase</span>(), <span class="ident">from_utf8</span>(<span class="kw-2">&amp;</span><span class="ident">enc_address</span>).<span class="ident">unwrap</span>().<span class="ident">to_lowercase</span>());
+		}
+	}
+}
+</pre></div>
 </section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="pallet_account_linker" data-search-index-js="../../../search-index.js" data-search-js="../../../search.js"></div>
     <script src="../../../main.js"></script><script src="../../../source-script.js"></script><script src="../../../source-files.js"></script></body></html>

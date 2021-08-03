@@ -609,46 +609,6 @@
 <span id="606">606</span>
 <span id="607">607</span>
 <span id="608">608</span>
-<span id="609">609</span>
-<span id="610">610</span>
-<span id="611">611</span>
-<span id="612">612</span>
-<span id="613">613</span>
-<span id="614">614</span>
-<span id="615">615</span>
-<span id="616">616</span>
-<span id="617">617</span>
-<span id="618">618</span>
-<span id="619">619</span>
-<span id="620">620</span>
-<span id="621">621</span>
-<span id="622">622</span>
-<span id="623">623</span>
-<span id="624">624</span>
-<span id="625">625</span>
-<span id="626">626</span>
-<span id="627">627</span>
-<span id="628">628</span>
-<span id="629">629</span>
-<span id="630">630</span>
-<span id="631">631</span>
-<span id="632">632</span>
-<span id="633">633</span>
-<span id="634">634</span>
-<span id="635">635</span>
-<span id="636">636</span>
-<span id="637">637</span>
-<span id="638">638</span>
-<span id="639">639</span>
-<span id="640">640</span>
-<span id="641">641</span>
-<span id="642">642</span>
-<span id="643">643</span>
-<span id="644">644</span>
-<span id="645">645</span>
-<span id="646">646</span>
-<span id="647">647</span>
-<span id="648">648</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! # NFT Pallet</span>
 <span class="doccomment">//!</span>
@@ -667,26 +627,27 @@
 <span class="doccomment">//! ### Dispatchable Functions</span>
 <span class="doccomment">//! #### Class Issuance</span>
 <span class="doccomment">//! * `create_class` - Create an NFT class (think the whole CryptoKitties or Hashmask each as a class)</span>
-<span class="doccomment">//! </span>
+<span class="doccomment">//!</span>
 <span class="doccomment">//! #### Instance Generation</span>
 <span class="doccomment">//! * `mint` - Mint specified number of instance of `Simple(u32)` type</span>
 <span class="doccomment">//! * `claim` - Whitelisted user claim an instance of `Claim(HashByte32)`, with a Merkle proof whose root</span>
 <span class="doccomment">//! is the HashByte32</span>
 <span class="doccomment">//! * `merge` - From two NFT instance, mint a new NFT instance of `Merge(ID, ID, bool)` type</span>
-<span class="doccomment">//! </span>
+<span class="doccomment">//!</span>
 <span class="doccomment">//! #### Daily User Actions</span>
 <span class="doccomment">//! * `transfer` - Transfer ownership of a transferable NFT</span>
 <span class="doccomment">//! * `burn` - Burn a burnable NFT</span>
-<span class="doccomment">//! </span>
+<span class="doccomment">//!</span>
 <span class="doccomment">//! [`Call`]: ./enum.Call.html</span>
 <span class="doccomment">//! [`Config`]: ./trait.Config.html</span>
 
 <span class="attribute">#![<span class="ident">cfg_attr</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;std&quot;</span>), <span class="ident">no_std</span>)]</span>
 
 <span class="kw">use</span> <span class="ident">enumflags2::BitFlags</span>;
-<span class="kw">use</span> <span class="ident">frame_support</span>::{<span class="ident">pallet_prelude</span>::<span class="kw-2">*</span>, <span class="ident">transactional</span>};
-<span class="kw">use</span> <span class="ident">frame_support::traits</span>::{
-	<span class="ident">Currency</span>, <span class="ident">Get</span>, <span class="ident">ExistenceRequirement::KeepAlive</span>,
+<span class="kw">use</span> <span class="ident">frame_support</span>::{
+	<span class="ident">pallet_prelude</span>::<span class="kw-2">*</span>,
+	<span class="ident">traits</span>::{<span class="ident">Currency</span>, <span class="ident">ExistenceRequirement::KeepAlive</span>, <span class="ident">Get</span>},
+	<span class="ident">transactional</span>,
 };
 <span class="kw">use</span> <span class="ident">frame_system::pallet_prelude</span>::<span class="kw-2">*</span>;
 <span class="kw">use</span> <span class="ident">orml_traits::NFT</span>;
@@ -699,10 +660,10 @@
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
 <span class="kw">mod</span> <span class="ident">mock</span>;
 
+<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">benchmarking</span>;
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
 <span class="kw">mod</span> <span class="ident">tests</span>;
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">weights</span>;
-<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">benchmarking</span>;
 
 <span class="kw">mod</span> <span class="ident">impl_nonfungibles</span>;
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">merkle_proof</span>;
@@ -738,9 +699,7 @@
 <span class="kw">impl</span> <span class="ident">Decode</span> <span class="kw">for</span> <span class="ident">Properties</span> {
 	<span class="kw">fn</span> <span class="ident">decode</span><span class="op">&lt;</span><span class="ident">I</span>: <span class="ident">codec::Input</span><span class="op">&gt;</span>(<span class="ident">input</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">I</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">sp_std::result::Result</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="ident">codec::Error</span><span class="op">&gt;</span> {
 		<span class="kw">let</span> <span class="ident">field</span> <span class="op">=</span> <span class="ident">u8::decode</span>(<span class="ident">input</span>)<span class="question-mark">?</span>;
-		<span class="prelude-val">Ok</span>(<span class="self">Self</span>(
-			<span class="op">&lt;</span><span class="ident">BitFlags</span><span class="op">&lt;</span><span class="ident">ClassProperty</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::from_bits</span>(<span class="ident">field</span> <span class="kw">as</span> <span class="ident">u8</span>).<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="string">&quot;invalid value&quot;</span>)<span class="question-mark">?</span>,
-		))
+		<span class="prelude-val">Ok</span>(<span class="self">Self</span>(<span class="op">&lt;</span><span class="ident">BitFlags</span><span class="op">&lt;</span><span class="ident">ClassProperty</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::from_bits</span>(<span class="ident">field</span> <span class="kw">as</span> <span class="ident">u8</span>).<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="string">&quot;invalid value&quot;</span>)<span class="question-mark">?</span>))
 	}
 }
 
@@ -777,7 +736,7 @@
 	<span class="ident">Claim</span>(<span class="ident">HashByte32</span>),
 	<span class="doccomment">/// A class that is merged from two class ID and ID</span>
 	<span class="doccomment">/// if true, burn the two instances</span>
-	<span class="ident">Merge</span>(<span class="ident">ID</span>, <span class="ident">ID</span>, <span class="ident">bool</span>), 
+	<span class="ident">Merge</span>(<span class="ident">ID</span>, <span class="ident">ID</span>, <span class="ident">bool</span>),
 }
 
 <span class="kw">pub</span> <span class="kw">type</span> <span class="ident">TokenIdOf</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="op">=</span> <span class="op">&lt;</span><span class="ident">T</span> <span class="kw">as</span> <span class="ident">orml_nft::Config</span><span class="op">&gt;</span><span class="ident">::TokenId</span>;
@@ -798,7 +757,6 @@
 			<span class="ident">TokenData</span> <span class="op">=</span> <span class="ident">TokenData</span>,
 		<span class="op">&gt;</span>
 	{
-
 		<span class="doccomment">/// The the currency to pay NFT class creation fee.</span>
 		<span class="kw">type</span> <span class="ident">Currency</span>: <span class="ident">Currency</span><span class="op">&lt;</span><span class="self">Self</span><span class="ident">::AccountId</span><span class="op">&gt;</span>;
 
@@ -863,7 +821,7 @@
 		<span class="doccomment">/// Claimed NFT token. \[claimer, class_id\]</span>
 		<span class="ident">ClaimedToken</span>(<span class="ident">T::AccountId</span>, <span class="ident">ClassIdOf</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>),
 		<span class="doccomment">/// Merged NFT token. \[owner, class_id\]</span>
-		<span class="ident">MergedToken</span>(<span class="ident">T::AccountId</span>, <span class="ident">ClassIdOf</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>),	
+		<span class="ident">MergedToken</span>(<span class="ident">T::AccountId</span>, <span class="ident">ClassIdOf</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>),
 		<span class="doccomment">/// Transferred NFT token. \[from, to, class_id, token_id\]</span>
 		<span class="ident">TransferredToken</span>(<span class="ident">T::AccountId</span>, <span class="ident">T::AccountId</span>, <span class="ident">ClassIdOf</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>, <span class="ident">TokenIdOf</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>),
 		<span class="doccomment">/// Burned NFT token. \[owner, class_id, token_id\]</span>
@@ -879,7 +837,7 @@
 
 	<span class="attribute">#[<span class="ident">pallet::storage</span>]</span>
 	<span class="attribute">#[<span class="ident">pallet::getter</span>(<span class="kw">fn</span> <span class="ident">claimed_list</span>)]</span>
-	<span class="doccomment">/// Claimed index vec for `Claim(HashByte32)` type NFT class, </span>
+	<span class="doccomment">/// Claimed index vec for `Claim(HashByte32)` type NFT class,</span>
 	<span class="doccomment">/// to guarantee each user claims once.</span>
 	<span class="doccomment">/// maximal index of claiming user is 2^16 which is more than enough</span>
 	<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type</span> <span class="ident">ClaimedList</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Config</span><span class="op">&gt;</span> <span class="op">=</span>
@@ -895,14 +853,14 @@
 		<span class="doccomment">/// 1. Each instance is directly issued by the corresponding third party: Simple(u32)</span>
 		<span class="doccomment">/// 2. At issuance, a list of user is provided and only these users may claim: Claim(HashByte32)</span>
 		<span class="doccomment">/// 3. Can be minted only when the user have 2 specific base non fungible assets: Merge(ID, ID, bool)</span>
-		<span class="doccomment">/// </span>
+		<span class="doccomment">///</span>
 		<span class="doccomment">/// Parameters:</span>
 		<span class="doccomment">/// - `metadata`: CID identifier of the class&#39;s metadata</span>
 		<span class="doccomment">/// - `properties`: Class property, include `Transferable` `Burnable`</span>
 		<span class="doccomment">/// - `start_block`: From when the instances can be minted (None if no restriction)</span>
 		<span class="doccomment">/// - `end_block`: Till when the instances can be minted (None if no restriction)</span>
 		<span class="doccomment">/// - `class_type`: Type of this class (refer to `ClassType`)</span>
-		<span class="doccomment">/// </span>
+		<span class="doccomment">///</span>
 		<span class="doccomment">/// Emits `CreatedClass` event when successful.</span>
 		<span class="attribute">#[<span class="ident">pallet::weight</span>(<span class="op">&lt;</span><span class="ident">T</span> <span class="kw">as</span> <span class="ident">Config</span><span class="op">&gt;</span><span class="ident">::WeightInfo::create_class</span>())]</span>
 		<span class="attribute">#[<span class="ident">transactional</span>]</span>
@@ -922,7 +880,7 @@
 				.<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::CreationFeeNotPaid</span>)<span class="question-mark">?</span>;
 
 			<span class="kw">match</span> <span class="ident">class_type</span> {
-				<span class="ident">ClassType::Merge</span>(<span class="ident">id1</span>, <span class="ident">id2</span>, <span class="ident">burn</span>) <span class="op">=</span><span class="op">&gt;</span> {
+				<span class="ident">ClassType::Merge</span>(<span class="ident">id1</span>, <span class="ident">id2</span>, <span class="ident">burn</span>) <span class="op">=</span><span class="op">&gt;</span>
 					<span class="kw">if</span> <span class="op">!</span><span class="ident">burn</span> {
 						<span class="macro">ensure!</span>(
 							<span class="op">&lt;</span><span class="ident">orml_nft::Pallet</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::classes</span>(<span class="ident">id1</span>).<span class="ident">is_some</span>(),
@@ -948,20 +906,14 @@
 							<span class="ident">data2</span>.<span class="ident">properties</span>.<span class="number">0</span>.<span class="ident">contains</span>(<span class="ident">ClassProperty::Burnable</span>),
 							<span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::NonBurnable</span>
 						);
-					}
-				}
+					},
 				<span class="ident">ClassType::Claim</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> {
 					<span class="ident">ClaimedList</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::insert</span>(<span class="ident">next_id</span>, <span class="ident">Vec</span>::<span class="op">&lt;</span><span class="ident">u16</span><span class="op">&gt;</span><span class="ident">::new</span>());
-				}
-				<span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> {}
+				},
+				<span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> {},
 			}
 
-			<span class="kw">let</span> <span class="ident">data</span> <span class="op">=</span> <span class="ident">ClassData</span> {
-				<span class="ident">properties</span>,
-				<span class="ident">start_block</span>,
-				<span class="ident">end_block</span>,
-				<span class="ident">class_type</span>,
-			};
+			<span class="kw">let</span> <span class="ident">data</span> <span class="op">=</span> <span class="ident">ClassData</span> { <span class="ident">properties</span>, <span class="ident">start_block</span>, <span class="ident">end_block</span>, <span class="ident">class_type</span> };
 			<span class="ident">orml_nft::Pallet</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::create_class</span>(<span class="kw-2">&amp;</span><span class="ident">who</span>, <span class="ident">metadata</span>.<span class="ident">to_vec</span>(), <span class="ident">data</span>)<span class="question-mark">?</span>;
 
 			<span class="self">Self</span><span class="ident">::deposit_event</span>(<span class="ident">Event::CreatedClass</span>(<span class="ident">who</span>, <span class="ident">next_id</span>));
@@ -969,13 +921,13 @@
 		}
 
 		<span class="doccomment">/// Mint `Simple(u32)` NFT instances from the class owner</span>
-		<span class="doccomment">/// </span>
+		<span class="doccomment">///</span>
 		<span class="doccomment">/// Parameters:</span>
 		<span class="doccomment">/// - `to`: The receiver of the minted NFTs</span>
 		<span class="doccomment">/// - `class_id`: Identifier of the NFT class to mint</span>
 		<span class="doccomment">/// - `metadata`: CID identifier of the instance&#39;s metadata</span>
 		<span class="doccomment">/// - `quantity`: number of NFT to mint</span>
-		<span class="doccomment">/// </span>
+		<span class="doccomment">///</span>
 		<span class="doccomment">/// Emits `MintedToken` event when successful</span>
 		<span class="attribute">#[<span class="ident">pallet::weight</span>(<span class="op">&lt;</span><span class="ident">T</span> <span class="kw">as</span> <span class="ident">Config</span><span class="op">&gt;</span><span class="ident">::WeightInfo::mint</span>(<span class="kw-2">*</span><span class="ident">quantity</span>))]</span>
 		<span class="attribute">#[<span class="ident">transactional</span>]</span>
@@ -992,10 +944,7 @@
 			<span class="kw">let</span> <span class="ident">class_info</span> <span class="op">=</span>
 				<span class="ident">orml_nft::Pallet</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::classes</span>(<span class="ident">class_id</span>).<span class="ident">ok_or</span>(<span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::ClassIdNotFound</span>)<span class="question-mark">?</span>;
 			<span class="macro">ensure!</span>(<span class="ident">who</span> <span class="op">=</span><span class="op">=</span> <span class="ident">class_info</span>.<span class="ident">owner</span>, <span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::NoPermission</span>);
-			<span class="macro">ensure!</span>(
-				<span class="self">Self</span><span class="ident">::check_time</span>(<span class="kw-2">&amp;</span><span class="ident">class_info</span>.<span class="ident">data</span>),
-				<span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::OutOfCampaignPeriod</span>
-			);
+			<span class="macro">ensure!</span>(<span class="self">Self</span><span class="ident">::check_time</span>(<span class="kw-2">&amp;</span><span class="ident">class_info</span>.<span class="ident">data</span>), <span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::OutOfCampaignPeriod</span>);
 
 			<span class="kw">match</span> <span class="ident">class_info</span>.<span class="ident">data</span>.<span class="ident">class_type</span> {
 				<span class="ident">ClassType::Simple</span>(<span class="ident">max_num</span>) <span class="op">=</span><span class="op">&gt;</span> {
@@ -1003,15 +952,12 @@
 					<span class="kw">if</span> <span class="ident">TokenIdOf</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::from</span>(<span class="ident">quantity</span>) <span class="op">+</span> <span class="ident">issued</span> <span class="op">&gt;</span> <span class="ident">TokenIdOf</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::from</span>(<span class="ident">max_num</span>) {
 						<span class="prelude-val">Err</span>(<span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::QuantityOverflow</span>)<span class="question-mark">?</span>
 					}
-				}
+				},
 				<span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::WrongClassType</span>)<span class="question-mark">?</span>,
 			}
 
 			<span class="comment">// TODO: adjustible rarity</span>
-			<span class="kw">let</span> <span class="ident">data</span> <span class="op">=</span> <span class="ident">TokenData</span> {
-				<span class="ident">used</span>: <span class="bool-val">false</span>,
-				<span class="ident">rarity</span>: <span class="number">0</span>,
-			};
+			<span class="kw">let</span> <span class="ident">data</span> <span class="op">=</span> <span class="ident">TokenData</span> { <span class="ident">used</span>: <span class="bool-val">false</span>, <span class="ident">rarity</span>: <span class="number">0</span> };
 			<span class="kw">for</span> <span class="kw">_</span> <span class="kw">in</span> <span class="number">0</span>..<span class="ident">quantity</span> {
 				<span class="ident">orml_nft::Pallet</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::mint</span>(<span class="kw-2">&amp;</span><span class="ident">to</span>, <span class="ident">class_id</span>, <span class="ident">metadata</span>.<span class="ident">clone</span>(), <span class="ident">data</span>.<span class="ident">clone</span>())<span class="question-mark">?</span>;
 			}
@@ -1023,12 +969,12 @@
 		<span class="doccomment">/// Claim a `Claim(HashByte32)` by a whitelisted user,</span>
 		<span class="doccomment">/// with a Merkle proof that proves the user&#39;s account</span>
 		<span class="doccomment">/// is in the Merkle tree of the given root</span>
-		<span class="doccomment">/// </span>
+		<span class="doccomment">///</span>
 		<span class="doccomment">/// Parameters:</span>
 		<span class="doccomment">/// - `index`: Index of user&#39;s Merkle proof</span>
 		<span class="doccomment">/// - `class_id`: Identifier of the NFT class to mint</span>
 		<span class="doccomment">/// - `proof`: Merkle proof</span>
-		<span class="doccomment">/// </span>
+		<span class="doccomment">///</span>
 		<span class="doccomment">/// Emits `ClaimedToken` event when successful</span>
 		<span class="attribute">#[<span class="ident">pallet::weight</span>(<span class="op">&lt;</span><span class="ident">T</span> <span class="kw">as</span> <span class="ident">Config</span><span class="op">&gt;</span><span class="ident">::WeightInfo::mint</span>(<span class="number">1</span>))]</span>
 		<span class="attribute">#[<span class="ident">transactional</span>]</span>
@@ -1042,15 +988,9 @@
 			<span class="kw">let</span> <span class="ident">class_info</span> <span class="op">=</span>
 				<span class="ident">orml_nft::Pallet</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::classes</span>(<span class="ident">class_id</span>).<span class="ident">ok_or</span>(<span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::ClassIdNotFound</span>)<span class="question-mark">?</span>;
 
-			<span class="macro">ensure!</span>(
-				<span class="ident">ClaimedList</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::contains_key</span>(<span class="ident">class_id</span>),
-				<span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::ClassClaimedListNotFound</span>
-			);
+			<span class="macro">ensure!</span>(<span class="ident">ClaimedList</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::contains_key</span>(<span class="ident">class_id</span>), <span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::ClassClaimedListNotFound</span>);
 
-			<span class="macro">ensure!</span>(
-				<span class="self">Self</span><span class="ident">::check_time</span>(<span class="kw-2">&amp;</span><span class="ident">class_info</span>.<span class="ident">data</span>),
-				<span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::OutOfCampaignPeriod</span>
-			);
+			<span class="macro">ensure!</span>(<span class="self">Self</span><span class="ident">::check_time</span>(<span class="kw-2">&amp;</span><span class="ident">class_info</span>.<span class="ident">data</span>), <span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::OutOfCampaignPeriod</span>);
 
 			<span class="kw">match</span> <span class="ident">class_info</span>.<span class="ident">data</span>.<span class="ident">class_type</span> {
 				<span class="ident">ClassType::Claim</span>(<span class="ident">merkle_root</span>) <span class="op">=</span><span class="op">&gt;</span> {
@@ -1075,16 +1015,13 @@
 						<span class="ident">merkle_proof::proof_verify</span>(<span class="kw-2">&amp;</span><span class="ident">computed_hash</span>, <span class="kw-2">&amp;</span><span class="ident">proof</span>, <span class="kw-2">&amp;</span><span class="ident">merkle_root</span>),
 						<span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::UserNotInClaimList</span>
 					);
-				}
+				},
 
 				<span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::WrongClassType</span>)<span class="question-mark">?</span>,
 			}
 
 			<span class="comment">// TODO: adjustable rarity</span>
-			<span class="kw">let</span> <span class="ident">data</span> <span class="op">=</span> <span class="ident">TokenData</span> {
-				<span class="ident">used</span>: <span class="bool-val">false</span>,
-				<span class="ident">rarity</span>: <span class="number">0</span>,
-			};
+			<span class="kw">let</span> <span class="ident">data</span> <span class="op">=</span> <span class="ident">TokenData</span> { <span class="ident">used</span>: <span class="bool-val">false</span>, <span class="ident">rarity</span>: <span class="number">0</span> };
 
 			<span class="comment">// TODO: if metadata can change?</span>
 			<span class="kw">let</span> <span class="ident">metadata</span> <span class="op">=</span> <span class="ident">class_info</span>.<span class="ident">metadata</span>;
@@ -1096,12 +1033,12 @@
 
 		<span class="doccomment">/// Merge from two NFT instances and generate a new NFT</span>
 		<span class="doccomment">/// of type `Merge(ID, ID, bool)`</span>
-		<span class="doccomment">/// </span>
+		<span class="doccomment">///</span>
 		<span class="doccomment">/// Parameters:</span>
 		<span class="doccomment">/// - `class_id`: Identifier of the NFT class to mint</span>
 		<span class="doccomment">/// - `token1`: First NFT of the merge base</span>
 		<span class="doccomment">/// - `token2`: Seconde NFT of the merge base</span>
-		<span class="doccomment">/// </span>
+		<span class="doccomment">///</span>
 		<span class="doccomment">/// Emits `MergedToken` event when successful</span>
 		<span class="attribute">#[<span class="ident">pallet::weight</span>(<span class="op">&lt;</span><span class="ident">T</span> <span class="kw">as</span> <span class="ident">Config</span><span class="op">&gt;</span><span class="ident">::WeightInfo::mint</span>(<span class="number">1</span>))]</span>
 		<span class="attribute">#[<span class="ident">transactional</span>]</span>
@@ -1115,17 +1052,14 @@
 			<span class="kw">let</span> <span class="ident">merged_class_info</span> <span class="op">=</span>
 				<span class="ident">orml_nft::Pallet</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::classes</span>(<span class="ident">class_id</span>).<span class="ident">ok_or</span>(<span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::ClassIdNotFound</span>)<span class="question-mark">?</span>;
 
-			<span class="macro">ensure!</span>(
-				<span class="self">Self</span><span class="ident">::check_time</span>(<span class="kw-2">&amp;</span><span class="ident">merged_class_info</span>.<span class="ident">data</span>),
-				<span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::OutOfCampaignPeriod</span>
-			);
+			<span class="macro">ensure!</span>(<span class="self">Self</span><span class="ident">::check_time</span>(<span class="kw-2">&amp;</span><span class="ident">merged_class_info</span>.<span class="ident">data</span>), <span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::OutOfCampaignPeriod</span>);
 
 			<span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">burn</span> <span class="op">=</span> <span class="bool-val">false</span>;
 
 			<span class="kw">if</span> <span class="kw">let</span> <span class="ident">ClassType::Merge</span>(<span class="ident">id1</span>, <span class="ident">id2</span>, <span class="ident">b</span>) <span class="op">=</span> <span class="ident">merged_class_info</span>.<span class="ident">data</span>.<span class="ident">class_type</span> {
 				<span class="macro">ensure!</span>(
-					((<span class="ident">id1</span> <span class="op">=</span><span class="op">=</span> <span class="ident">token1</span>.<span class="number">0</span>) <span class="op">&amp;&amp;</span> (<span class="ident">id2</span> <span class="op">=</span><span class="op">=</span> <span class="ident">token2</span>.<span class="number">0</span>))
-						<span class="op">|</span><span class="op">|</span> ((<span class="ident">id1</span> <span class="op">=</span><span class="op">=</span> <span class="ident">token2</span>.<span class="number">0</span>) <span class="op">&amp;&amp;</span> (<span class="ident">id2</span> <span class="op">=</span><span class="op">=</span> <span class="ident">token1</span>.<span class="number">0</span>)),
+					((<span class="ident">id1</span> <span class="op">=</span><span class="op">=</span> <span class="ident">token1</span>.<span class="number">0</span>) <span class="op">&amp;&amp;</span> (<span class="ident">id2</span> <span class="op">=</span><span class="op">=</span> <span class="ident">token2</span>.<span class="number">0</span>)) <span class="op">|</span><span class="op">|</span>
+						((<span class="ident">id1</span> <span class="op">=</span><span class="op">=</span> <span class="ident">token2</span>.<span class="number">0</span>) <span class="op">&amp;&amp;</span> (<span class="ident">id2</span> <span class="op">=</span><span class="op">=</span> <span class="ident">token1</span>.<span class="number">0</span>)),
 					<span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::WrongMergeBase</span>,
 				);
 				<span class="ident">burn</span> <span class="op">=</span> <span class="ident">b</span>;
@@ -1144,10 +1078,7 @@
 				<span class="self">Self</span><span class="ident">::do_burn</span>(<span class="kw-2">&amp;</span><span class="ident">who</span>, <span class="ident">token1</span>)<span class="question-mark">?</span>;
 				<span class="self">Self</span><span class="ident">::do_burn</span>(<span class="kw-2">&amp;</span><span class="ident">who</span>, <span class="ident">token2</span>)<span class="question-mark">?</span>;
 			} <span class="kw">else</span> {
-				<span class="macro">ensure!</span>(
-					<span class="op">!</span><span class="ident">token_info1</span>.<span class="ident">data</span>.<span class="ident">used</span> <span class="op">&amp;&amp;</span> <span class="op">!</span><span class="ident">token_info2</span>.<span class="ident">data</span>.<span class="ident">used</span>,
-					<span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::TokenUsed</span>
-				);
+				<span class="macro">ensure!</span>(<span class="op">!</span><span class="ident">token_info1</span>.<span class="ident">data</span>.<span class="ident">used</span> <span class="op">&amp;&amp;</span> <span class="op">!</span><span class="ident">token_info2</span>.<span class="ident">data</span>.<span class="ident">used</span>, <span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::TokenUsed</span>);
 				<span class="ident">token_info1</span>.<span class="ident">data</span>.<span class="ident">used</span> <span class="op">=</span> <span class="bool-val">true</span>;
 				<span class="ident">token_info2</span>.<span class="ident">data</span>.<span class="ident">used</span> <span class="op">=</span> <span class="bool-val">true</span>;
 				<span class="ident">orml_nft::Tokens</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::insert</span>(<span class="ident">token1</span>.<span class="number">0</span>, <span class="ident">token1</span>.<span class="number">1</span>, <span class="ident">token_info1</span>);
@@ -1156,10 +1087,7 @@
 
 			<span class="comment">// mint new token</span>
 			<span class="comment">// TODO: adjustible rarity</span>
-			<span class="kw">let</span> <span class="ident">data</span> <span class="op">=</span> <span class="ident">TokenData</span> {
-				<span class="ident">used</span>: <span class="bool-val">false</span>,
-				<span class="ident">rarity</span>: <span class="number">0</span>,
-			};
+			<span class="kw">let</span> <span class="ident">data</span> <span class="op">=</span> <span class="ident">TokenData</span> { <span class="ident">used</span>: <span class="bool-val">false</span>, <span class="ident">rarity</span>: <span class="number">0</span> };
 
 			<span class="comment">// TODO: if metadata can change?</span>
 			<span class="kw">let</span> <span class="ident">metadata</span> <span class="op">=</span> <span class="ident">merged_class_info</span>.<span class="ident">metadata</span>;
@@ -1175,7 +1103,7 @@
 		<span class="doccomment">/// Parameters:</span>
 		<span class="doccomment">/// - `to`: Receiver of the token</span>
 		<span class="doccomment">/// - `token`: NFT instance to transfer</span>
-		<span class="doccomment">/// </span>
+		<span class="doccomment">///</span>
 		<span class="doccomment">/// Emits `TransferredToken` event when successful</span>
 		<span class="attribute">#[<span class="ident">pallet::weight</span>(<span class="op">&lt;</span><span class="ident">T</span> <span class="kw">as</span> <span class="ident">Config</span><span class="op">&gt;</span><span class="ident">::WeightInfo::transfer</span>())]</span>
 		<span class="attribute">#[<span class="ident">transactional</span>]</span>
@@ -1194,7 +1122,7 @@
 		<span class="doccomment">///</span>
 		<span class="doccomment">/// Parameters:</span>
 		<span class="doccomment">/// - `token`: NFT instance to burn</span>
-		<span class="doccomment">/// </span>
+		<span class="doccomment">///</span>
 		<span class="doccomment">/// Emits `BurnedToken` event when successful</span>
 		<span class="attribute">#[<span class="ident">pallet::weight</span>(<span class="op">&lt;</span><span class="ident">T</span> <span class="kw">as</span> <span class="ident">Config</span><span class="op">&gt;</span><span class="ident">::WeightInfo::burn</span>())]</span>
 		<span class="attribute">#[<span class="ident">transactional</span>]</span>
@@ -1228,12 +1156,7 @@
 
 		<span class="ident">orml_nft::Pallet</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::transfer</span>(<span class="ident">from</span>, <span class="ident">to</span>, <span class="ident">token</span>)<span class="question-mark">?</span>;
 
-		<span class="self">Self</span><span class="ident">::deposit_event</span>(<span class="ident">Event::TransferredToken</span>(
-			<span class="ident">from</span>.<span class="ident">clone</span>(),
-			<span class="ident">to</span>.<span class="ident">clone</span>(),
-			<span class="ident">token</span>.<span class="number">0</span>,
-			<span class="ident">token</span>.<span class="number">1</span>,
-		));
+		<span class="self">Self</span><span class="ident">::deposit_event</span>(<span class="ident">Event::TransferredToken</span>(<span class="ident">from</span>.<span class="ident">clone</span>(), <span class="ident">to</span>.<span class="ident">clone</span>(), <span class="ident">token</span>.<span class="number">0</span>, <span class="ident">token</span>.<span class="number">1</span>));
 		<span class="prelude-val">Ok</span>(())
 	}
 
@@ -1243,10 +1166,7 @@
 		<span class="kw">let</span> <span class="ident">class_info</span> <span class="op">=</span>
 			<span class="ident">orml_nft::Pallet</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::classes</span>(<span class="ident">token</span>.<span class="number">0</span>).<span class="ident">ok_or</span>(<span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::ClassIdNotFound</span>)<span class="question-mark">?</span>;
 		<span class="kw">let</span> <span class="ident">data</span> <span class="op">=</span> <span class="ident">class_info</span>.<span class="ident">data</span>;
-		<span class="macro">ensure!</span>(
-			<span class="ident">data</span>.<span class="ident">properties</span>.<span class="number">0</span>.<span class="ident">contains</span>(<span class="ident">ClassProperty::Burnable</span>),
-			<span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::NonBurnable</span>
-		);
+		<span class="macro">ensure!</span>(<span class="ident">data</span>.<span class="ident">properties</span>.<span class="number">0</span>.<span class="ident">contains</span>(<span class="ident">ClassProperty::Burnable</span>), <span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::NonBurnable</span>);
 
 		<span class="kw">let</span> <span class="ident">token_info</span> <span class="op">=</span>
 			<span class="ident">orml_nft::Pallet</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::tokens</span>(<span class="ident">token</span>.<span class="number">0</span>, <span class="ident">token</span>.<span class="number">1</span>).<span class="ident">ok_or</span>(<span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::TokenIdNotFound</span>)<span class="question-mark">?</span>;
@@ -1259,18 +1179,18 @@
 }
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Config</span><span class="op">&gt;</span> <span class="ident">Pallet</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
-	<span class="doccomment">/// check if current block time is in the range of the time span given by the </span>
+	<span class="doccomment">/// check if current block time is in the range of the time span given by the</span>
 	<span class="doccomment">/// token class info</span>
 	<span class="kw">fn</span> <span class="ident">check_time</span>(<span class="ident">token_info</span>: <span class="kw-2">&amp;</span><span class="ident">ClassData</span><span class="op">&lt;</span><span class="ident">BlockNumberOf</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>, <span class="ident">ClassIdOf</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
 		<span class="kw">let</span> <span class="ident">current_block_number</span> <span class="op">=</span> <span class="op">&lt;</span><span class="ident">frame_system::Pallet</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::block_number</span>();
 		<span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">start_block</span>) <span class="op">=</span> <span class="ident">token_info</span>.<span class="ident">start_block</span> {
 			<span class="kw">if</span> <span class="ident">start_block</span> <span class="op">&gt;</span> <span class="ident">current_block_number</span> {
-				<span class="kw">return</span> <span class="bool-val">false</span>;
+				<span class="kw">return</span> <span class="bool-val">false</span>
 			}
 		}
 		<span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">end_block</span>) <span class="op">=</span> <span class="ident">token_info</span>.<span class="ident">end_block</span> {
 			<span class="kw">if</span> <span class="ident">end_block</span> <span class="op">&lt;</span> <span class="ident">current_block_number</span> {
-				<span class="kw">return</span> <span class="bool-val">false</span>;
+				<span class="kw">return</span> <span class="bool-val">false</span>
 			}
 		}
 		<span class="bool-val">true</span>

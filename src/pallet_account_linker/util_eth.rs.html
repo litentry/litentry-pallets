@@ -153,6 +153,7 @@
 <span id="150">150</span>
 <span id="151">151</span>
 <span id="152">152</span>
+<span id="153">153</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="ident">codec::Encode</span>;
 <span class="kw">use</span> <span class="ident">sp_std::prelude</span>::<span class="kw-2">*</span>;
@@ -172,8 +173,12 @@
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">eth_data_hash</span>(<span class="kw-2">mut</span> <span class="ident">data</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>[<span class="ident">u8</span>; <span class="number">32</span>], <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span><span class="op">&gt;</span> {
 	<span class="kw">const</span> <span class="ident">MSG_LEN</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">51</span>;
 	<span class="kw">if</span> <span class="ident">data</span>.<span class="ident">len</span>() <span class="op">!</span><span class="op">=</span> <span class="ident">MSG_LEN</span> {
-		<span class="macro">log::error!</span>(<span class="string">&quot;Ethereum message has an unexpected length {} !!! Expected is {}.&quot;</span>, <span class="ident">data</span>.<span class="ident">len</span>(), <span class="ident">MSG_LEN</span>);
-		<span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="string">&quot;Unexpected ethereum message length!&quot;</span>);
+		<span class="macro">log::error!</span>(
+			<span class="string">&quot;Ethereum message has an unexpected length {} !!! Expected is {}.&quot;</span>,
+			<span class="ident">data</span>.<span class="ident">len</span>(),
+			<span class="ident">MSG_LEN</span>
+		);
+		<span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="string">&quot;Unexpected ethereum message length!&quot;</span>)
 	}
 	<span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">length_bytes</span> <span class="op">=</span> <span class="ident">usize_to_u8_array</span>(<span class="ident">data</span>.<span class="ident">len</span>())<span class="question-mark">?</span>;
 	<span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">eth_data</span> <span class="op">=</span> <span class="string">b&quot;\x19Ethereum Signed Message:\n&quot;</span>.<span class="ident">encode</span>();
@@ -195,7 +200,7 @@
 		<span class="kw">let</span> <span class="ident">tens</span> <span class="op">=</span> <span class="ident">length</span> <span class="op">/</span> <span class="number">10</span>;
 		<span class="kw">let</span> <span class="ident">ones</span> <span class="op">=</span> <span class="ident">length</span> <span class="op">%</span> <span class="number">10</span>;
 
-		<span class="kw">let</span> <span class="kw-2">mut</span>  <span class="ident">vec_res</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">Vec::new</span>();
+		<span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">vec_res</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">Vec::new</span>();
 		<span class="kw">if</span> <span class="ident">tens</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span> {
 			<span class="ident">vec_res</span>.<span class="ident">push</span>(<span class="ident">digits</span>[<span class="ident">tens</span>]);
 		}
@@ -218,7 +223,6 @@
 
 	<span class="attribute">#[<span class="ident">test</span>]</span>
 	<span class="kw">fn</span> <span class="ident">correct_recover</span>() {
-
 		<span class="kw">let</span> <span class="ident">msg</span> <span class="op">=</span> <span class="ident">decode</span>(<span class="string">&quot;61626364656667&quot;</span>).<span class="ident">unwrap</span>();
 		<span class="kw">let</span> <span class="ident">msg</span> <span class="op">=</span> <span class="ident">eth_data_hash_test_helper</span>(<span class="ident">msg</span>);
 
@@ -236,7 +240,6 @@
 
 	<span class="attribute">#[<span class="ident">test</span>]</span>
 	<span class="kw">fn</span> <span class="ident">wrong_msg</span>() {
-
 		<span class="kw">let</span> <span class="ident">msg</span> <span class="op">=</span> <span class="ident">decode</span>(<span class="string">&quot;626364656667&quot;</span>).<span class="ident">unwrap</span>();
 		<span class="kw">let</span> <span class="ident">msg</span> <span class="op">=</span> <span class="ident">eth_data_hash_test_helper</span>(<span class="ident">msg</span>);
 
@@ -254,7 +257,6 @@
 
 	<span class="attribute">#[<span class="ident">test</span>]</span>
 	<span class="kw">fn</span> <span class="ident">sig_from_another_addr</span>() {
-
 		<span class="kw">let</span> <span class="ident">msg</span> <span class="op">=</span> <span class="ident">decode</span>(<span class="string">&quot;61626364656667&quot;</span>).<span class="ident">unwrap</span>();
 		<span class="kw">let</span> <span class="ident">msg</span> <span class="op">=</span> <span class="ident">eth_data_hash_test_helper</span>(<span class="ident">msg</span>);
 

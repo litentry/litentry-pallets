@@ -365,10 +365,14 @@
 <span id="362">362</span>
 <span id="363">363</span>
 <span id="364">364</span>
+<span id="365">365</span>
+<span id="366">366</span>
+<span id="367">367</span>
+<span id="368">368</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! # AccountLinker Pallet</span>
 <span class="doccomment">//!</span>
-<span class="doccomment">//! The AccountLinker pallet provides functionality for linking a Litentry account to account at </span>
+<span class="doccomment">//! The AccountLinker pallet provides functionality for linking a Litentry account to account at</span>
 <span class="doccomment">//! other networks. (currently support Ethereum (BSC), BTC and Polkadot ecosystem)</span>
 <span class="doccomment">//!</span>
 <span class="doccomment">//! ## Overview</span>
@@ -380,13 +384,13 @@
 <span class="doccomment">//! ## Interface</span>
 <span class="doccomment">//!</span>
 <span class="doccomment">//! ### Dispatchable Functions</span>
-<span class="doccomment">//! </span>
+<span class="doccomment">//!</span>
 <span class="doccomment">//! * `link_eth` - Link an Ethereum address to a Litentry account providing a proof signature</span>
 <span class="doccomment">//! from the private key of that Ethereum address.</span>
 <span class="doccomment">//! * `link_btc` - Link an BTC address to a Litentry account providing a proof signature</span>
 <span class="doccomment">//! from the private key of that BTC address.</span>
 <span class="doccomment">//! * `link_polkadot` - Initiate a link request to link a Litentry address to another Litentry address</span>
-<span class="doccomment">//! * `accept_polkadot` - Accept a pending `link_polkadot` request to link a Litentry address </span>
+<span class="doccomment">//! * `accept_polkadot` - Accept a pending `link_polkadot` request to link a Litentry address</span>
 <span class="doccomment">//! to another Litentry address.</span>
 <span class="doccomment">//!</span>
 <span class="doccomment">//! [`Call`]: ./enum.Call.html</span>
@@ -402,9 +406,9 @@
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
 <span class="kw">mod</span> <span class="ident">tests</span>;
 
+<span class="kw">mod</span> <span class="ident">benchmarking</span>;
 <span class="kw">mod</span> <span class="ident">btc</span>;
 <span class="kw">mod</span> <span class="ident">util_eth</span>;
-<span class="kw">mod</span> <span class="ident">benchmarking</span>;
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">weights</span>;
 
 <span class="kw">type</span> <span class="ident">EthAddress</span> <span class="op">=</span> [<span class="ident">u8</span>; <span class="number">20</span>];
@@ -414,14 +418,12 @@
 <span class="attribute">#[<span class="ident">frame_support::pallet</span>]</span>
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">pallet</span> {
 	<span class="kw">use</span> <span class="kw">crate</span>::<span class="kw-2">*</span>;
-	<span class="kw">use</span> <span class="ident">frame_system::pallet_prelude</span>::<span class="kw-2">*</span>;
+	<span class="kw">use</span> <span class="ident">btc</span>::{<span class="ident">base58::ToBase58</span>, <span class="ident">witness::WitnessProgram</span>};
 	<span class="kw">use</span> <span class="ident">codec::Encode</span>;
-	<span class="kw">use</span> <span class="ident">sp_std::prelude</span>::<span class="kw-2">*</span>;
+	<span class="kw">use</span> <span class="ident">frame_support</span>::{<span class="ident">dispatch::DispatchResultWithPostInfo</span>, <span class="ident">pallet_prelude</span>::<span class="kw-2">*</span>};
+	<span class="kw">use</span> <span class="ident">frame_system</span>::{<span class="ident">ensure_signed</span>, <span class="ident">pallet_prelude</span>::<span class="kw-2">*</span>};
 	<span class="kw">use</span> <span class="ident">sp_io::crypto::secp256k1_ecdsa_recover_compressed</span>;
-	<span class="kw">use</span> <span class="ident">frame_support</span>::{<span class="ident">dispatch::DispatchResultWithPostInfo</span>, <span class="ident">pallet_prelude</span>::<span class="kw-2">*</span>,};
-	<span class="kw">use</span> <span class="ident">frame_system</span>::{<span class="ident">ensure_signed</span>};
-	<span class="kw">use</span> <span class="ident">btc::base58::ToBase58</span>;
-	<span class="kw">use</span> <span class="ident">btc::witness::WitnessProgram</span>;
+	<span class="kw">use</span> <span class="ident">sp_std::prelude</span>::<span class="kw-2">*</span>;
 	<span class="kw">use</span> <span class="ident">weights::WeightInfo</span>;
 	<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">EXPIRING_BLOCK_NUMBER_MAX</span>: <span class="ident">u32</span> <span class="op">=</span> <span class="number">10</span> <span class="op">*</span> <span class="number">60</span> <span class="op">*</span> <span class="number">24</span> <span class="op">*</span> <span class="number">30</span>; <span class="comment">// 30 days for 6s per block</span>
 	<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">MAX_ETH_LINKS</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">3</span>;
@@ -478,37 +480,40 @@
 
 	<span class="attribute">#[<span class="ident">pallet::storage</span>]</span>
 	<span class="attribute">#[<span class="ident">pallet::getter</span>(<span class="kw">fn</span> <span class="ident">eth_addresses</span>)]</span>
-	<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type</span> <span class="ident">EthereumLink</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Config</span><span class="op">&gt;</span> <span class="op">=</span>  <span class="ident">StorageMap</span><span class="op">&lt;</span><span class="kw">_</span>, <span class="ident">Blake2_128Concat</span>, <span class="ident">T::AccountId</span>, <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">EthAddress</span><span class="op">&gt;</span>, <span class="ident">ValueQuery</span><span class="op">&gt;</span>;
+	<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type</span> <span class="ident">EthereumLink</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Config</span><span class="op">&gt;</span> <span class="op">=</span>
+		<span class="ident">StorageMap</span><span class="op">&lt;</span><span class="kw">_</span>, <span class="ident">Blake2_128Concat</span>, <span class="ident">T::AccountId</span>, <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">EthAddress</span><span class="op">&gt;</span>, <span class="ident">ValueQuery</span><span class="op">&gt;</span>;
 
 	<span class="attribute">#[<span class="ident">pallet::storage</span>]</span>
 	<span class="attribute">#[<span class="ident">pallet::getter</span>(<span class="kw">fn</span> <span class="ident">btc_addresses</span>)]</span>
-	<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type</span> <span class="ident">BitcoinLink</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Config</span><span class="op">&gt;</span> <span class="op">=</span>  <span class="ident">StorageMap</span><span class="op">&lt;</span><span class="kw">_</span>, <span class="ident">Blake2_128Concat</span>, <span class="ident">T::AccountId</span>, <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span><span class="op">&gt;</span>, <span class="ident">ValueQuery</span><span class="op">&gt;</span>;
+	<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type</span> <span class="ident">BitcoinLink</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Config</span><span class="op">&gt;</span> <span class="op">=</span>
+		<span class="ident">StorageMap</span><span class="op">&lt;</span><span class="kw">_</span>, <span class="ident">Blake2_128Concat</span>, <span class="ident">T::AccountId</span>, <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span><span class="op">&gt;</span>, <span class="ident">ValueQuery</span><span class="op">&gt;</span>;
 
 	<span class="attribute">#[<span class="ident">pallet::storage</span>]</span>
 	<span class="attribute">#[<span class="ident">pallet::getter</span>(<span class="kw">fn</span> <span class="ident">polkadot_addresses</span>)]</span>
-	<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type</span> <span class="ident">PolkadotLink</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Config</span><span class="op">&gt;</span> <span class="op">=</span>  <span class="ident">StorageMap</span><span class="op">&lt;</span><span class="kw">_</span>, <span class="ident">Blake2_128Concat</span>, <span class="ident">T::AccountId</span>, <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">T::AccountId</span><span class="op">&gt;</span>, <span class="ident">ValueQuery</span><span class="op">&gt;</span>;
+	<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type</span> <span class="ident">PolkadotLink</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Config</span><span class="op">&gt;</span> <span class="op">=</span>
+		<span class="ident">StorageMap</span><span class="op">&lt;</span><span class="kw">_</span>, <span class="ident">Blake2_128Concat</span>, <span class="ident">T::AccountId</span>, <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">T::AccountId</span><span class="op">&gt;</span>, <span class="ident">ValueQuery</span><span class="op">&gt;</span>;
 
 	<span class="attribute">#[<span class="ident">pallet::storage</span>]</span>
 	<span class="attribute">#[<span class="ident">pallet::getter</span>(<span class="kw">fn</span> <span class="ident">polkadot_pending</span>)]</span>
-	<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type</span> <span class="ident">PolkadotPending</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Config</span><span class="op">&gt;</span> <span class="op">=</span>  <span class="ident">StorageMap</span><span class="op">&lt;</span><span class="kw">_</span>, <span class="ident">Blake2_128Concat</span>, <span class="ident">T::AccountId</span>, (<span class="ident">T::AccountId</span>, <span class="ident">u32</span>), <span class="ident">ValueQuery</span><span class="op">&gt;</span>;
+	<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type</span> <span class="ident">PolkadotPending</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Config</span><span class="op">&gt;</span> <span class="op">=</span>
+		<span class="ident">StorageMap</span><span class="op">&lt;</span><span class="kw">_</span>, <span class="ident">Blake2_128Concat</span>, <span class="ident">T::AccountId</span>, (<span class="ident">T::AccountId</span>, <span class="ident">u32</span>), <span class="ident">ValueQuery</span><span class="op">&gt;</span>;
 
 	<span class="attribute">#[<span class="ident">pallet::call</span>]</span>
-	<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span>:<span class="ident">Config</span><span class="op">&gt;</span> <span class="ident">Pallet</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
-
+	<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Config</span><span class="op">&gt;</span> <span class="ident">Pallet</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
 		<span class="doccomment">/// Link an Ethereum address to a Litentry account providing a proof signature from the private key</span>
 		<span class="doccomment">/// of that Ethereum address.</span>
 		<span class="doccomment">///</span>
-		<span class="doccomment">/// The runtime needs to ensure that a malicious index can be handled correctly. </span>
-		<span class="doccomment">/// Currently, when vec.len &gt; MAX_ETH_LINKS, replacement will always happen at the final index. </span>
+		<span class="doccomment">/// The runtime needs to ensure that a malicious index can be handled correctly.</span>
+		<span class="doccomment">/// Currently, when vec.len &gt; MAX_ETH_LINKS, replacement will always happen at the final index.</span>
 		<span class="doccomment">/// Otherwise it will use the next new slot unless index is valid against a currently available slot.</span>
-		<span class="doccomment">/// </span>
+		<span class="doccomment">///</span>
 		<span class="doccomment">/// Parameters:</span>
 		<span class="doccomment">/// - `account`: The Litentry address that is to be linked</span>
 		<span class="doccomment">/// - `index`: The index of the linked Ethereum address that the user wants to replace with.</span>
 		<span class="doccomment">/// - `addr_expected`: The intended Ethereum address to link to the origin&#39;s Litentry address</span>
 		<span class="doccomment">/// - `expiring_block_number`: The block number after which this link request will expire</span>
 		<span class="doccomment">/// - `sig`: The rsv-signature generated by the private key of the addr_expected</span>
-		<span class="doccomment">/// </span>
+		<span class="doccomment">///</span>
 		<span class="doccomment">/// Emits `EthAddressLinked` event when successful.</span>
 		<span class="attribute">#[<span class="ident">pallet::weight</span>(<span class="ident">T::WeightInfo::link_eth</span>())]</span>
 		<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">link_eth</span>(
@@ -519,23 +524,26 @@
 			<span class="ident">expiring_block_number</span>: <span class="ident">T::BlockNumber</span>,
 			<span class="ident">sig</span>: <span class="ident">Signature</span>,
 		) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">DispatchResultWithPostInfo</span> {
-
 			<span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="ident">ensure_signed</span>(<span class="ident">origin</span>)<span class="question-mark">?</span>;
 
 			<span class="kw">let</span> <span class="ident">current_block_number</span> <span class="op">=</span> <span class="op">&lt;</span><span class="ident">frame_system::Pallet</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::block_number</span>();
 			<span class="macro">ensure!</span>(<span class="ident">expiring_block_number</span> <span class="op">&gt;</span> <span class="ident">current_block_number</span>, <span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::LinkRequestExpired</span>);
-			<span class="macro">ensure!</span>((<span class="ident">expiring_block_number</span> <span class="op">-</span> <span class="ident">current_block_number</span>) <span class="op">&lt;</span> <span class="ident">T::BlockNumber::from</span>(<span class="ident">EXPIRING_BLOCK_NUMBER_MAX</span>),
-				<span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::InvalidExpiringBlockNumber</span>);
+			<span class="macro">ensure!</span>(
+				(<span class="ident">expiring_block_number</span> <span class="op">-</span> <span class="ident">current_block_number</span>) <span class="op">&lt;</span>
+					<span class="ident">T::BlockNumber::from</span>(<span class="ident">EXPIRING_BLOCK_NUMBER_MAX</span>),
+				<span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::InvalidExpiringBlockNumber</span>
+			);
 
 			<span class="kw">let</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="self">Self</span><span class="ident">::generate_raw_message</span>(<span class="kw-2">&amp;</span><span class="ident">account</span>, <span class="ident">expiring_block_number</span>);
 
-			<span class="kw">let</span> <span class="ident">hash</span> <span class="op">=</span> <span class="ident">util_eth::eth_data_hash</span>(<span class="ident">bytes</span>).<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::UnexpectedEthMsgLength</span>)<span class="question-mark">?</span>;
+			<span class="kw">let</span> <span class="ident">hash</span> <span class="op">=</span>
+				<span class="ident">util_eth::eth_data_hash</span>(<span class="ident">bytes</span>).<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::UnexpectedEthMsgLength</span>)<span class="question-mark">?</span>;
 
 			<span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">msg</span> <span class="op">=</span> [<span class="number">0u8</span>; <span class="number">32</span>];
 			<span class="ident">msg</span>[..<span class="number">32</span>].<span class="ident">copy_from_slice</span>(<span class="kw-2">&amp;</span><span class="ident">hash</span>[..<span class="number">32</span>]);
 
-			<span class="kw">let</span> <span class="ident">addr</span> <span class="op">=</span> <span class="ident">util_eth::addr_from_sig</span>(<span class="ident">msg</span>, <span class="ident">sig</span>)
-				.<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::EcdsaRecoverFailure</span>)<span class="question-mark">?</span>;
+			<span class="kw">let</span> <span class="ident">addr</span> <span class="op">=</span>
+				<span class="ident">util_eth::addr_from_sig</span>(<span class="ident">msg</span>, <span class="ident">sig</span>).<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::EcdsaRecoverFailure</span>)<span class="question-mark">?</span>;
 			<span class="macro">ensure!</span>(<span class="ident">addr</span> <span class="op">=</span><span class="op">=</span> <span class="ident">addr_expected</span>, <span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::UnexpectedAddress</span>);
 
 			<span class="ident">EthereumLink</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::mutate</span>(<span class="kw-2">&amp;</span><span class="ident">account</span>, <span class="op">|</span><span class="ident">addrs</span><span class="op">|</span> {
@@ -553,24 +561,23 @@
 			<span class="self">Self</span><span class="ident">::deposit_event</span>(<span class="ident">Event::EthAddressLinked</span>(<span class="ident">account</span>, <span class="ident">addr</span>.<span class="ident">to_vec</span>()));
 
 			<span class="prelude-val">Ok</span>(().<span class="ident">into</span>())
-
 		}
 
 		<span class="doccomment">/// Link a BTC address to a Litentry account providing a proof signature from the private key</span>
 		<span class="doccomment">/// of that BTC address. The BTC address may either be a legacy P2PK one (started with b&#39;1&#39;)</span>
 		<span class="doccomment">/// or a Segwit P2PK one (started with b&#39;bc&#39;).</span>
 		<span class="doccomment">///</span>
-		<span class="doccomment">/// The runtime needs to ensure that a malicious index can be handled correctly. </span>
-		<span class="doccomment">/// Currently, when vec.len &gt; MAX_ETH_LINKS, replacement will always happen at the final index. </span>
+		<span class="doccomment">/// The runtime needs to ensure that a malicious index can be handled correctly.</span>
+		<span class="doccomment">/// Currently, when vec.len &gt; MAX_ETH_LINKS, replacement will always happen at the final index.</span>
 		<span class="doccomment">/// Otherwise it will use the next new slot unless index is valid against a currently available slot.</span>
-		<span class="doccomment">/// </span>
+		<span class="doccomment">///</span>
 		<span class="doccomment">/// Parameters:</span>
 		<span class="doccomment">/// - `account`: The Litentry address that is to be linked</span>
 		<span class="doccomment">/// - `index`: The index of the linked BTC address that the user wants to replace with.</span>
 		<span class="doccomment">/// - `addr_expected`: The intended BTC address to link to the origin&#39;s Litentry address</span>
 		<span class="doccomment">/// - `expiring_block_number`: The block number after which this link request will expire</span>
 		<span class="doccomment">/// - `sig`: The rsv-signature generated by the private key of the addr_expected</span>
-		<span class="doccomment">/// </span>
+		<span class="doccomment">///</span>
 		<span class="doccomment">/// Emits `BtcAddressLinked` event when successful.</span>
 		<span class="attribute">#[<span class="ident">pallet::weight</span>(<span class="ident">T::WeightInfo::link_btc</span>())]</span>
 		<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">link_btc</span>(
@@ -581,13 +588,15 @@
 			<span class="ident">expiring_block_number</span>: <span class="ident">T::BlockNumber</span>,
 			<span class="ident">sig</span>: <span class="ident">Signature</span>,
 		) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">DispatchResultWithPostInfo</span> {
-
 			<span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="ident">ensure_signed</span>(<span class="ident">origin</span>)<span class="question-mark">?</span>;
 
 			<span class="kw">let</span> <span class="ident">current_block_number</span> <span class="op">=</span> <span class="op">&lt;</span><span class="ident">frame_system::Pallet</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::block_number</span>();
 			<span class="macro">ensure!</span>(<span class="ident">expiring_block_number</span> <span class="op">&gt;</span> <span class="ident">current_block_number</span>, <span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::LinkRequestExpired</span>);
-			<span class="macro">ensure!</span>((<span class="ident">expiring_block_number</span> <span class="op">-</span> <span class="ident">current_block_number</span>) <span class="op">&lt;</span> <span class="ident">T::BlockNumber::from</span>(<span class="ident">EXPIRING_BLOCK_NUMBER_MAX</span>),
-				<span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::InvalidExpiringBlockNumber</span>);
+			<span class="macro">ensure!</span>(
+				(<span class="ident">expiring_block_number</span> <span class="op">-</span> <span class="ident">current_block_number</span>) <span class="op">&lt;</span>
+					<span class="ident">T::BlockNumber::from</span>(<span class="ident">EXPIRING_BLOCK_NUMBER_MAX</span>),
+				<span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::InvalidExpiringBlockNumber</span>
+			);
 
 			<span class="comment">// TODO: we may enlarge this 2</span>
 			<span class="kw">if</span> <span class="ident">addr_expected</span>.<span class="ident">len</span>() <span class="op">&lt;</span> <span class="number">2</span> {
@@ -596,7 +605,8 @@
 
 			<span class="kw">let</span> <span class="ident">addr_type</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">addr_expected</span>[<span class="number">0</span>] <span class="op">=</span><span class="op">=</span> <span class="string">b&#39;1&#39;</span> {
 				<span class="ident">BTCAddrType::Legacy</span>
-			} <span class="kw">else</span> <span class="kw">if</span> <span class="ident">addr_expected</span>[<span class="number">0</span>] <span class="op">=</span><span class="op">=</span> <span class="string">b&#39;b&#39;</span> <span class="op">&amp;&amp;</span> <span class="ident">addr_expected</span>[<span class="number">1</span>] <span class="op">=</span><span class="op">=</span> <span class="string">b&#39;c&#39;</span> { <span class="comment">// TODO: a better way?</span>
+			} <span class="kw">else</span> <span class="kw">if</span> <span class="ident">addr_expected</span>[<span class="number">0</span>] <span class="op">=</span><span class="op">=</span> <span class="string">b&#39;b&#39;</span> <span class="op">&amp;&amp;</span> <span class="ident">addr_expected</span>[<span class="number">1</span>] <span class="op">=</span><span class="op">=</span> <span class="string">b&#39;c&#39;</span> {
+				<span class="comment">// TODO: a better way?</span>
 				<span class="ident">BTCAddrType::Segwit</span>
 			} <span class="kw">else</span> {
 				<span class="prelude-val">Err</span>(<span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::InvalidBTCAddress</span>)<span class="question-mark">?</span>
@@ -611,12 +621,10 @@
 			<span class="ident">msg</span>[..<span class="number">32</span>].<span class="ident">copy_from_slice</span>(<span class="kw-2">&amp;</span><span class="ident">hash</span>[..<span class="number">32</span>]);
 
 			<span class="kw">let</span> <span class="ident">pk</span> <span class="op">=</span> <span class="ident">secp256k1_ecdsa_recover_compressed</span>(<span class="kw-2">&amp;</span><span class="ident">sig</span>, <span class="kw-2">&amp;</span><span class="ident">msg</span>)
-			.<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::EcdsaRecoverFailure</span>)<span class="question-mark">?</span>;
+				.<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::EcdsaRecoverFailure</span>)<span class="question-mark">?</span>;
 
 			<span class="kw">let</span> <span class="ident">addr</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">addr_type</span> {
-				<span class="ident">BTCAddrType::Legacy</span> <span class="op">=</span><span class="op">&gt;</span> {
-					<span class="ident">btc::legacy::btc_addr_from_pk</span>(<span class="kw-2">&amp;</span><span class="ident">pk</span>).<span class="ident">to_base58</span>()
-				},
+				<span class="ident">BTCAddrType::Legacy</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">btc::legacy::btc_addr_from_pk</span>(<span class="kw-2">&amp;</span><span class="ident">pk</span>).<span class="ident">to_base58</span>(),
 				<span class="comment">// Native P2WPKH is a scriptPubKey of 22 bytes.</span>
 				<span class="comment">// It starts with a OP_0, followed by a canonical push of the keyhash (i.e. 0x0014{20-byte keyhash})</span>
 				<span class="comment">// keyhash is RIPEMD160(SHA256) of a compressed public key</span>
@@ -627,9 +635,10 @@
 					<span class="ident">pk</span>[<span class="number">0</span>] <span class="op">=</span> <span class="number">0</span>;
 					<span class="ident">pk</span>[<span class="number">1</span>] <span class="op">=</span> <span class="number">20</span>;
 					<span class="ident">pk</span>[<span class="number">2</span>..].<span class="ident">copy_from_slice</span>(<span class="kw-2">&amp;</span><span class="ident">pk_hash</span>);
-					<span class="kw">let</span> <span class="ident">wp</span> <span class="op">=</span> <span class="ident">WitnessProgram::from_scriptpubkey</span>(<span class="kw-2">&amp;</span><span class="ident">pk</span>.<span class="ident">to_vec</span>()).<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::InvalidBTCAddress</span>)<span class="question-mark">?</span>;
+					<span class="kw">let</span> <span class="ident">wp</span> <span class="op">=</span> <span class="ident">WitnessProgram::from_scriptpubkey</span>(<span class="kw-2">&amp;</span><span class="ident">pk</span>.<span class="ident">to_vec</span>())
+						.<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::InvalidBTCAddress</span>)<span class="question-mark">?</span>;
 					<span class="ident">wp</span>.<span class="ident">to_address</span>(<span class="string">b&quot;bc&quot;</span>.<span class="ident">to_vec</span>()).<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::InvalidBTCAddress</span>)<span class="question-mark">?</span>
-				}
+				},
 			};
 
 			<span class="macro">ensure!</span>(<span class="ident">addr</span> <span class="op">=</span><span class="op">=</span> <span class="ident">addr_expected</span>, <span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::UnexpectedAddress</span>);
@@ -649,12 +658,11 @@
 			<span class="self">Self</span><span class="ident">::deposit_event</span>(<span class="ident">Event::BtcAddressLinked</span>(<span class="ident">account</span>, <span class="ident">addr</span>));
 
 			<span class="prelude-val">Ok</span>(().<span class="ident">into</span>())
-
 		}
 
 		<span class="doccomment">/// Initiate a link request to link a Litentry address (= any account in Polkadot ecosystem)</span>
 		<span class="doccomment">/// to another Litentry address (= any account in Polkadot ecosystem).</span>
-		<span class="doccomment">/// </span>
+		<span class="doccomment">///</span>
 		<span class="doccomment">/// Parameters:</span>
 		<span class="doccomment">/// - `account`: The Litentry address that is to be linked</span>
 		<span class="doccomment">/// - `index`: The index of the linked Litentry address that the user wants to replace with.</span>
@@ -664,7 +672,6 @@
 			<span class="ident">account</span>: <span class="ident">T::AccountId</span>,
 			<span class="ident">index</span>: <span class="ident">u32</span>,
 		) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">DispatchResultWithPostInfo</span> {
-
 			<span class="kw">let</span> <span class="ident">origin</span> <span class="op">=</span> <span class="ident">ensure_signed</span>(<span class="ident">origin</span>)<span class="question-mark">?</span>;
 
 			<span class="comment">// TODO: charge some fee</span>
@@ -672,26 +679,24 @@
 			<span class="op">&lt;</span><span class="ident">PolkadotPending</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::insert</span>(<span class="ident">origin</span>, (<span class="ident">account</span>, <span class="ident">index</span>));
 
 			<span class="prelude-val">Ok</span>(().<span class="ident">into</span>())
-
 		}
 
 		<span class="doccomment">/// Accept a pending `link_polkadot` request to link a Litentry address (= any account in Polkadot ecosystem)</span>
 		<span class="doccomment">/// to another Litentry address (= any account in Polkadot ecosystem).</span>
 		<span class="doccomment">///</span>
-		<span class="doccomment">/// The runtime needs to ensure that a malicious index can be handled correctly. </span>
-		<span class="doccomment">/// Currently, when vec.len &gt; MAX_ETH_LINKS, replacement will always happen at the final index. </span>
+		<span class="doccomment">/// The runtime needs to ensure that a malicious index can be handled correctly.</span>
+		<span class="doccomment">/// Currently, when vec.len &gt; MAX_ETH_LINKS, replacement will always happen at the final index.</span>
 		<span class="doccomment">/// Otherwise it will use the next new slot unless index is valid against a currently available slot.</span>
-		<span class="doccomment">/// </span>
+		<span class="doccomment">///</span>
 		<span class="doccomment">/// Parameters:</span>
 		<span class="doccomment">/// - `account`: The Litentry address that is to be linked</span>
-		<span class="doccomment">/// </span>
+		<span class="doccomment">///</span>
 		<span class="doccomment">/// Emits `PolkadotAddressLinked` event when successful.</span>
 		<span class="attribute">#[<span class="ident">pallet::weight</span>(<span class="ident">T::WeightInfo::accept_polkadot</span>())]</span>
 		<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">accept_polkadot</span>(
 			<span class="ident">origin</span>: <span class="ident">OriginFor</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>,
 			<span class="ident">account</span>: <span class="ident">T::AccountId</span>,
 		) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">DispatchResultWithPostInfo</span> {
-
 			<span class="kw">let</span> <span class="ident">origin</span> <span class="op">=</span> <span class="ident">ensure_signed</span>(<span class="ident">origin</span>)<span class="question-mark">?</span>;
 
 			<span class="kw">let</span> (<span class="ident">target</span>, <span class="ident">index</span>) <span class="op">=</span> <span class="self">Self</span><span class="ident">::polkadot_pending</span>(<span class="kw-2">&amp;</span><span class="ident">account</span>);
@@ -716,14 +721,17 @@
 		}
 	}
 
-	<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span>:<span class="ident">Config</span><span class="op">&gt;</span> <span class="ident">Pallet</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
-		<span class="doccomment">/// Assemble the message that the user has signed </span>
+	<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Config</span><span class="op">&gt;</span> <span class="ident">Pallet</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
+		<span class="doccomment">/// Assemble the message that the user has signed</span>
 		<span class="doccomment">/// Format: &quot;Link Litentry: &quot; + Litentry account + expiring block number</span>
-		<span class="kw">fn</span> <span class="ident">generate_raw_message</span>(<span class="ident">account</span>: <span class="kw-2">&amp;</span><span class="ident">T::AccountId</span>, <span class="ident">expiring_block_number</span>: <span class="ident">T::BlockNumber</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span> {
+		<span class="kw">fn</span> <span class="ident">generate_raw_message</span>(
+			<span class="ident">account</span>: <span class="kw-2">&amp;</span><span class="ident">T::AccountId</span>,
+			<span class="ident">expiring_block_number</span>: <span class="ident">T::BlockNumber</span>,
+		) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span> {
 			<span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="string">b&quot;Link Litentry: &quot;</span>.<span class="ident">encode</span>();
 			<span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">account_vec</span> <span class="op">=</span> <span class="ident">account</span>.<span class="ident">encode</span>();
 			<span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">expiring_block_number_vec</span> <span class="op">=</span> <span class="ident">expiring_block_number</span>.<span class="ident">encode</span>();
-			
+
 			<span class="ident">bytes</span>.<span class="ident">append</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">account_vec</span>);
 			<span class="ident">bytes</span>.<span class="ident">append</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">expiring_block_number_vec</span>);
 			<span class="ident">bytes</span>

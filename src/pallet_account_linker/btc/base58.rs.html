@@ -114,6 +114,9 @@
 <span id="111">111</span>
 <span id="112">112</span>
 <span id="113">113</span>
+<span id="114">114</span>
+<span id="115">115</span>
+<span id="116">116</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! Based on https://github.com/debris/base58/blob/master/src/lib.rs</span>
 <span class="doccomment">//! works only up to 128 bytes</span>
@@ -146,7 +149,7 @@
 				<span class="ident">carry</span> <span class="op">/</span><span class="op">=</span> <span class="number">58</span>;
 
 				<span class="comment">// in original trezor implementation it was underflowing</span>
-				<span class="kw">if</span> <span class="ident">j</span>  <span class="op">&gt;</span> <span class="number">0</span> {
+				<span class="kw">if</span> <span class="ident">j</span> <span class="op">&gt;</span> <span class="number">0</span> {
 					<span class="ident">j</span> <span class="op">-</span><span class="op">=</span> <span class="number">1</span>;
 				}
 			}
@@ -174,8 +177,8 @@
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
 <span class="kw">mod</span> <span class="ident">tests</span> {
 	<span class="kw">use</span> <span class="kw">super</span><span class="ident">::ToBase58</span>;
-	<span class="kw">use</span> <span class="ident">std::str::from_utf8</span>;
 	<span class="kw">use</span> <span class="ident">hex::decode</span>;
+	<span class="kw">use</span> <span class="ident">std::str::from_utf8</span>;
 
 	<span class="attribute">#[<span class="ident">test</span>]</span>
 	<span class="kw">fn</span> <span class="ident">test_to_base58_basic</span>() {
@@ -189,7 +192,10 @@
 		<span class="macro">assert_eq!</span>(<span class="ident">from_utf8</span>(<span class="kw-2">&amp;</span>[<span class="number">49</span>, <span class="number">49</span>].<span class="ident">to_base58</span>()).<span class="ident">unwrap</span>(), <span class="string">&quot;4k8&quot;</span>);
 		<span class="macro">assert_eq!</span>(<span class="ident">from_utf8</span>(<span class="kw-2">&amp;</span><span class="string">b&quot;abc&quot;</span>.<span class="ident">to_base58</span>()).<span class="ident">unwrap</span>(), <span class="string">&quot;ZiCa&quot;</span>);
 		<span class="macro">assert_eq!</span>(<span class="ident">from_utf8</span>(<span class="kw-2">&amp;</span><span class="string">b&quot;1234598760&quot;</span>.<span class="ident">to_base58</span>()).<span class="ident">unwrap</span>(), <span class="string">&quot;3mJr7AoUXx2Wqd&quot;</span>);
-		<span class="macro">assert_eq!</span>(<span class="ident">from_utf8</span>(<span class="kw-2">&amp;</span><span class="string">b&quot;abcdefghijklmnopqrstuvwxyz&quot;</span>.<span class="ident">to_base58</span>()).<span class="ident">unwrap</span>(), <span class="string">&quot;3yxU3u1igY8WkgtjK92fbJQCd4BZiiT1v25f&quot;</span>);
+		<span class="macro">assert_eq!</span>(
+			<span class="ident">from_utf8</span>(<span class="kw-2">&amp;</span><span class="string">b&quot;abcdefghijklmnopqrstuvwxyz&quot;</span>.<span class="ident">to_base58</span>()).<span class="ident">unwrap</span>(),
+			<span class="string">&quot;3yxU3u1igY8WkgtjK92fbJQCd4BZiiT1v25f&quot;</span>
+		);
 	}
 
 	<span class="attribute">#[<span class="ident">test</span>]</span>

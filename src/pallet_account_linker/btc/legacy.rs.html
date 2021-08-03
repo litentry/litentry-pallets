@@ -88,33 +88,32 @@
 <span id="85">85</span>
 <span id="86">86</span>
 <span id="87">87</span>
-<span id="88">88</span>
 </pre><div class="example-wrap"><pre class="rust ">
-<span class="kw">use</span> <span class="ident">sha2</span>::{<span class="ident">Digest</span>, <span class="ident">Sha256</span>};
 <span class="kw">use</span> <span class="ident">ripemd160::Ripemd160</span>;
+<span class="kw">use</span> <span class="ident">sha2</span>::{<span class="ident">Digest</span>, <span class="ident">Sha256</span>};
 
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">btc_addr_from_pk</span>(<span class="ident">pk</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]) <span class="op">-</span><span class="op">&gt;</span> [<span class="ident">u8</span>; <span class="number">25</span>] {
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">result</span> <span class="op">=</span> [<span class="number">0u8</span>; <span class="number">25</span>];
+	<span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">result</span> <span class="op">=</span> [<span class="number">0u8</span>; <span class="number">25</span>];
 
-    <span class="comment">// Now only support P2PKH (Mainnet) prefix = 0</span>
-    <span class="ident">result</span>[<span class="number">0</span>] <span class="op">=</span> <span class="number">0</span>;
-    <span class="ident">result</span>[<span class="number">1</span>..<span class="number">21</span>].<span class="ident">copy_from_slice</span>(<span class="kw-2">&amp;</span><span class="ident">hash160</span>(<span class="ident">pk</span>));
-    <span class="kw">let</span> <span class="ident">cs</span> <span class="op">=</span> <span class="ident">checksum</span>(<span class="kw-2">&amp;</span><span class="ident">result</span>[<span class="number">0</span>..<span class="number">21</span>]);
-    <span class="ident">result</span>[<span class="number">21</span>..<span class="number">25</span>].<span class="ident">copy_from_slice</span>(<span class="kw-2">&amp;</span><span class="ident">cs</span>);
-    <span class="ident">result</span>
+	<span class="comment">// Now only support P2PKH (Mainnet) prefix = 0</span>
+	<span class="ident">result</span>[<span class="number">0</span>] <span class="op">=</span> <span class="number">0</span>;
+	<span class="ident">result</span>[<span class="number">1</span>..<span class="number">21</span>].<span class="ident">copy_from_slice</span>(<span class="kw-2">&amp;</span><span class="ident">hash160</span>(<span class="ident">pk</span>));
+	<span class="kw">let</span> <span class="ident">cs</span> <span class="op">=</span> <span class="ident">checksum</span>(<span class="kw-2">&amp;</span><span class="ident">result</span>[<span class="number">0</span>..<span class="number">21</span>]);
+	<span class="ident">result</span>[<span class="number">21</span>..<span class="number">25</span>].<span class="ident">copy_from_slice</span>(<span class="kw-2">&amp;</span><span class="ident">cs</span>);
+	<span class="ident">result</span>
 }
 
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">hash160</span>(<span class="ident">bytes</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]) <span class="op">-</span><span class="op">&gt;</span> [<span class="ident">u8</span>; <span class="number">20</span>] {
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">hasher_sha256</span> <span class="op">=</span> <span class="ident">Sha256::new</span>();
-    <span class="ident">hasher_sha256</span>.<span class="ident">update</span>(<span class="ident">bytes</span>);
-    <span class="kw">let</span> <span class="ident">digest</span> <span class="op">=</span> <span class="ident">hasher_sha256</span>.<span class="ident">finalize</span>();
+	<span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">hasher_sha256</span> <span class="op">=</span> <span class="ident">Sha256::new</span>();
+	<span class="ident">hasher_sha256</span>.<span class="ident">update</span>(<span class="ident">bytes</span>);
+	<span class="kw">let</span> <span class="ident">digest</span> <span class="op">=</span> <span class="ident">hasher_sha256</span>.<span class="ident">finalize</span>();
 
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">hasher_ripemd</span> <span class="op">=</span> <span class="ident">Ripemd160::new</span>();
-    <span class="ident">hasher_ripemd</span>.<span class="ident">update</span>(<span class="ident">digest</span>);
+	<span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">hasher_ripemd</span> <span class="op">=</span> <span class="ident">Ripemd160::new</span>();
+	<span class="ident">hasher_ripemd</span>.<span class="ident">update</span>(<span class="ident">digest</span>);
 
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">ret</span> <span class="op">=</span> [<span class="number">0</span>; <span class="number">20</span>];
-    <span class="ident">ret</span>.<span class="ident">copy_from_slice</span>(<span class="kw-2">&amp;</span><span class="ident">hasher_ripemd</span>.<span class="ident">finalize</span>()[..]);
-    <span class="ident">ret</span>
+	<span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">ret</span> <span class="op">=</span> [<span class="number">0</span>; <span class="number">20</span>];
+	<span class="ident">ret</span>.<span class="ident">copy_from_slice</span>(<span class="kw-2">&amp;</span><span class="ident">hasher_ripemd</span>.<span class="ident">finalize</span>()[..]);
+	<span class="ident">ret</span>
 }
 
 <span class="kw">fn</span> <span class="ident">checksum</span>(<span class="ident">input</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]) <span class="op">-</span><span class="op">&gt;</span> [<span class="ident">u8</span>; <span class="number">4</span>] {
@@ -131,16 +130,16 @@
 <span class="doccomment">/// # Returns</span>
 <span class="doccomment">/// * The double SHA256 hash encoded as LE bytes from data</span>
 <span class="kw">fn</span> <span class="ident">dsha256</span>(<span class="ident">bytes</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]) <span class="op">-</span><span class="op">&gt;</span> [<span class="ident">u8</span>; <span class="number">32</span>] {
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">hasher</span> <span class="op">=</span> <span class="ident">Sha256::new</span>();
-    <span class="ident">hasher</span>.<span class="ident">update</span>(<span class="ident">bytes</span>);
-    <span class="kw">let</span> <span class="ident">digest</span> <span class="op">=</span> <span class="ident">hasher</span>.<span class="ident">finalize</span>();
+	<span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">hasher</span> <span class="op">=</span> <span class="ident">Sha256::new</span>();
+	<span class="ident">hasher</span>.<span class="ident">update</span>(<span class="ident">bytes</span>);
+	<span class="kw">let</span> <span class="ident">digest</span> <span class="op">=</span> <span class="ident">hasher</span>.<span class="ident">finalize</span>();
 
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">second_hasher</span> <span class="op">=</span> <span class="ident">Sha256::new</span>();
-    <span class="ident">second_hasher</span>.<span class="ident">update</span>(<span class="ident">digest</span>);
+	<span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">second_hasher</span> <span class="op">=</span> <span class="ident">Sha256::new</span>();
+	<span class="ident">second_hasher</span>.<span class="ident">update</span>(<span class="ident">digest</span>);
 
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">ret</span> <span class="op">=</span> [<span class="number">0</span>; <span class="number">32</span>];
-    <span class="ident">ret</span>.<span class="ident">copy_from_slice</span>(<span class="kw-2">&amp;</span><span class="ident">second_hasher</span>.<span class="ident">finalize</span>()[..]);
-    <span class="ident">ret</span>
+	<span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">ret</span> <span class="op">=</span> [<span class="number">0</span>; <span class="number">32</span>];
+	<span class="ident">ret</span>.<span class="ident">copy_from_slice</span>(<span class="kw-2">&amp;</span><span class="ident">second_hasher</span>.<span class="ident">finalize</span>()[..]);
+	<span class="ident">ret</span>
 }
 
 <span class="comment">// test data can be obtained from here http://gobittest.appspot.com/Address</span>
@@ -151,32 +150,32 @@
 
 	<span class="attribute">#[<span class="ident">test</span>]</span>
 	<span class="kw">fn</span> <span class="ident">correct_dhash160</span>() {
-
 		<span class="kw">let</span> <span class="ident">pk</span> <span class="op">=</span> <span class="ident">decode</span>(<span class="string">&quot;0450863AD64A87AE8A2FE83C1AF1A8403CB53F53E486D8511DAD8A04887E5B23522CD470243453A299FA9E77237716103ABC11A1DF38855ED6F2EE187E9C582BA6&quot;</span>).<span class="ident">unwrap</span>();
 
-        <span class="kw">let</span> <span class="ident">hash</span> <span class="op">=</span> <span class="ident">hash160</span>(<span class="kw-2">&amp;</span><span class="ident">pk</span>);
+		<span class="kw">let</span> <span class="ident">hash</span> <span class="op">=</span> <span class="ident">hash160</span>(<span class="kw-2">&amp;</span><span class="ident">pk</span>);
 
-        <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">decode</span>(<span class="string">&quot;010966776006953D5567439E5E39F86A0D273BEE&quot;</span>).<span class="ident">unwrap</span>();
+		<span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">decode</span>(<span class="string">&quot;010966776006953D5567439E5E39F86A0D273BEE&quot;</span>).<span class="ident">unwrap</span>();
 		<span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">hash_expected</span> <span class="op">=</span> [<span class="number">0u8</span>; <span class="number">20</span>];
 		<span class="ident">hash_expected</span>[<span class="number">0</span>..<span class="number">20</span>].<span class="ident">copy_from_slice</span>(<span class="kw-2">&amp;</span><span class="ident">result</span>[<span class="number">0</span>..<span class="number">20</span>]);
 
 		<span class="macro">assert_eq!</span>(<span class="ident">hash</span>, <span class="ident">hash_expected</span>);
-    }
+	}
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">correct_btc_addr_from_pk</span>() {
-        <span class="kw">let</span> <span class="ident">pk</span> <span class="op">=</span> <span class="ident">decode</span>(<span class="string">&quot;0450863AD64A87AE8A2FE83C1AF1A8403CB53F53E486D8511DAD8A04887E5B23522CD470243453A299FA9E77237716103ABC11A1DF38855ED6F2EE187E9C582BA6&quot;</span>).<span class="ident">unwrap</span>();
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">pk_input</span> <span class="op">=</span> [<span class="number">0u8</span>; <span class="number">65</span>];
-        <span class="ident">pk_input</span>[<span class="number">0</span>..<span class="number">65</span>].<span class="ident">copy_from_slice</span>(<span class="kw-2">&amp;</span><span class="ident">pk</span>[<span class="number">0</span>..<span class="number">65</span>]);
+	<span class="attribute">#[<span class="ident">test</span>]</span>
+	<span class="kw">fn</span> <span class="ident">correct_btc_addr_from_pk</span>() {
+		<span class="kw">let</span> <span class="ident">pk</span> <span class="op">=</span> <span class="ident">decode</span>(<span class="string">&quot;0450863AD64A87AE8A2FE83C1AF1A8403CB53F53E486D8511DAD8A04887E5B23522CD470243453A299FA9E77237716103ABC11A1DF38855ED6F2EE187E9C582BA6&quot;</span>).<span class="ident">unwrap</span>();
+		<span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">pk_input</span> <span class="op">=</span> [<span class="number">0u8</span>; <span class="number">65</span>];
+		<span class="ident">pk_input</span>[<span class="number">0</span>..<span class="number">65</span>].<span class="ident">copy_from_slice</span>(<span class="kw-2">&amp;</span><span class="ident">pk</span>[<span class="number">0</span>..<span class="number">65</span>]);
 
-        <span class="kw">let</span> <span class="ident">addr</span> <span class="op">=</span> <span class="ident">btc_addr_from_pk</span>(<span class="kw-2">&amp;</span><span class="ident">pk_input</span>);
+		<span class="kw">let</span> <span class="ident">addr</span> <span class="op">=</span> <span class="ident">btc_addr_from_pk</span>(<span class="kw-2">&amp;</span><span class="ident">pk_input</span>);
 
-        <span class="kw">let</span> <span class="ident">addr_expected_hex</span> <span class="op">=</span> <span class="ident">decode</span>(<span class="string">&quot;00010966776006953D5567439E5E39F86A0D273BEED61967F6&quot;</span>).<span class="ident">unwrap</span>();
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">addr_expected</span> <span class="op">=</span> [<span class="number">0u8</span>; <span class="number">25</span>];
-        <span class="ident">addr_expected</span>[<span class="number">0</span>..<span class="number">25</span>].<span class="ident">copy_from_slice</span>(<span class="kw-2">&amp;</span><span class="ident">addr_expected_hex</span>[<span class="number">0</span>..<span class="number">25</span>]);
-        <span class="macro">assert_eq!</span>(<span class="ident">addr</span>, <span class="ident">addr_expected</span>);
-    }
-
-}</pre></div>
+		<span class="kw">let</span> <span class="ident">addr_expected_hex</span> <span class="op">=</span>
+			<span class="ident">decode</span>(<span class="string">&quot;00010966776006953D5567439E5E39F86A0D273BEED61967F6&quot;</span>).<span class="ident">unwrap</span>();
+		<span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">addr_expected</span> <span class="op">=</span> [<span class="number">0u8</span>; <span class="number">25</span>];
+		<span class="ident">addr_expected</span>[<span class="number">0</span>..<span class="number">25</span>].<span class="ident">copy_from_slice</span>(<span class="kw-2">&amp;</span><span class="ident">addr_expected_hex</span>[<span class="number">0</span>..<span class="number">25</span>]);
+		<span class="macro">assert_eq!</span>(<span class="ident">addr</span>, <span class="ident">addr_expected</span>);
+	}
+}
+</pre></div>
 </section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="pallet_account_linker" data-search-index-js="../../../search-index.js" data-search-js="../../../search.js"></div>
     <script src="../../../main.js"></script><script src="../../../source-script.js"></script><script src="../../../source-files.js"></script></body></html>
