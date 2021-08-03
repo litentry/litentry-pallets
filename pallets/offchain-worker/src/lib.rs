@@ -95,6 +95,14 @@ pub mod pallet {
 		type Reward: OnUnbalanced<PositiveImbalanceOf<Self>>;
 		type OcwQueryReward: Get<<<Self as Config>::Currency as Currency<<Self as frame_system::Config>::AccountId>>::Balance>;
 		type WeightInfo: weights::WeightInfo;
+
+		/// The maximum weight indicate the maximum weight used for data aggregation at the end of a session
+		type MaximumWeightForDataAggregation: Get<Weight>;
+
+		/// The maximum commits per session defined to avoid the weight used for data aggregation exceed MaximumWeightForDataAggregation
+		/// The weights used is depends on the data size in CommitAccountBalance, as a reference, the weights for 100 items can be found
+		/// in weights.rs dummy() -> Weight. need re-run the benchmarking according to this parameter and guarantee the data is reasonable
+		type MaximumCommitsPerSession: Get<u32>;
 	}
 
 	#[pallet::hooks]
@@ -158,6 +166,8 @@ pub mod pallet {
 		TokenServerNoResponse,
 		/// Storage retrieval error
 		InvalidStorageRetrieval,
+		/// Too much commits in a session
+		TooMuchCommitsInSession,
 	}
 
 	#[pallet::pallet]
@@ -189,6 +199,9 @@ pub mod pallet {
 	#[pallet::getter(fn ocw_account_index)]
 	pub(super) type OcwAccountIndex<T: Config> =  StorageMap<_, Blake2_128Concat, T::AccountId, Option<u32>, ValueQuery>;
 
+	#[pallet::storage]
+	#[pallet::getter(fn commit_number_in_session)]
+	pub(super) type CommitNumberInSession<T: Config> = StorageValue<_, u32>;
 
 	#[pallet::call]
 	impl<T:Config> Pallet<T> {
@@ -254,6 +267,15 @@ pub mod pallet {
 
 			// Check the commit slot
 			Self::valid_commit_slot(account.clone(), Self::get_ocw_index(Some(&account)), data_source)?;
+
+			// Check the commit number in a session
+			match Self::commit_number_in_session() {
+				Some(commits) => {
+					ensure!(commits == T::MaximumCommitsPerSession::get(), <Error<T>>::TooMuchCommitsInSession);
+					CommitNumberInSession::<T>::set(Some(commits + 1));
+				},
+				None => {CommitNumberInSession::<T>::set(Some(1));},
+			};
 
 			// put query result on chain
 			CommitAccountBalance::<T>::insert(&sender, &QueryKey{account, data_source}, Some(balance));
@@ -348,6 +370,9 @@ pub mod pallet {
 
 		// Clear claim accounts in last session
 		fn clear_claim() {
+			// Reset the commit number for next session
+			CommitNumberInSession::<T>::set(Some(0));
+
 			// Remove all account index in last session
 			<ClaimAccountIndex<T>>::remove_all(None);
 
