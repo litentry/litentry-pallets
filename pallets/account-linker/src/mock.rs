@@ -1,14 +1,14 @@
+use crate as account_linker;
 use frame_support::{
 	parameter_types,
 	traits::{OnFinalize, OnInitialize},
 };
 use frame_system as system;
-use crate as account_linker;
 use sp_core::H256;
 use sp_runtime::{
+	generic,
 	traits::{BlakeTwo256, IdentityLookup},
 	AccountId32,
-	generic,
 };
 
 pub use crate::MAX_ETH_LINKS;
@@ -68,20 +68,17 @@ pub type AccountLinkerError = account_linker::Error<Test>;
 
 // Build genesis storage according to the mock runtime.
 pub fn new_test_ext() -> sp_io::TestExternalities {
-	system::GenesisConfig::default()
-		.build_storage::<Test>()
-		.unwrap()
-		.into()
+	system::GenesisConfig::default().build_storage::<Test>().unwrap().into()
 }
 
 pub fn run_to_block(n: u32) {
-    while System::block_number() < n {
-        AccountLinker::on_finalize(System::block_number());
-        System::on_finalize(System::block_number());
-        System::set_block_number(System::block_number() + 1);
-        System::on_initialize(System::block_number());
-        AccountLinker::on_initialize(System::block_number());
-    }
+	while System::block_number() < n {
+		AccountLinker::on_finalize(System::block_number());
+		System::on_finalize(System::block_number());
+		System::set_block_number(System::block_number() + 1);
+		System::on_initialize(System::block_number());
+		AccountLinker::on_initialize(System::block_number());
+	}
 }
 
 pub fn events() -> Vec<Event> {

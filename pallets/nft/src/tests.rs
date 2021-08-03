@@ -1,6 +1,5 @@
 use super::*;
-use crate::mock::Event;
-use crate::mock::*;
+use crate::mock::{Event, *};
 use frame_support::{assert_noop, assert_ok};
 use sp_runtime::AccountId32;
 
@@ -85,12 +84,7 @@ fn test_issue_and_claim_eth() {
 		);
 
 		// alice claims with alice's proof
-		assert_ok!(Nft::claim(
-			Origin::signed(alice_account.clone()),
-			0,
-			0,
-			alice_proof.clone(),
-		));
+		assert_ok!(Nft::claim(Origin::signed(alice_account.clone()), 0, 0, alice_proof.clone(),));
 
 		// alice claims again
 		assert_noop!(
@@ -155,11 +149,6 @@ fn test_issue_and_merge_eth() {
 		));
 
 		// claim with proof
-		assert_ok!(Nft::merge(
-			Origin::signed(other_account.clone()),
-			2,
-			(0, 0),
-			(1, 0),
-		));
+		assert_ok!(Nft::merge(Origin::signed(other_account.clone()), 2, (0, 0), (1, 0),));
 	})
 }

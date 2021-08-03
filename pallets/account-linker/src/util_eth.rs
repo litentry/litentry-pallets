@@ -16,8 +16,12 @@ pub fn addr_from_sig(msg: [u8; 32], sig: [u8; 65]) -> Result<[u8; 20], sp_io::Ec
 pub fn eth_data_hash(mut data: Vec<u8>) -> Result<[u8; 32], &'static str> {
 	const MSG_LEN: usize = 51;
 	if data.len() != MSG_LEN {
-		log::error!("Ethereum message has an unexpected length {} !!! Expected is {}.", data.len(), MSG_LEN);
-		return Err("Unexpected ethereum message length!");
+		log::error!(
+			"Ethereum message has an unexpected length {} !!! Expected is {}.",
+			data.len(),
+			MSG_LEN
+		);
+		return Err("Unexpected ethereum message length!")
 	}
 	let mut length_bytes = usize_to_u8_array(data.len())?;
 	let mut eth_data = b"\x19Ethereum Signed Message:\n".encode();
@@ -39,7 +43,7 @@ fn usize_to_u8_array(length: usize) -> Result<Vec<u8>, &'static str> {
 		let tens = length / 10;
 		let ones = length % 10;
 
-		let mut  vec_res: Vec<u8> = Vec::new();
+		let mut vec_res: Vec<u8> = Vec::new();
 		if tens != 0 {
 			vec_res.push(digits[tens]);
 		}
@@ -62,7 +66,6 @@ mod tests {
 
 	#[test]
 	fn correct_recover() {
-
 		let msg = decode("61626364656667").unwrap();
 		let msg = eth_data_hash_test_helper(msg);
 
@@ -80,7 +83,6 @@ mod tests {
 
 	#[test]
 	fn wrong_msg() {
-
 		let msg = decode("626364656667").unwrap();
 		let msg = eth_data_hash_test_helper(msg);
 
@@ -98,7 +100,6 @@ mod tests {
 
 	#[test]
 	fn sig_from_another_addr() {
-
 		let msg = decode("61626364656667").unwrap();
 		let msg = eth_data_hash_test_helper(msg);
 

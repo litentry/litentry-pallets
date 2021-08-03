@@ -29,7 +29,7 @@ impl ToBase58 for [u8] {
 				carry /= 58;
 
 				// in original trezor implementation it was underflowing
-				if j  > 0 {
+				if j > 0 {
 					j -= 1;
 				}
 			}
@@ -57,8 +57,8 @@ impl ToBase58 for [u8] {
 #[cfg(test)]
 mod tests {
 	use super::ToBase58;
-	use std::str::from_utf8;
 	use hex::decode;
+	use std::str::from_utf8;
 
 	#[test]
 	fn test_to_base58_basic() {
@@ -72,7 +72,10 @@ mod tests {
 		assert_eq!(from_utf8(&[49, 49].to_base58()).unwrap(), "4k8");
 		assert_eq!(from_utf8(&b"abc".to_base58()).unwrap(), "ZiCa");
 		assert_eq!(from_utf8(&b"1234598760".to_base58()).unwrap(), "3mJr7AoUXx2Wqd");
-		assert_eq!(from_utf8(&b"abcdefghijklmnopqrstuvwxyz".to_base58()).unwrap(), "3yxU3u1igY8WkgtjK92fbJQCd4BZiiT1v25f");
+		assert_eq!(
+			from_utf8(&b"abcdefghijklmnopqrstuvwxyz".to_base58()).unwrap(),
+			"3yxU3u1igY8WkgtjK92fbJQCd4BZiiT1v25f"
+		);
 	}
 
 	#[test]
