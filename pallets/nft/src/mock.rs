@@ -119,7 +119,6 @@ pub fn run_to_block(n: u32) {
 		<System as OnInitialize<u32>>::on_initialize(System::block_number());
 		<Nft as OnInitialize<u32>>::on_initialize(System::block_number());
 	};
-	assert_eq!(System::block_number(), n)
 }
 
 pub fn events() -> Vec<Event> {
