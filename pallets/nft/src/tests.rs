@@ -2,6 +2,8 @@ use super::*;
 use crate::mock::{Event, *};
 use frame_support::{assert_noop, assert_ok};
 use sp_runtime::AccountId32;
+use frame_system::Event as SystemEvent;
+use pallet_balances::Event as BalanceEvent;
 
 #[test]
 fn test_issue_and_mint_eth() {
@@ -56,8 +58,11 @@ fn test_issue_and_claim_eth() {
 		]];
 
 		run_to_block(1);
+		assert_eq!(System::block_number(),1);
 
 		let _ = Balances::deposit_creating(&alice_account, (CREATION_FEE + 10).into());
+
+		System::reset_events();
 
 		// issue a claim class
 		assert_ok!(Nft::create_class(
@@ -69,13 +74,17 @@ fn test_issue_and_claim_eth() {
 			ClassType::Claim(merkle_root),
 		));
 
-		// assert_eq!(
-		// 	events(),
-		// 	[Event::Nft(crate::Event::CreatedClass(
-		// 		alice_account.clone(),
-		// 		0
-		// 	)),]
-		// );
+		// even we clear events before create_class, as Pot address never exists and balance on it being added, it will always trigger system event and balance event first time
+		// Improvement will be made in full test - issue #71
+		assert_eq!(
+			events(),
+			[
+			SystemEvent::NewAccount(Pot::get()).into(),
+			BalanceEvent::Endowed(Pot::get(), CREATION_FEE.into()).into(),
+			BalanceEvent::Transfer(alice_account.clone(), Pot::get(), CREATION_FEE.into()).into(),
+			Event::Nft(crate::Event::CreatedClass(alice_account.clone(),0)),
+			]
+		);
 
 		// alice claims with random proof
 		assert_noop!(
