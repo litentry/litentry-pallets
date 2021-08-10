@@ -58,7 +58,7 @@ fn test_issue_and_claim_eth() {
 		]];
 
 		run_to_block(1);
-		assert_eq!(System::block_number(),1);
+		assert_eq!(System::block_number(), 1);
 
 		let _ = Balances::deposit_creating(&alice_account, (CREATION_FEE + 10).into());
 
