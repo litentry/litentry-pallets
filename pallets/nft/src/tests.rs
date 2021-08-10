@@ -79,10 +79,10 @@ fn test_issue_and_claim_eth() {
 		assert_eq!(
 			events(),
 			[
-			SystemEvent::NewAccount(Pot::get()).into(),
-			BalanceEvent::Endowed(Pot::get(), CREATION_FEE.into()).into(),
-			BalanceEvent::Transfer(alice_account.clone(), Pot::get(), CREATION_FEE.into()).into(),
-			Event::Nft(crate::Event::CreatedClass(alice_account.clone(),0)),
+				SystemEvent::NewAccount(Pot::get()).into(),
+				BalanceEvent::Endowed(Pot::get(), CREATION_FEE.into()).into(),
+				BalanceEvent::Transfer(alice_account.clone(), Pot::get(), CREATION_FEE.into()).into(),
+				Event::Nft(crate::Event::CreatedClass(alice_account.clone(), 0)),
 			]
 		);
 
