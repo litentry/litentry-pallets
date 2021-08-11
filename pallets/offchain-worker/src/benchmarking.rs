@@ -44,8 +44,3 @@ benchmarks! {
 
     }: { OCW::<T>::on_finalize(block_number.into()); }
 }
-
-impl_benchmark_test_suite!(
-	OCW,
-	crate::tests::Test,
-);
