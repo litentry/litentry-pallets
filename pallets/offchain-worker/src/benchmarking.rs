@@ -47,6 +47,5 @@ benchmarks! {
 
 impl_benchmark_test_suite!(
 	OCW,
-	crate::tests::new_test_ext(),
 	crate::tests::Test,
 );
