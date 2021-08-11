@@ -2,9 +2,13 @@
 
 use super::*;
 
-use frame_benchmarking::{account, benchmarks};
+use frame_benchmarking::{account, benchmarks, impl_benchmark_test_suite};
+use frame_support::{ensure, traits::OnFinalize};
+
 use frame_system::RawOrigin;
 use sp_std::prelude::*;
+
+use crate::Pallet as OCW;
 
 benchmarks! {
 
@@ -22,8 +26,7 @@ benchmarks! {
         
     }: submit_balance(RawOrigin::Signed(caller), account_id, block_number.into(), data_source.into(), balance)
 
-    // benchmark with 100 records in CommitAccountBalance
-    dummy {
+    on_finalize {
         let caller: T::AccountId = account("caller", 0, 0);
 
         let block_number = 4_u32;
@@ -39,5 +42,11 @@ benchmarks! {
             CommitAccountBalance::<T>::insert(&sender.clone(), &query_key, Some(balance));
         }
 
-    }: dummy(RawOrigin::Signed(caller), block_number.into())
+    }: { OCW::<T>::on_finalize(block_number.into()); }
 }
+
+impl_benchmark_test_suite!(
+	OCW,
+	crate::tests::new_test_ext(),
+	crate::tests::Test,
+);

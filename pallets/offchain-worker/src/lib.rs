@@ -133,7 +133,7 @@ pub mod pallet {
 		/// It just return the weight of on_finalize
 		fn on_initialize(block_number: T::BlockNumber) -> Weight {
 			log::info!("ocw on_initialize {:?}.", block_number);
-			<T as pallet::Config>::WeightInfo::dummy()
+			<T as pallet::Config>::WeightInfo::on_finalize()
 		}
 
 		/// The on_finalize trigger the query result aggregation.
@@ -334,16 +334,6 @@ pub mod pallet {
 				&QueryKey { account, data_source },
 				Some(balance),
 			);
-
-			Ok(().into())
-		}
-
-		#[pallet::weight(<T as pallet::Config>::WeightInfo::dummy())]
-		// dummy used to compute the weight of on_finalize
-		pub fn dummy(origin: OriginFor<T>, block_number: T::BlockNumber)-> DispatchResultWithPostInfo {
-			ensure_signed(origin)?;
-
-			Self::do_finalize(block_number);
 
 			Ok(().into())
 		}
