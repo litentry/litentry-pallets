@@ -1,7 +1,6 @@
 <!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `pallets/offchain-worker/src/lib.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>lib.rs - source</title><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled ><script id="default-settings"></script><script src="../../storage.js"></script><script src="../../crates.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../favicon.svg">
 <link rel="alternate icon" type="image/png" href="../../favicon-16x16.png">
-<link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../pallet_offchain_worker/index.html'><div class='logo-container rust-logo'><img src='../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu"><img src="../../brush.svg" width="18" height="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" class="help-button">?</button>
-                <a id="settings-menu" href="../../settings.html"><img src="../../wheel.svg" width="18" height="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><pre class="line-numbers"><span id="1">  1</span>
+<link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../pallet_offchain_worker/index.html'><div class='logo-container rust-logo'><img src='../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img src="../../brush.svg" width="18" height="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../settings.html" title="settings"><img src="../../wheel.svg" width="18" height="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">  1</span>
 <span id="2">  2</span>
 <span id="3">  3</span>
 <span id="4">  4</span>
@@ -921,7 +920,36 @@
 <span id="918">918</span>
 <span id="919">919</span>
 <span id="920">920</span>
-</pre><div class="example-wrap"><pre class="rust ">
+<span id="921">921</span>
+<span id="922">922</span>
+<span id="923">923</span>
+<span id="924">924</span>
+<span id="925">925</span>
+<span id="926">926</span>
+<span id="927">927</span>
+<span id="928">928</span>
+<span id="929">929</span>
+<span id="930">930</span>
+<span id="931">931</span>
+<span id="932">932</span>
+<span id="933">933</span>
+<span id="934">934</span>
+<span id="935">935</span>
+<span id="936">936</span>
+<span id="937">937</span>
+<span id="938">938</span>
+<span id="939">939</span>
+<span id="940">940</span>
+<span id="941">941</span>
+<span id="942">942</span>
+<span id="943">943</span>
+<span id="944">944</span>
+<span id="945">945</span>
+<span id="946">946</span>
+<span id="947">947</span>
+<span id="948">948</span>
+<span id="949">949</span>
+</pre><pre class="rust">
 <span class="doccomment">//! # Offchain Worker</span>
 <span class="doccomment">//! The pallet is responsible for get the external assets claim from the extrinsic and then query and aggregate the</span>
 <span class="doccomment">//! balance (btc and eth) according to linked external accounts in account linker pallet. Offchain worker get the data</span>
@@ -958,8 +986,8 @@
 	<span class="doccomment">/// Unique key for query</span>
 	<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Encode</span>, <span class="ident">Decode</span>, <span class="ident">Default</span>, <span class="ident">Debug</span>)]</span>
 	<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">QueryKey</span><span class="op">&lt;</span><span class="ident">AccountId</span><span class="op">&gt;</span> {
-		<span class="ident">account</span>: <span class="ident">AccountId</span>,
-		<span class="ident">data_source</span>: <span class="ident">urls::DataSource</span>,
+		<span class="kw">pub</span> <span class="ident">account</span>: <span class="ident">AccountId</span>,
+		<span class="kw">pub</span> <span class="ident">data_source</span>: <span class="ident">urls::DataSource</span>,
 	}
 
 	<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">crypto</span> {
@@ -1041,6 +1069,14 @@
 		<span class="kw">type</span> <span class="ident">Reward</span>: <span class="ident">OnUnbalanced</span><span class="op">&lt;</span><span class="ident">PositiveImbalanceOf</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span><span class="op">&gt;</span>;
 		<span class="kw">type</span> <span class="ident">OcwQueryReward</span>: <span class="ident">Get</span><span class="op">&lt;</span><span class="op">&lt;</span><span class="op">&lt;</span><span class="self">Self</span> <span class="kw">as</span> <span class="ident">Config</span><span class="op">&gt;</span><span class="ident">::Currency</span> <span class="kw">as</span> <span class="ident">Currency</span><span class="op">&lt;</span><span class="op">&lt;</span><span class="self">Self</span> <span class="kw">as</span> <span class="ident">frame_system::Config</span><span class="op">&gt;</span><span class="ident">::AccountId</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::Balance</span><span class="op">&gt;</span>;
 		<span class="kw">type</span> <span class="ident">WeightInfo</span>: <span class="ident">weights::WeightInfo</span>;
+
+		<span class="doccomment">/// The maximum weight indicate the maximum weight used for data aggregation at the end of a session</span>
+		<span class="kw">type</span> <span class="ident">MaximumWeightForDataAggregation</span>: <span class="ident">Get</span><span class="op">&lt;</span><span class="ident">Weight</span><span class="op">&gt;</span>;
+
+		<span class="doccomment">/// The maximum commits per session defined to avoid the weight used for data aggregation exceed MaximumWeightForDataAggregation</span>
+		<span class="doccomment">/// The weights used is depends on the data size in CommitAccountBalance, as a reference, the weights for 100 items can be found</span>
+		<span class="doccomment">/// in weights.rs dummy() -&gt; Weight. need re-run the benchmarking according to this parameter and guarantee the data is reasonable</span>
+		<span class="kw">type</span> <span class="ident">MaximumCommitsPerSession</span>: <span class="ident">Get</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span>;
 	}
 
 	<span class="attribute">#[<span class="ident">pallet::hooks</span>]</span>
@@ -1049,26 +1085,14 @@
 		<span class="doccomment">/// It just return the weight of on_finalize</span>
 		<span class="kw">fn</span> <span class="ident">on_initialize</span>(<span class="ident">block_number</span>: <span class="ident">T::BlockNumber</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Weight</span> {
 			<span class="macro">log::info!</span>(<span class="string">&quot;ocw on_initialize {:?}.&quot;</span>, <span class="ident">block_number</span>);
-			<span class="number">1000</span>
+			<span class="op">&lt;</span><span class="ident">T</span> <span class="kw">as</span> <span class="ident">pallet::Config</span><span class="op">&gt;</span><span class="ident">::WeightInfo::on_finalize</span>()
 		}
 
 		<span class="doccomment">/// The on_finalize trigger the query result aggregation.</span>
 		<span class="doccomment">/// The argument block_number has big impact on the weight.</span>
 		<span class="kw">fn</span> <span class="ident">on_finalize</span>(<span class="ident">block_number</span>: <span class="ident">T::BlockNumber</span>) {
-			<span class="macro">log::info!</span>(<span class="string">&quot;ocw on_finalize {:?}.&quot;</span>, <span class="ident">block_number</span>);
-
-			<span class="kw">let</span> <span class="ident">query_session_length</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="ident">T::QuerySessionLength::get</span>() <span class="kw">as</span> <span class="ident">usize</span>;
-			<span class="kw">let</span> <span class="ident">index_in_session</span> <span class="op">=</span> <span class="ident">TryInto</span>::<span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span><span class="ident">::try_into</span>(<span class="ident">block_number</span>)
-				.<span class="ident">map_or</span>(<span class="ident">query_session_length</span>, <span class="op">|</span><span class="ident">bn</span><span class="op">|</span> <span class="ident">bn</span> <span class="op">%</span> <span class="ident">query_session_length</span>);
-			<span class="kw">let</span> <span class="ident">last_block_number</span> <span class="op">=</span> <span class="ident">query_session_length</span> <span class="op">-</span> <span class="number">1</span>;
-
-			<span class="comment">// Clear claim at the first block of a session</span>
-			<span class="kw">if</span> <span class="ident">index_in_session</span> <span class="op">=</span><span class="op">=</span> <span class="number">0</span> {
-				<span class="self">Self</span><span class="ident">::clear_claim</span>();
-			<span class="comment">// Do aggregation at last block of a session</span>
-			} <span class="kw">else</span> <span class="kw">if</span> <span class="ident">index_in_session</span> <span class="op">=</span><span class="op">=</span> <span class="ident">last_block_number</span> {
-				<span class="self">Self</span><span class="ident">::aggregate_query_result</span>();
-			}
+			<span class="macro">log::info!</span>(<span class="string">&quot;ocw on_finalize.{:?}.&quot;</span>, <span class="ident">block_number</span>);
+			<span class="self">Self</span><span class="ident">::do_finalize</span>(<span class="ident">block_number</span>);
 		}
 
 		<span class="doccomment">/// TODO block N offchain_worker will be called after block N+1 finalize</span>
@@ -1117,6 +1141,8 @@
 		<span class="ident">TokenServerNoResponse</span>,
 		<span class="doccomment">/// Storage retrieval error</span>
 		<span class="ident">InvalidStorageRetrieval</span>,
+		<span class="doccomment">/// Too much commits in a session</span>
+		<span class="ident">TooMuchCommitsInSession</span>,
 	}
 
 	<span class="attribute">#[<span class="ident">pallet::pallet</span>]</span>
@@ -1157,8 +1183,12 @@
 
 	<span class="attribute">#[<span class="ident">pallet::storage</span>]</span>
 	<span class="attribute">#[<span class="ident">pallet::getter</span>(<span class="kw">fn</span> <span class="ident">ocw_account_index</span>)]</span>
-	<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type</span> <span class="ident">OcwAccountIndex</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Config</span><span class="op">&gt;</span> <span class="op">=</span>
-		<span class="ident">StorageMap</span><span class="op">&lt;</span><span class="kw">_</span>, <span class="ident">Blake2_128Concat</span>, <span class="ident">T::AccountId</span>, <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span>, <span class="ident">ValueQuery</span><span class="op">&gt;</span>;
+	<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type</span> <span class="ident">OcwAccountIndex</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Config</span><span class="op">&gt;</span> <span class="op">=</span> 
+		 <span class="ident">StorageMap</span><span class="op">&lt;</span><span class="kw">_</span>, <span class="ident">Blake2_128Concat</span>, <span class="ident">T::AccountId</span>, <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span>, <span class="ident">ValueQuery</span><span class="op">&gt;</span>;
+
+	<span class="attribute">#[<span class="ident">pallet::storage</span>]</span>
+	<span class="attribute">#[<span class="ident">pallet::getter</span>(<span class="kw">fn</span> <span class="ident">commit_number_in_session</span>)]</span>
+	<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type</span> <span class="ident">CommitNumberInSession</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Config</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">StorageValue</span><span class="op">&lt;</span><span class="kw">_</span>, <span class="ident">u32</span><span class="op">&gt;</span>;
 
 	<span class="attribute">#[<span class="ident">pallet::call</span>]</span>
 	<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Config</span><span class="op">&gt;</span> <span class="ident">Pallet</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
@@ -1241,6 +1271,15 @@
 				<span class="ident">data_source</span>,
 			)<span class="question-mark">?</span>;
 
+			<span class="comment">// Check the commit number in a session</span>
+			<span class="kw">match</span> <span class="self">Self</span><span class="ident">::commit_number_in_session</span>() {
+				<span class="prelude-val">Some</span>(<span class="ident">commits</span>) <span class="op">=</span><span class="op">&gt;</span> {
+					<span class="macro">ensure!</span>(<span class="ident">commits</span> <span class="op">=</span><span class="op">=</span> <span class="ident">T::MaximumCommitsPerSession::get</span>(), <span class="op">&lt;</span><span class="ident">Error</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::TooMuchCommitsInSession</span>);
+					<span class="ident">CommitNumberInSession</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::set</span>(<span class="prelude-val">Some</span>(<span class="ident">commits</span> <span class="op">+</span> <span class="number">1</span>));
+				},
+				<span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> {<span class="ident">CommitNumberInSession</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::set</span>(<span class="prelude-val">Some</span>(<span class="number">1</span>));},
+			};
+
 			<span class="comment">// put query result on chain</span>
 			<span class="ident">CommitAccountBalance</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::insert</span>(
 				<span class="kw-2">&amp;</span><span class="ident">sender</span>,
@@ -1253,6 +1292,21 @@
 	}
 
 	<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Config</span><span class="op">&gt;</span> <span class="ident">Pallet</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
+		<span class="comment">// </span>
+		<span class="kw">fn</span> <span class="ident">do_finalize</span>(<span class="ident">block_number</span>: <span class="ident">T::BlockNumber</span>) {
+			<span class="kw">let</span> <span class="ident">query_session_length</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="ident">T::QuerySessionLength::get</span>() <span class="kw">as</span> <span class="ident">usize</span>;
+			<span class="kw">let</span> <span class="ident">index_in_session</span> <span class="op">=</span> <span class="ident">TryInto</span>::<span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span><span class="ident">::try_into</span>(<span class="ident">block_number</span>).<span class="ident">map_or</span>(<span class="ident">query_session_length</span>, <span class="op">|</span><span class="ident">bn</span><span class="op">|</span> <span class="ident">bn</span> <span class="op">%</span> <span class="ident">query_session_length</span>);
+			<span class="kw">let</span> <span class="ident">last_block_number</span> <span class="op">=</span> <span class="ident">query_session_length</span> <span class="op">-</span> <span class="number">1</span>;
+
+			<span class="comment">// Clear claim at the first block of a session</span>
+			<span class="kw">if</span> <span class="ident">index_in_session</span> <span class="op">=</span><span class="op">=</span> <span class="number">0</span> {
+				<span class="self">Self</span><span class="ident">::clear_claim</span>();
+			<span class="comment">// Do aggregation at last block of a session</span>
+			} <span class="kw">else</span> <span class="kw">if</span> <span class="ident">index_in_session</span> <span class="op">=</span><span class="op">=</span> <span class="ident">last_block_number</span> {
+				<span class="self">Self</span><span class="ident">::aggregate_query_result</span>();
+			}
+		}
+
 		<span class="comment">// Main entry for ocw</span>
 		<span class="kw">fn</span> <span class="ident">query</span>(<span class="ident">block_number</span>: <span class="ident">T::BlockNumber</span>, <span class="ident">info</span>: <span class="kw-2">&amp;</span><span class="ident">urls::TokenInfo</span>) {
 			<span class="comment">// Get my ocw account for submit query result</span>
@@ -1326,6 +1380,9 @@
 
 		<span class="comment">// Clear claim accounts in last session</span>
 		<span class="kw">fn</span> <span class="ident">clear_claim</span>() {
+			<span class="comment">// Reset the commit number for next session</span>
+			<span class="ident">CommitNumberInSession</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::set</span>(<span class="prelude-val">Some</span>(<span class="number">0</span>));
+
 			<span class="comment">// Remove all account index in last session</span>
 			<span class="op">&lt;</span><span class="ident">ClaimAccountIndex</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::remove_all</span>(<span class="prelude-val">None</span>);
 
@@ -1843,5 +1900,4 @@
 	}
 }
 </pre></div>
-</section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../../" data-current-crate="pallet_offchain_worker" data-search-index-js="../../search-index.js" data-search-js="../../search.js"></div>
-    <script src="../../main.js"></script><script src="../../source-script.js"></script><script src="../../source-files.js"></script></body></html>
+</section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../../" data-current-crate="pallet_offchain_worker" data-search-index-js="../../search-index.js" data-search-js="../../search.js"></div><script src="../../main.js"></script><script src="../../source-script.js"></script><script src="../../source-files.js"></script></body></html>
