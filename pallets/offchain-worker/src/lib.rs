@@ -34,8 +34,8 @@ pub mod pallet {
 	/// Unique key for query
 	#[derive(Encode, Decode, Default, Debug)]
 	pub struct QueryKey<AccountId> {
-		account: AccountId,
-		data_source: urls::DataSource,
+		pub account: AccountId,
+		pub data_source: urls::DataSource,
 	}
 
 	pub mod crypto {
@@ -117,6 +117,14 @@ pub mod pallet {
 		type Reward: OnUnbalanced<PositiveImbalanceOf<Self>>;
 		type OcwQueryReward: Get<<<Self as Config>::Currency as Currency<<Self as frame_system::Config>::AccountId>>::Balance>;
 		type WeightInfo: weights::WeightInfo;
+
+		/// The maximum weight indicate the maximum weight used for data aggregation at the end of a session
+		type MaximumWeightForDataAggregation: Get<Weight>;
+
+		/// The maximum commits per session defined to avoid the weight used for data aggregation exceed MaximumWeightForDataAggregation
+		/// The weights used is depends on the data size in CommitAccountBalance, as a reference, the weights for 100 items can be found
+		/// in weights.rs dummy() -> Weight. need re-run the benchmarking according to this parameter and guarantee the data is reasonable
+		type MaximumCommitsPerSession: Get<u32>;
 	}
 
 	#[pallet::hooks]
@@ -125,26 +133,14 @@ pub mod pallet {
 		/// It just return the weight of on_finalize
 		fn on_initialize(block_number: T::BlockNumber) -> Weight {
 			log::info!("ocw on_initialize {:?}.", block_number);
-			1000
+			<T as pallet::Config>::WeightInfo::on_finalize()
 		}
 
 		/// The on_finalize trigger the query result aggregation.
 		/// The argument block_number has big impact on the weight.
 		fn on_finalize(block_number: T::BlockNumber) {
-			log::info!("ocw on_finalize {:?}.", block_number);
-
-			let query_session_length: usize = T::QuerySessionLength::get() as usize;
-			let index_in_session = TryInto::<usize>::try_into(block_number)
-				.map_or(query_session_length, |bn| bn % query_session_length);
-			let last_block_number = query_session_length - 1;
-
-			// Clear claim at the first block of a session
-			if index_in_session == 0 {
-				Self::clear_claim();
-			// Do aggregation at last block of a session
-			} else if index_in_session == last_block_number {
-				Self::aggregate_query_result();
-			}
+			log::info!("ocw on_finalize.{:?}.", block_number);
+			Self::do_finalize(block_number);
 		}
 
 		/// TODO block N offchain_worker will be called after block N+1 finalize
@@ -193,6 +189,8 @@ pub mod pallet {
 		TokenServerNoResponse,
 		/// Storage retrieval error
 		InvalidStorageRetrieval,
+		/// Too much commits in a session
+		TooMuchCommitsInSession,
 	}
 
 	#[pallet::pallet]
@@ -233,8 +231,12 @@ pub mod pallet {
 
 	#[pallet::storage]
 	#[pallet::getter(fn ocw_account_index)]
-	pub(super) type OcwAccountIndex<T: Config> =
-		StorageMap<_, Blake2_128Concat, T::AccountId, Option<u32>, ValueQuery>;
+	pub(super) type OcwAccountIndex<T: Config> = 
+		 StorageMap<_, Blake2_128Concat, T::AccountId, Option<u32>, ValueQuery>;
+
+	#[pallet::storage]
+	#[pallet::getter(fn commit_number_in_session)]
+	pub(super) type CommitNumberInSession<T: Config> = StorageValue<_, u32>;
 
 	#[pallet::call]
 	impl<T: Config> Pallet<T> {
@@ -317,6 +319,15 @@ pub mod pallet {
 				data_source,
 			)?;
 
+			// Check the commit number in a session
+			match Self::commit_number_in_session() {
+				Some(commits) => {
+					ensure!(commits == T::MaximumCommitsPerSession::get(), <Error<T>>::TooMuchCommitsInSession);
+					CommitNumberInSession::<T>::set(Some(commits + 1));
+				},
+				None => {CommitNumberInSession::<T>::set(Some(1));},
+			};
+
 			// put query result on chain
 			CommitAccountBalance::<T>::insert(
 				&sender,
@@ -329,6 +340,21 @@ pub mod pallet {
 	}
 
 	impl<T: Config> Pallet<T> {
+		// 
+		fn do_finalize(block_number: T::BlockNumber) {
+			let query_session_length: usize = T::QuerySessionLength::get() as usize;
+			let index_in_session = TryInto::<usize>::try_into(block_number).map_or(query_session_length, |bn| bn % query_session_length);
+			let last_block_number = query_session_length - 1;
+
+			// Clear claim at the first block of a session
+			if index_in_session == 0 {
+				Self::clear_claim();
+			// Do aggregation at last block of a session
+			} else if index_in_session == last_block_number {
+				Self::aggregate_query_result();
+			}
+		}
+
 		// Main entry for ocw
 		fn query(block_number: T::BlockNumber, info: &urls::TokenInfo) {
 			// Get my ocw account for submit query result
@@ -402,6 +428,9 @@ pub mod pallet {
 
 		// Clear claim accounts in last session
 		fn clear_claim() {
+			// Reset the commit number for next session
+			CommitNumberInSession::<T>::set(Some(0));
+
 			// Remove all account index in last session
 			<ClaimAccountIndex<T>>::remove_all(None);
 
