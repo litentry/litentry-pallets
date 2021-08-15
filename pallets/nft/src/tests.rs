@@ -2,8 +2,100 @@ use super::*;
 use crate::mock::{Event, *};
 use frame_support::{assert_noop, assert_ok};
 use sp_runtime::AccountId32;
-use frame_system::Event as SystemEvent;
-use pallet_balances::Event as BalanceEvent;
+
+#[test]
+fn demostration_of_event_filter() {
+	new_test_ext().execute_with(|| {
+		let alice_account: AccountId32 = AccountId32::from([
+			0xd4, 0x35, 0x93, 0xc7, 0x15, 0xfd, 0xd3, 0x1c, 0x61, 0x14, 0x1a, 0xbd, 0x04, 0xa9,
+			0x9f, 0xd6, 0x82, 0x2c, 0x85, 0x58, 0x85, 0x4c, 0xcd, 0xe3, 0x9a, 0x56, 0x84, 0xe7,
+			0xa5, 0x6d, 0xa2, 0x7d,
+		]);
+
+		run_to_block(1);
+		assert_eq!(System::block_number(), 1);
+
+		// give balance to Alice
+		let _ = Balances::deposit_creating(&alice_account, (CREATION_FEE + 10).into());
+		// issue a simple class
+		assert_ok!(Nft::create_class(
+			Origin::signed(alice_account.clone()),
+			CID::default(),
+			Properties::default(),
+			None,
+			None,
+			ClassType::Simple(100),
+		));
+
+		// <frame_system::Event::<Test>> type argument: give the events belong to frame_system only
+		assert_eq!(
+			events_filter::<frame_system::Event::<Test>>(),
+			[
+				Event::System(frame_system::Event::NewAccount(alice_account.clone())),
+				Event::System(frame_system::Event::NewAccount(Pot::get())),
+			]
+		);
+
+		// <pallet_balances::Event::<Test>> type argument: give the events belong to pallet_balances only
+		assert_eq!(
+			events_filter::<pallet_balances::Event::<Test>>(),
+			[
+				Event::Balances(pallet_balances::Event::<Test>::Endowed(
+					alice_account.clone(),
+					(CREATION_FEE + 10).into()
+				)),
+				Event::Balances(pallet_balances::Event::<Test>::Endowed(
+					Pot::get(),
+					CREATION_FEE.into()
+				)),
+				Event::Balances(pallet_balances::Event::<Test>::Transfer(
+					alice_account.clone(),
+					Pot::get(),
+					CREATION_FEE.into()
+				)),
+			]
+		);
+
+		// <crate::Event::<Test>> type argument: which in our case, crate is our nft crate, give the events belong to self-design events only
+		assert_eq!(
+			events_filter::<crate::Event::<Test>>(),
+			[Event::Nft(crate::Event::CreatedClass(alice_account.clone(), 0)),]
+		);
+
+		// <Event> argument: Event is the general type, give all events
+		assert_eq!(
+			events_filter::<Event>(),
+			[
+				Event::System(frame_system::Event::NewAccount(alice_account.clone())),
+				Event::Balances(pallet_balances::Event::<Test>::Endowed(
+					alice_account.clone(),
+					(CREATION_FEE + 10).into()
+				)),
+				Event::System(frame_system::Event::NewAccount(Pot::get())),
+				Event::Balances(pallet_balances::Event::<Test>::Endowed(
+					Pot::get(),
+					CREATION_FEE.into()
+				)),
+				Event::Balances(pallet_balances::Event::<Test>::Transfer(
+					alice_account.clone(),
+					Pot::get(),
+					CREATION_FEE.into()
+				)),
+				Event::Nft(crate::Event::CreatedClass(alice_account.clone(), 0)),
+			]
+		);
+
+		// get_vector provide event display on index level. negative index will display reversed order element's reference.
+		assert_eq!(
+			*get_vector(&events_filter::<Event>(), -2),
+			Event::Balances(pallet_balances::Event::<Test>::Transfer(
+				alice_account.clone(),
+				Pot::get(),
+				CREATION_FEE.into()
+			)),
+		);
+	})
+}
 
 #[test]
 fn test_issue_and_mint_eth() {
@@ -74,16 +166,10 @@ fn test_issue_and_claim_eth() {
 			ClassType::Claim(merkle_root),
 		));
 
-		// even we clear events before create_class, as Pot address never exists and balance on it being added, it will always trigger system event and balance event first time
-		// Improvement will be made in full test - issue #71
+		//check the create event
 		assert_eq!(
-			events(),
-			[
-				SystemEvent::NewAccount(Pot::get()).into(),
-				BalanceEvent::Endowed(Pot::get(), CREATION_FEE.into()).into(),
-				BalanceEvent::Transfer(alice_account.clone(), Pot::get(), CREATION_FEE.into()).into(),
-				Event::Nft(crate::Event::CreatedClass(alice_account.clone(), 0)),
-			]
+			*get_vector(&events_filter::<crate::Event::<Test>>(), -1),
+			Event::Nft(crate::Event::CreatedClass(alice_account.clone(), 0)),
 		);
 
 		// alice claims with random proof
@@ -94,6 +180,12 @@ fn test_issue_and_claim_eth() {
 
 		// alice claims with alice's proof
 		assert_ok!(Nft::claim(Origin::signed(alice_account.clone()), 0, 0, alice_proof.clone(),));
+
+		//check the claim event
+		assert_eq!(
+			*get_vector(&events_filter::<crate::Event::<Test>>(), -1),
+			Event::Nft(crate::Event::ClaimedToken(alice_account.clone(), 0)),
+		);
 
 		// alice claims again
 		assert_noop!(

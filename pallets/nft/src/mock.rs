@@ -11,6 +11,7 @@ use sp_runtime::{
 	traits::{BlakeTwo256, IdentityLookup},
 	AccountId32,
 };
+use sp_std::any::{Any, TypeId};
 
 type UncheckedExtrinsic = frame_system::mocking::MockUncheckedExtrinsic<Test>;
 type Block = frame_system::mocking::MockBlock<Test>;
@@ -118,13 +119,40 @@ pub fn run_to_block(n: u32) {
 		System::set_block_number(System::block_number() + 1);
 		<System as OnInitialize<u32>>::on_initialize(System::block_number());
 		<Nft as OnInitialize<u32>>::on_initialize(System::block_number());
-	};
+	}
 }
 
-pub fn events() -> Vec<Event> {
-	let evt = System::events().into_iter().map(|evt| evt.event).collect::<Vec<_>>();
+pub fn events_filter<T: 'static>() -> Vec<Event> {
+	let mut evt = System::events();
 
-	System::reset_events();
+	evt.retain(|evt| if_right_events::<T>(&evt.event));
+	return evt.into_iter().map(|evt| evt.event).collect::<Vec<_>>();
+}
 
-	evt
+pub fn if_right_events<T: 'static>(evt: &Event) -> bool {
+	if TypeId::of::<T>() == TypeId::of::<Event>() {
+		return true;
+	} else {
+		match evt {
+			Event::System(i) => return if_right_raw_events::<T>(i),
+			Event::Balances(i) => return if_right_raw_events::<T>(i),
+			Event::Nft(i) => return if_right_raw_events::<T>(i),
+		}
+	}
+}
+
+pub fn if_right_raw_events<T: 'static>(s: &dyn Any) -> bool {
+	if let Some(_) = s.downcast_ref::<T>() {
+		true
+	} else {
+		false
+	}
+}
+
+pub fn get_vector<T>(vector: &Vec<T>, index: isize) -> &T {
+	if index < 0 {
+		return &vector[(vector.len() as isize + index) as usize];
+	} else {
+		return &vector[index as usize];
+	}
 }
