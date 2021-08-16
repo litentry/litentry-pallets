@@ -15,9 +15,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate as offchain_worker;
 use crate::*;
-use frame_support::parameter_types;
+use crate as offchain_worker;
+use frame_support::{parameter_types, weights::Weight};
 use sp_core::{sr25519::Signature, H256};
 use sp_runtime::{
 	testing::{Header, TestXt},
@@ -129,6 +129,8 @@ parameter_types! {
 	pub const QueryTaskRedundancy: u32 = 3;
 	pub const QuerySessionLength: u32 = 5;
 	pub const OcwQueryReward: u128 = 1;
+	pub const MaximumWeightForDataAggregation: Weight = 100_000_000_000;
+	pub const MaximumCommitsPerSession: u32 = 100;
 }
 
 impl Config for Test {
@@ -142,6 +144,8 @@ impl Config for Test {
 	type Reward = ();
 	type OcwQueryReward = OcwQueryReward;
 	type WeightInfo = ();
+	type MaximumWeightForDataAggregation = MaximumWeightForDataAggregation;
+	type MaximumCommitsPerSession = MaximumCommitsPerSession;
 }
 
 #[test]
