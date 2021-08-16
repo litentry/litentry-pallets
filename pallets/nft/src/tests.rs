@@ -87,7 +87,7 @@ fn demostration_of_event_filter() {
 
 		// get_vector provide event display on index level. negative index will display reversed order element's reference.
 		assert_eq!(
-			*get_vector(&events_filter::<Event>(), -2),
+			events_filter::<Event>()[4],
 			Event::Balances(pallet_balances::Event::<Test>::Transfer(
 				alice_account.clone(),
 				Pot::get(),
@@ -168,7 +168,7 @@ fn test_issue_and_claim_eth() {
 
 		//check the create event
 		assert_eq!(
-			*get_vector(&events_filter::<crate::Event::<Test>>(), -1),
+			events_filter::<crate::Event::<Test>>()[0],
 			Event::Nft(crate::Event::CreatedClass(alice_account.clone(), 0)),
 		);
 
@@ -183,7 +183,7 @@ fn test_issue_and_claim_eth() {
 
 		//check the claim event
 		assert_eq!(
-			*get_vector(&events_filter::<crate::Event::<Test>>(), -1),
+			events_filter::<crate::Event::<Test>>()[1],
 			Event::Nft(crate::Event::ClaimedToken(alice_account.clone(), 0)),
 		);
 
