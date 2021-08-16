@@ -122,6 +122,8 @@ pub fn run_to_block(n: u32) {
 	}
 }
 
+
+// Put Event type as T, this method filters the system events storage accordingly
 pub fn events_filter<T: 'static>() -> Vec<Event> {
 	let mut evt = System::events();
 
@@ -129,6 +131,9 @@ pub fn events_filter<T: 'static>() -> Vec<Event> {
 	return evt.into_iter().map(|evt| evt.event).collect::<Vec<_>>();
 }
 
+// TypeId::of::<Event> is the type id of global event, it will not reject anything and always return true.
+// Event::System, Event::Balances, Event::Nft(self crate).  Ormal_NFT is also tested but no imported Event so far.
+// Match should be modifed
 pub fn if_right_events<T: 'static>(evt: &Event) -> bool {
 	if TypeId::of::<T>() == TypeId::of::<Event>() {
 		return true;
@@ -141,6 +146,7 @@ pub fn if_right_events<T: 'static>(evt: &Event) -> bool {
 	}
 }
 
+// Use reflection Any trait to check if "s" is compatiable to Type "T"
 pub fn if_right_raw_events<T: 'static>(s: &dyn Any) -> bool {
 	if let Some(_) = s.downcast_ref::<T>() {
 		true
@@ -149,6 +155,8 @@ pub fn if_right_raw_events<T: 'static>(s: &dyn Any) -> bool {
 	}
 }
 
+
+// enable index input like negative value
 pub fn get_vector<T>(vector: &Vec<T>, index: isize) -> &T {
 	if index < 0 {
 		return &vector[(vector.len() as isize + index) as usize];
