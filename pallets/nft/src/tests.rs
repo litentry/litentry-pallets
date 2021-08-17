@@ -3,18 +3,6 @@ use crate::mock::{Event, *};
 use frame_support::{assert_noop, assert_ok};
 use sp_runtime::AccountId32;
 
-// Event without Implementation:
-// BurnedTokenWithRemark(T::AccountId, ClassIdOf<T>, TokenIdOf<T>, T::Hash),
-// DestroyedClass(T::AccountId, ClassIdOf<T>),
-
-// Error:
-// TokenIdNotFound, TokenNotFound seems to be a duplicate.
-
-// logic:
-// After A "burned" Merged token merged，No burned event emit
-// If transfer an non-exist token id, the error will be from orml_nft, who's Event or Error is not defined
-// If transfer an no-permission token id, the error will be from orml_nft, who's Event or Error is not defined
-
 fn initial_account() -> (AccountId32, AccountId32) {
 	let alice_account: AccountId32 = AccountId32::from([
 		0xd4, 0x35, 0x93, 0xc7, 0x15, 0xfd, 0xd3, 0x1c, 0x61, 0x14, 0x1a, 0xbd, 0x04, 0xa9, 0x9f,
@@ -196,7 +184,7 @@ fn test_burn() {
 		//  burn exist class but non-exist burnable token
 		assert_noop!(
 			Nft::burn(Origin::signed(bob_account.clone()), (1, 10),),
-			NftError::TokenIdNotFound
+			NftError::TokenNotFound
 		);
 
 		// someone else burn no-owned token
