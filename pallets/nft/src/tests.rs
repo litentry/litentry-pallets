@@ -470,6 +470,7 @@ fn test_claimed_token_event() {
 		]];
 
 		// issue a claim class : class id, 0
+
 		assert_ok!(Nft::create_class(
 			Origin::signed(alice_account.clone()),
 			CID::default(),
@@ -518,6 +519,12 @@ fn test_claimed_token_event() {
 		assert_eq!(
 			events_filter::<crate::Event::<Test>>()[2],
 			Event::Nft(crate::Event::ClaimedToken(alice_account.clone(), 0))
+		);
+
+		//check the claim event
+		assert_eq!(
+			events_filter::<crate::Event::<Test>>()[1],
+			Event::Nft(crate::Event::ClaimedToken(alice_account.clone(), 0)),
 		);
 
 		// alice claims again
