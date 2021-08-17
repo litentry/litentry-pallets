@@ -1,5 +1,6 @@
 use super::*;
 use crate as nft;
+use frame_support::{assert_noop, assert_ok};
 use frame_support::{
 	parameter_types,
 	traits::{OnFinalize, OnInitialize},
@@ -11,6 +12,7 @@ use sp_runtime::{
 	traits::{BlakeTwo256, IdentityLookup},
 	AccountId32,
 };
+use sp_std::any::{Any, TypeId};
 
 type UncheckedExtrinsic = frame_system::mocking::MockUncheckedExtrinsic<Test>;
 type Block = frame_system::mocking::MockBlock<Test>;
@@ -121,10 +123,144 @@ pub fn run_to_block(n: u32) {
 	}
 }
 
-pub fn events() -> Vec<Event> {
-	let evt = System::events().into_iter().map(|evt| evt.event).collect::<Vec<_>>();
+// Put Event type as T, this method filters the system events storage accordingly
+pub fn events_filter<T: 'static>() -> Vec<Event> {
+	let mut evt = System::events();
 
-	System::reset_events();
+	evt.retain(|evt| if_right_events::<T>(&evt.event));
+	return evt.into_iter().map(|evt| evt.event).collect::<Vec<_>>();
+}
 
-	evt
+// TypeId::of::<Event> is the type id of global event, it will not reject anything and always return true.
+// Event::System, Event::Balances, Event::Nft(self crate).  Ormal_NFT is also tested but no imported Event so far.
+// Match should be modifed
+pub fn if_right_events<T: 'static>(evt: &Event) -> bool {
+	if TypeId::of::<T>() == TypeId::of::<Event>() {
+		return true;
+	} else {
+		match evt {
+			Event::System(i) => return if_right_raw_events::<T>(i),
+			Event::Balances(i) => return if_right_raw_events::<T>(i),
+			Event::Nft(i) => return if_right_raw_events::<T>(i),
+		}
+	}
+}
+
+// Use reflection Any trait to check if "s" is compatiable to Type "T"
+pub fn if_right_raw_events<T: 'static>(s: &dyn Any) -> bool {
+	if let Some(_) = s.downcast_ref::<T>() {
+		true
+	} else {
+		false
+	}
+}
+
+#[test]
+fn check_test_helper() {
+	let evt = Event::System(frame_system::Event::NewAccount(AccountId32::from([0u8; 32])));
+	assert_eq!(if_right_events::<frame_system::Event::<Test>>(&evt), true);
+
+	let evt = Event::Balances(pallet_balances::Event::<Test>::Transfer(
+		AccountId32::from([0u8; 32]),
+		AccountId32::from([1u8; 32]),
+		CREATION_FEE.into(),
+	));
+	assert_eq!(if_right_events::<pallet_balances::Event::<Test>>(&evt), true);
+
+	let evt = Event::Nft(crate::Event::CreatedClass(AccountId32::from([0u8; 32]), 0));
+	assert_eq!(if_right_events::<crate::Event::<Test>>(&evt), true);
+}
+
+#[test]
+fn demostration_of_event_filter() {
+	new_test_ext().execute_with(|| {
+		let alice_account: AccountId32 = AccountId32::from([
+			0xd4, 0x35, 0x93, 0xc7, 0x15, 0xfd, 0xd3, 0x1c, 0x61, 0x14, 0x1a, 0xbd, 0x04, 0xa9,
+			0x9f, 0xd6, 0x82, 0x2c, 0x85, 0x58, 0x85, 0x4c, 0xcd, 0xe3, 0x9a, 0x56, 0x84, 0xe7,
+			0xa5, 0x6d, 0xa2, 0x7d,
+		]);
+
+		run_to_block(1);
+		assert_eq!(System::block_number(), 1);
+
+		// give balance to Alice
+		let _ = Balances::deposit_creating(&alice_account, (CREATION_FEE + 10).into());
+		// issue a simple class
+		assert_ok!(Nft::create_class(
+			Origin::signed(alice_account.clone()),
+			CID::default(),
+			Properties::default(),
+			None,
+			None,
+			ClassType::Simple(100),
+		));
+
+		// <frame_system::Event::<Test>> type argument: give the events belong to frame_system only
+		assert_eq!(
+			events_filter::<frame_system::Event::<Test>>(),
+			[
+				Event::System(frame_system::Event::NewAccount(alice_account.clone())),
+				Event::System(frame_system::Event::NewAccount(Pot::get())),
+			]
+		);
+
+		// <pallet_balances::Event::<Test>> type argument: give the events belong to pallet_balances only
+		assert_eq!(
+			events_filter::<pallet_balances::Event::<Test>>(),
+			[
+				Event::Balances(pallet_balances::Event::<Test>::Endowed(
+					alice_account.clone(),
+					(CREATION_FEE + 10).into()
+				)),
+				Event::Balances(pallet_balances::Event::<Test>::Endowed(
+					Pot::get(),
+					CREATION_FEE.into()
+				)),
+				Event::Balances(pallet_balances::Event::<Test>::Transfer(
+					alice_account.clone(),
+					Pot::get(),
+					CREATION_FEE.into()
+				)),
+			]
+		);
+
+		// <crate::Event::<Test>> type argument: which in our case, crate is our nft crate, give the events belong to self-design events only
+		assert_eq!(
+			events_filter::<crate::Event::<Test>>(),
+			[Event::Nft(crate::Event::CreatedClass(alice_account.clone(), 0)),]
+		);
+
+		// <Event> argument: Event is the general type, give all events
+		assert_eq!(
+			events_filter::<Event>(),
+			[
+				Event::System(frame_system::Event::NewAccount(alice_account.clone())),
+				Event::Balances(pallet_balances::Event::<Test>::Endowed(
+					alice_account.clone(),
+					(CREATION_FEE + 10).into()
+				)),
+				Event::System(frame_system::Event::NewAccount(Pot::get())),
+				Event::Balances(pallet_balances::Event::<Test>::Endowed(
+					Pot::get(),
+					CREATION_FEE.into()
+				)),
+				Event::Balances(pallet_balances::Event::<Test>::Transfer(
+					alice_account.clone(),
+					Pot::get(),
+					CREATION_FEE.into()
+				)),
+				Event::Nft(crate::Event::CreatedClass(alice_account.clone(), 0)),
+			]
+		);
+
+		// get_vector provide event display on index level. negative index will display reversed order element's reference.
+		assert_eq!(
+			events_filter::<Event>()[4],
+			Event::Balances(pallet_balances::Event::<Test>::Transfer(
+				alice_account.clone(),
+				Pot::get(),
+				CREATION_FEE.into()
+			)),
+		);
+	})
 }

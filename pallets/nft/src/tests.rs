@@ -56,8 +56,11 @@ fn test_issue_and_claim_eth() {
 		]];
 
 		run_to_block(1);
+		assert_eq!(System::block_number(), 1);
 
 		let _ = Balances::deposit_creating(&alice_account, (CREATION_FEE + 10).into());
+
+		System::reset_events();
 
 		// issue a claim class
 		assert_ok!(Nft::create_class(
@@ -69,13 +72,11 @@ fn test_issue_and_claim_eth() {
 			ClassType::Claim(merkle_root),
 		));
 
-		// assert_eq!(
-		// 	events(),
-		// 	[Event::Nft(crate::Event::CreatedClass(
-		// 		alice_account.clone(),
-		// 		0
-		// 	)),]
-		// );
+		//check the create event
+		assert_eq!(
+			events_filter::<crate::Event::<Test>>()[0],
+			Event::Nft(crate::Event::CreatedClass(alice_account.clone(), 0)),
+		);
 
 		// alice claims with random proof
 		assert_noop!(
@@ -85,6 +86,12 @@ fn test_issue_and_claim_eth() {
 
 		// alice claims with alice's proof
 		assert_ok!(Nft::claim(Origin::signed(alice_account.clone()), 0, 0, alice_proof.clone(),));
+
+		//check the claim event
+		assert_eq!(
+			events_filter::<crate::Event::<Test>>()[1],
+			Event::Nft(crate::Event::ClaimedToken(alice_account.clone(), 0)),
+		);
 
 		// alice claims again
 		assert_noop!(
