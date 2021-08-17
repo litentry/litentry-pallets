@@ -521,12 +521,6 @@ fn test_claimed_token_event() {
 			Event::Nft(crate::Event::ClaimedToken(alice_account.clone(), 0))
 		);
 
-		//check the claim event
-		assert_eq!(
-			events_filter::<crate::Event::<Test>>()[1],
-			Event::Nft(crate::Event::ClaimedToken(alice_account.clone(), 0)),
-		);
-
 		// alice claims again
 		assert_noop!(
 			Nft::claim(Origin::signed(alice_account.clone()), 0, 0, alice_proof,),
