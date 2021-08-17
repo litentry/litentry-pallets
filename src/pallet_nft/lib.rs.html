@@ -608,6 +608,7 @@
 <span id="606">606</span>
 <span id="607">607</span>
 <span id="608">608</span>
+<span id="609">609</span>
 </pre><pre class="rust">
 <span class="doccomment">//! # NFT Pallet</span>
 <span class="doccomment">//!</span>
@@ -879,7 +880,7 @@
 				.<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::CreationFeeNotPaid</span>)<span class="question-mark">?</span>;
 
 			<span class="kw">match</span> <span class="ident">class_type</span> {
-				<span class="ident">ClassType::Merge</span>(<span class="ident">id1</span>, <span class="ident">id2</span>, <span class="ident">burn</span>) <span class="op">=</span><span class="op">&gt;</span>
+				<span class="ident">ClassType::Merge</span>(<span class="ident">id1</span>, <span class="ident">id2</span>, <span class="ident">burn</span>) <span class="op">=</span><span class="op">&gt;</span> {
 					<span class="kw">if</span> <span class="op">!</span><span class="ident">burn</span> {
 						<span class="macro">ensure!</span>(
 							<span class="op">&lt;</span><span class="ident">orml_nft::Pallet</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::classes</span>(<span class="ident">id1</span>).<span class="ident">is_some</span>(),
@@ -905,11 +906,12 @@
 							<span class="ident">data2</span>.<span class="ident">properties</span>.<span class="number">0</span>.<span class="ident">contains</span>(<span class="ident">ClassProperty::Burnable</span>),
 							<span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::NonBurnable</span>
 						);
-					},
+					}
+				}
 				<span class="ident">ClassType::Claim</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> {
 					<span class="ident">ClaimedList</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::insert</span>(<span class="ident">next_id</span>, <span class="ident">Vec</span>::<span class="op">&lt;</span><span class="ident">u16</span><span class="op">&gt;</span><span class="ident">::new</span>());
-				},
-				<span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> {},
+				}
+				<span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> {}
 			}
 
 			<span class="kw">let</span> <span class="ident">data</span> <span class="op">=</span> <span class="ident">ClassData</span> { <span class="ident">properties</span>, <span class="ident">start_block</span>, <span class="ident">end_block</span>, <span class="ident">class_type</span> };
@@ -951,7 +953,7 @@
 					<span class="kw">if</span> <span class="ident">TokenIdOf</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::from</span>(<span class="ident">quantity</span>) <span class="op">+</span> <span class="ident">issued</span> <span class="op">&gt;</span> <span class="ident">TokenIdOf</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::from</span>(<span class="ident">max_num</span>) {
 						<span class="prelude-val">Err</span>(<span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::QuantityOverflow</span>)<span class="question-mark">?</span>
 					}
-				},
+				}
 				<span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::WrongClassType</span>)<span class="question-mark">?</span>,
 			}
 
@@ -1014,7 +1016,7 @@
 						<span class="ident">merkle_proof::proof_verify</span>(<span class="kw-2">&amp;</span><span class="ident">computed_hash</span>, <span class="kw-2">&amp;</span><span class="ident">proof</span>, <span class="kw-2">&amp;</span><span class="ident">merkle_root</span>),
 						<span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::UserNotInClaimList</span>
 					);
-				},
+				}
 
 				<span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::WrongClassType</span>)<span class="question-mark">?</span>,
 			}
@@ -1057,8 +1059,8 @@
 
 			<span class="kw">if</span> <span class="kw">let</span> <span class="ident">ClassType::Merge</span>(<span class="ident">id1</span>, <span class="ident">id2</span>, <span class="ident">b</span>) <span class="op">=</span> <span class="ident">merged_class_info</span>.<span class="ident">data</span>.<span class="ident">class_type</span> {
 				<span class="macro">ensure!</span>(
-					((<span class="ident">id1</span> <span class="op">=</span><span class="op">=</span> <span class="ident">token1</span>.<span class="number">0</span>) <span class="op">&amp;&amp;</span> (<span class="ident">id2</span> <span class="op">=</span><span class="op">=</span> <span class="ident">token2</span>.<span class="number">0</span>)) <span class="op">|</span><span class="op">|</span>
-						((<span class="ident">id1</span> <span class="op">=</span><span class="op">=</span> <span class="ident">token2</span>.<span class="number">0</span>) <span class="op">&amp;&amp;</span> (<span class="ident">id2</span> <span class="op">=</span><span class="op">=</span> <span class="ident">token1</span>.<span class="number">0</span>)),
+					((<span class="ident">id1</span> <span class="op">=</span><span class="op">=</span> <span class="ident">token1</span>.<span class="number">0</span>) <span class="op">&amp;&amp;</span> (<span class="ident">id2</span> <span class="op">=</span><span class="op">=</span> <span class="ident">token2</span>.<span class="number">0</span>))
+						<span class="op">|</span><span class="op">|</span> ((<span class="ident">id1</span> <span class="op">=</span><span class="op">=</span> <span class="ident">token2</span>.<span class="number">0</span>) <span class="op">&amp;&amp;</span> (<span class="ident">id2</span> <span class="op">=</span><span class="op">=</span> <span class="ident">token1</span>.<span class="number">0</span>)),
 					<span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::WrongMergeBase</span>,
 				);
 				<span class="ident">burn</span> <span class="op">=</span> <span class="ident">b</span>;
@@ -1184,12 +1186,12 @@
 		<span class="kw">let</span> <span class="ident">current_block_number</span> <span class="op">=</span> <span class="op">&lt;</span><span class="ident">frame_system::Pallet</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::block_number</span>();
 		<span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">start_block</span>) <span class="op">=</span> <span class="ident">token_info</span>.<span class="ident">start_block</span> {
 			<span class="kw">if</span> <span class="ident">start_block</span> <span class="op">&gt;</span> <span class="ident">current_block_number</span> {
-				<span class="kw">return</span> <span class="bool-val">false</span>
+				<span class="kw">return</span> <span class="bool-val">false</span>;
 			}
 		}
 		<span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">end_block</span>) <span class="op">=</span> <span class="ident">token_info</span>.<span class="ident">end_block</span> {
 			<span class="kw">if</span> <span class="ident">end_block</span> <span class="op">&lt;</span> <span class="ident">current_block_number</span> {
-				<span class="kw">return</span> <span class="bool-val">false</span>
+				<span class="kw">return</span> <span class="bool-val">false</span>;
 			}
 		}
 		<span class="bool-val">true</span>
