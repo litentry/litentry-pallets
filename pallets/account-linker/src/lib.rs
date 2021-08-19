@@ -55,6 +55,8 @@ pub mod pallet {
 	use btc::base58::ToBase58;
 	use btc::witness::WitnessProgram;
 	use weights::WeightInfo;
+	use sp_core::H256;
+
 	pub const EXPIRING_BLOCK_NUMBER_MAX: u32 = 10 * 60 * 24 * 30; // 30 days for 6s per block
 	pub const MAX_ETH_LINKS: usize = 3;
 	pub const MAX_BTC_LINKS: usize = 3;
@@ -73,7 +75,7 @@ pub mod pallet {
 
 	#[pallet::event]
 	#[pallet::generate_deposit(pub(super) fn deposit_event)]
-	#[pallet::metadata(T::AccountId = "AccountId")]
+	#[pallet::metadata(T::AccountId = "AccountId", T::BlockNumber = "BlockNumber")]
 	pub enum Event<T: Config> {
 		/// Ethereum address successfully linked. \[Lintentry account, Ethereum account\]
 		EthAddressLinked(T::AccountId, Vec<u8>),
@@ -81,6 +83,8 @@ pub mod pallet {
 		BtcAddressLinked(T::AccountId, Vec<u8>),
 		/// Polkadot address successfully linked. \[Lintentry account, Polkadot account\]
 		PolkadotAddressLinked(T::AccountId, T::AccountId),
+		/// Sgx Ethereum address link received. \[Lintentry account, Index, Block numver\]
+		SgxEthAddressLinked(T::AccountId, u32, T::BlockNumber),
 	}
 
 	#[pallet::error]
@@ -126,6 +130,30 @@ pub mod pallet {
 
 	#[pallet::call]
 	impl<T:Config> Pallet<T> {
+
+		#[pallet::weight(T::WeightInfo::link_eth())]
+		pub fn sgx_link_eth(
+			origin: OriginFor<T>,
+			_account: Vec<u8>,
+			index: u32,
+			_addr_expected: Vec<u8>,
+			expiring_block_number: T::BlockNumber,
+			_sig: Vec<u8>,
+			_shard_identifier: H256,
+		) -> DispatchResultWithPostInfo {
+
+			let who = ensure_signed(origin)?;
+
+			let current_block_number = <frame_system::Pallet<T>>::block_number();
+			ensure!(expiring_block_number > current_block_number, Error::<T>::LinkRequestExpired);
+			ensure!((expiring_block_number - current_block_number) < T::BlockNumber::from(EXPIRING_BLOCK_NUMBER_MAX),
+				Error::<T>::InvalidExpiringBlockNumber);
+
+			Self::deposit_event(Event::SgxEthAddressLinked(who, index, expiring_block_number));
+
+			Ok(().into())
+
+		}
 
 		/// Link an Ethereum address to a Litentry account providing a proof signature from the private key
 		/// of that Ethereum address.
