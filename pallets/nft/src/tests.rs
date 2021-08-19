@@ -99,11 +99,7 @@ fn test_general_process() {
 		);
 
 		//CreationFeeNotPaid
-		let random_account: AccountId32 = AccountId32::from([
-			0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-			0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x10, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-			0x00, 0x00, 0x00, 0x00,
-		]);
+		let random_account: AccountId32 = AccountId32::from([0u8; 32]);
 		assert_noop!(
 			Nft::create_class(
 				Origin::signed(random_account.clone()),
@@ -126,7 +122,6 @@ fn test_general_process() {
 // TokenIdNotFound
 // NonBurnable
 // NoPermission
-
 fn test_burn_process() {
 	new_test_ext().execute_with(|| {
 		let (alice_account, bob_account) = initial_accounts();
@@ -443,7 +438,7 @@ fn test_claimed_token_process() {
 			0xf7u8, 0x3du8, 0x16u8, 0x36u8, 0x42u8, 0x9au8, 0x26u8, 0xabu8, 0x60u8, 0x7bu8, 0x52u8,
 			0xf1u8, 0xdeu8, 0x07u8, 0x3bu8, 0x1fu8, 0x53u8, 0xedu8, 0xd9u8, 0x30u8, 0x2du8,
 		]];
-		
+
 		// issue a claim class : class id, 0
 		assert_ok!(Nft::create_class(
 			Origin::signed(alice_account.clone()),
@@ -692,7 +687,7 @@ fn test_merged_token_process() {
 
 		// merge will not generate burn event, more implement here
 		// check the owner of burned token is account #0
-		let random_account: AccountId32 =  AccountId32::from([0u8; 32]);
+		let random_account: AccountId32 = AccountId32::from([0u8; 32]);
 		assert_eq!(Nft::owner((2, 9)).unwrap_or(random_account.clone()), random_account);
 
 		// transfer class id=2 token id=8 to account #0
