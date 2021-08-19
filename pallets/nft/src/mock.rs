@@ -123,7 +123,15 @@ pub fn run_to_block(n: u32) {
 	}
 }
 
-// Put Event type as T, this method filters the system events storage accordingly
+/// Put Event type as T, this method filters the system events storage accordingly
+///
+/// Type Parameters:
+/// - `T`: Event/ pallet Event type
+/// - Example: TypeId::of::<Event> : global event, it will not reject anything and always return true.
+/// 		   Event::System : Event of frame_system
+/// 		   Event::Balances : Event of pallet_balances
+///            Event::Nft: Event ofself crate
+/// 		   _ : return empty vector
 pub fn events_filter<T: 'static>() -> Vec<Event> {
 	let mut evt = System::events();
 
@@ -131,9 +139,18 @@ pub fn events_filter<T: 'static>() -> Vec<Event> {
 	return evt.into_iter().map(|evt| evt.event).collect::<Vec<_>>();
 }
 
-// TypeId::of::<Event> is the type id of global event, it will not reject anything and always return true.
-// Event::System, Event::Balances, Event::Nft(self crate).  Ormal_NFT is also tested but no imported Event so far.
-// Match should be modifed
+/// return true if Event is an instance of T
+///
+/// Parameters:
+/// - `evt`: Event
+/// Type Parameters:
+/// - `T`: Event/ pallet Event type
+/// - Example: TypeId::of::<Event> : global event, it will not reject anything and always return true.
+/// 		   Event::System : Event of frame_system
+/// 		   Event::Balances : Event of pallet_balances
+///            Event::Nft: Event ofself crate
+/// 		   
+/// Ormal_NFT is also tested but no imported Event so far.
 pub fn if_right_events<T: 'static>(evt: &Event) -> bool {
 	if TypeId::of::<T>() == TypeId::of::<Event>() {
 		return true;
@@ -146,7 +163,12 @@ pub fn if_right_events<T: 'static>(evt: &Event) -> bool {
 	}
 }
 
-// Use reflection Any trait to check if "s" is compatiable to Type "T"
+/// return true if s is an instance of T
+///
+/// Parameters:
+/// - `s`: Any
+/// Type Parameters:
+/// - `T`: type
 pub fn if_right_raw_events<T: 'static>(s: &dyn Any) -> bool {
 	if let Some(_) = s.downcast_ref::<T>() {
 		true

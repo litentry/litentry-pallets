@@ -169,8 +169,6 @@ pub mod pallet {
 		ClassIdNotFound,
 		/// Class ClaimedList not found (Only for Claim type)
 		ClassClaimedListNotFound,
-		/// TokenId not found
-		TokenIdNotFound,
 		/// The operator is not the owner of the token and has no permission
 		NoPermission,
 		/// Quantity is invalid. need >= 1
@@ -214,10 +212,6 @@ pub mod pallet {
 		TransferredToken(T::AccountId, T::AccountId, ClassIdOf<T>, TokenIdOf<T>),
 		/// Burned NFT token. \[owner, class_id, token_id\]
 		BurnedToken(T::AccountId, ClassIdOf<T>, TokenIdOf<T>),
-		/// Burned NFT token with remark. \[owner, class_id, token_id, remark_hash\]
-		BurnedTokenWithRemark(T::AccountId, ClassIdOf<T>, TokenIdOf<T>, T::Hash),
-		/// Destroyed NFT class. \[owner, class_id\]
-		DestroyedClass(T::AccountId, ClassIdOf<T>),
 	}
 
 	#[pallet::pallet]
@@ -558,7 +552,7 @@ impl<T: Config> Pallet<T> {
 		ensure!(data.properties.0.contains(ClassProperty::Burnable), Error::<T>::NonBurnable);
 
 		let token_info =
-			orml_nft::Pallet::<T>::tokens(token.0, token.1).ok_or(Error::<T>::TokenIdNotFound)?;
+			orml_nft::Pallet::<T>::tokens(token.0, token.1).ok_or(Error::<T>::TokenNotFound)?;
 		ensure!(*who == token_info.owner, Error::<T>::NoPermission);
 
 		orml_nft::Pallet::<T>::burn(&who, token)?;
