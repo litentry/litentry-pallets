@@ -3,7 +3,7 @@ use crate::mock::{Event, *};
 use frame_support::{assert_noop, assert_ok};
 use sp_runtime::AccountId32;
 
-fn initial_account() -> (AccountId32, AccountId32) {
+fn initial_accounts() -> (AccountId32, AccountId32) {
 	let alice_account: AccountId32 = AccountId32::from([
 		0xd4, 0x35, 0x93, 0xc7, 0x15, 0xfd, 0xd3, 0x1c, 0x61, 0x14, 0x1a, 0xbd, 0x04, 0xa9, 0x9f,
 		0xd6, 0x82, 0x2c, 0x85, 0x58, 0x85, 0x4c, 0xcd, 0xe3, 0x9a, 0x56, 0x84, 0xe7, 0xa5, 0x6d,
@@ -31,13 +31,12 @@ fn initial_account() -> (AccountId32, AccountId32) {
 #[test]
 // Test for general Event:
 // CreatedClass(T::AccountId, ClassIdOf<T>)
-
 // Test for Error:
 // WrongClassType
 // CreationFeeNotPaid
-fn test_general_event() {
+fn test_general_process() {
 	new_test_ext().execute_with(|| {
-		let (alice_account, _bob_account) = initial_account();
+		let (alice_account, _bob_account) = initial_accounts();
 
 		let merkle_root = [
 			0x0cu8, 0x67u8, 0xcau8, 0xf4u8, 0x61u8, 0x29u8, 0x0cu8, 0xd4u8, 0x63u8, 0xe5u8, 0x35u8,
@@ -122,16 +121,15 @@ fn test_general_event() {
 #[test]
 // Test for burn function:
 // BurnedToken(T::AccountId, ClassIdOf<T>, TokenIdOf<T>)
-
 // Test for Error:
 // ClassIdNotFound
 // TokenIdNotFound
 // NonBurnable
 // NoPermission
 
-fn test_burn() {
+fn test_burn_process() {
 	new_test_ext().execute_with(|| {
-		let (alice_account, bob_account) = initial_account();
+		let (alice_account, bob_account) = initial_accounts();
 
 		// create Unburnable and Transferable class without start/end restrcition class id 0
 		assert_ok!(Nft::create_class(
@@ -205,15 +203,14 @@ fn test_burn() {
 #[test]
 // Test for transfer function:
 // TransferredToken(T::AccountId, ClassIdOf<T>, TokenIdOf<T>)
-
 // Test for Error:
 // ClassIdNotFound
 // TokenNotFound
 // NonBurnable
 // NoPermission
-fn test_transfer() {
+fn test_transfer_process() {
 	new_test_ext().execute_with(|| {
-		let (alice_account, bob_account) = initial_account();
+		let (alice_account, bob_account) = initial_accounts();
 
 		// create Burnable and unTransferable class without start/end restrcition class id 0
 		assert_ok!(Nft::create_class(
@@ -298,17 +295,15 @@ fn test_transfer() {
 #[test]
 // Test for Simple type Event:
 // MintedToken(T::AccountId, T::AccountId, ClassIdOf<T>, u32)
-
 // Test for Error:
 // ClassIdNotFound
 // NoPermission,
 // InvalidQuantity,
 // QuantityOverflow
 // OutOfCampaignPeriod
-
-fn test_minted_token_event() {
+fn test_minted_token_process() {
 	new_test_ext().execute_with(|| {
-		let (alice_account, bob_account) = initial_account();
+		let (alice_account, bob_account) = initial_accounts();
 		// create Transferable Unburnable class without start/end restrcition
 		assert_ok!(Nft::create_class(
 			Origin::signed(alice_account.clone()),
@@ -425,16 +420,15 @@ fn test_minted_token_event() {
 #[test]
 // Test for Claim type Event:
 // ClaimedToken(T::AccountId, ClassIdOf<T>)
-
 // Test for Error:
 // OutOfCampaignPeriod
 // NonTransferable,
 // ClassClaimedListNotFound
 // UserNotInClaimList
 // TokenAlreadyClaimed
-fn test_claimed_token_event() {
+fn test_claimed_token_process() {
 	new_test_ext().execute_with(|| {
-		let (alice_account, bob_account) = initial_account();
+		let (alice_account, bob_account) = initial_accounts();
 
 		// root is 0x0c67caf461290cd463e535213f996e32736e65a2063783fde5036b71396dfb0c
 		let merkle_root = [
@@ -527,16 +521,15 @@ fn test_claimed_token_event() {
 // Test for Merge type Event:
 // MergedToken(T::AccountId, ClassIdOf<T>)
 // TransferredToken(T::AccountId, T::AccountId, ClassIdOf<T>, TokenIdOf<T>)
-
 // Test for Error:
 // WrongMergeBase
 // NonBurnable
 // OutOfCampaignPeriod
 // TokenNotFound
 // TokenUsed
-fn test_merged_token_event() {
+fn test_merged_token_process() {
 	new_test_ext().execute_with(|| {
-		let (alice_account, bob_account) = initial_account();
+		let (alice_account, bob_account) = initial_accounts();
 
 		// issue basic unburnable NFTs : class id 0, 1
 		assert_ok!(Nft::create_class(
@@ -707,11 +700,7 @@ fn test_merged_token_event() {
 
 		// merge will not generate burn event, more implement here
 		// check the owner of burned token is account #0
-		let random_account: AccountId32 = AccountId32::from([
-			0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-			0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x10, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-			0x00, 0x00, 0x00, 0x00,
-		]);
+		let random_account: AccountId32 =  AccountId32::from([0u8; 32]);
 		assert_eq!(Nft::owner((2, 9)).unwrap_or(random_account.clone()), random_account);
 
 		// transfer class id=2 token id=8 to account #0
