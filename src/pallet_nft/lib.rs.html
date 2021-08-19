@@ -603,12 +603,6 @@
 <span id="601">601</span>
 <span id="602">602</span>
 <span id="603">603</span>
-<span id="604">604</span>
-<span id="605">605</span>
-<span id="606">606</span>
-<span id="607">607</span>
-<span id="608">608</span>
-<span id="609">609</span>
 </pre><pre class="rust">
 <span class="doccomment">//! # NFT Pallet</span>
 <span class="doccomment">//!</span>
@@ -781,8 +775,6 @@
 		<span class="ident">ClassIdNotFound</span>,
 		<span class="doccomment">/// Class ClaimedList not found (Only for Claim type)</span>
 		<span class="ident">ClassClaimedListNotFound</span>,
-		<span class="doccomment">/// TokenId not found</span>
-		<span class="ident">TokenIdNotFound</span>,
 		<span class="doccomment">/// The operator is not the owner of the token and has no permission</span>
 		<span class="ident">NoPermission</span>,
 		<span class="doccomment">/// Quantity is invalid. need &gt;= 1</span>
@@ -826,10 +818,6 @@
 		<span class="ident">TransferredToken</span>(<span class="ident">T::AccountId</span>, <span class="ident">T::AccountId</span>, <span class="ident">ClassIdOf</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>, <span class="ident">TokenIdOf</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>),
 		<span class="doccomment">/// Burned NFT token. \[owner, class_id, token_id\]</span>
 		<span class="ident">BurnedToken</span>(<span class="ident">T::AccountId</span>, <span class="ident">ClassIdOf</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>, <span class="ident">TokenIdOf</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>),
-		<span class="doccomment">/// Burned NFT token with remark. \[owner, class_id, token_id, remark_hash\]</span>
-		<span class="ident">BurnedTokenWithRemark</span>(<span class="ident">T::AccountId</span>, <span class="ident">ClassIdOf</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>, <span class="ident">TokenIdOf</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>, <span class="ident">T::Hash</span>),
-		<span class="doccomment">/// Destroyed NFT class. \[owner, class_id\]</span>
-		<span class="ident">DestroyedClass</span>(<span class="ident">T::AccountId</span>, <span class="ident">ClassIdOf</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>),
 	}
 
 	<span class="attribute">#[<span class="ident">pallet::pallet</span>]</span>
@@ -1170,7 +1158,7 @@
 		<span class="macro">ensure!</span>(<span class="ident">data</span>.<span class="ident">properties</span>.<span class="number">0</span>.<span class="ident">contains</span>(<span class="ident">ClassProperty::Burnable</span>), <span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::NonBurnable</span>);
 
 		<span class="kw">let</span> <span class="ident">token_info</span> <span class="op">=</span>
-			<span class="ident">orml_nft::Pallet</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::tokens</span>(<span class="ident">token</span>.<span class="number">0</span>, <span class="ident">token</span>.<span class="number">1</span>).<span class="ident">ok_or</span>(<span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::TokenIdNotFound</span>)<span class="question-mark">?</span>;
+			<span class="ident">orml_nft::Pallet</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::tokens</span>(<span class="ident">token</span>.<span class="number">0</span>, <span class="ident">token</span>.<span class="number">1</span>).<span class="ident">ok_or</span>(<span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::TokenNotFound</span>)<span class="question-mark">?</span>;
 		<span class="macro">ensure!</span>(<span class="kw-2">*</span><span class="ident">who</span> <span class="op">=</span><span class="op">=</span> <span class="ident">token_info</span>.<span class="ident">owner</span>, <span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::NoPermission</span>);
 
 		<span class="ident">orml_nft::Pallet</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::burn</span>(<span class="kw-2">&amp;</span><span class="ident">who</span>, <span class="ident">token</span>)<span class="question-mark">?</span>;
