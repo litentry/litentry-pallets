@@ -360,7 +360,13 @@ fn test_minted_token_process() {
 		));
 		assert_eq!(
 			events_filter::<crate::Event::<Test>>()[1],
-			Event::Nft(crate::Event::MintedToken(alice_account.clone(), bob_account.clone(), 0, 5))
+			Event::Nft(crate::Event::MintedToken(
+				alice_account.clone(),
+				bob_account.clone(),
+				0,
+				0,
+				5
+			))
 		);
 
 		//mint 5 instance with wrong ClassInfo owner
@@ -412,7 +418,13 @@ fn test_minted_token_process() {
 		));
 		assert_eq!(
 			events_filter::<crate::Event::<Test>>()[3],
-			Event::Nft(crate::Event::MintedToken(alice_account.clone(), bob_account.clone(), 1, 5))
+			Event::Nft(crate::Event::MintedToken(
+				alice_account.clone(),
+				bob_account.clone(),
+				1,
+				0,
+				5
+			))
 		);
 	});
 }
@@ -500,7 +512,7 @@ fn test_claimed_token_process() {
 		assert_ok!(Nft::claim(Origin::signed(alice_account.clone()), 0, 0, alice_proof.clone(),));
 		assert_eq!(
 			events_filter::<crate::Event::<Test>>()[2],
-			Event::Nft(crate::Event::ClaimedToken(alice_account.clone(), 0))
+			Event::Nft(crate::Event::ClaimedToken(alice_account.clone(), 0, 0))
 		);
 
 		// alice claims again
@@ -583,6 +595,7 @@ fn test_merged_token_process() {
 				alice_account.clone(),
 				bob_account.clone(),
 				0,
+				0,
 				10
 			))
 		);
@@ -601,6 +614,7 @@ fn test_merged_token_process() {
 				alice_account.clone(),
 				bob_account.clone(),
 				1,
+				0,
 				10
 			))
 		);
@@ -681,7 +695,7 @@ fn test_merged_token_process() {
 		assert_ok!(Nft::merge(Origin::signed(bob_account.clone()), 4, (2, 9), (3, 9),));
 		assert_eq!(
 			events_filter::<crate::Event::<Test>>()[10],
-			Event::Nft(crate::Event::MergedToken(bob_account.clone(), 4))
+			Event::Nft(crate::Event::MergedToken(bob_account.clone(), 4, 0))
 		);
 
 		// merge existed class and existed token again for used token
@@ -693,14 +707,23 @@ fn test_merged_token_process() {
 		//---------------------//
 		//---burn merge NFT--------------------------//
 		assert_ok!(Nft::merge(Origin::signed(bob_account.clone()), 5, (2, 9), (3, 9),));
+		// merge will generate burn event
 		assert_eq!(
 			events_filter::<crate::Event::<Test>>()[11],
-			Event::Nft(crate::Event::MergedToken(bob_account.clone(), 5))
+			Event::Nft(crate::Event::BurnedToken(bob_account.clone(), 2, 9)),
+		);
+		assert_eq!(
+			events_filter::<crate::Event::<Test>>()[12],
+			Event::Nft(crate::Event::BurnedToken(bob_account.clone(), 3, 9)),
+		);
+		// MergedToken event
+		assert_eq!(
+			events_filter::<crate::Event::<Test>>()[13],
+			Event::Nft(crate::Event::MergedToken(bob_account.clone(), 5, 0))
 		);
 
-		// merge will not generate burn event, more implement here
 		// check the owner of burned token is account #0
-		let random_account: AccountId32 =  AccountId32::from([0u8; 32]);
+		let random_account: AccountId32 = AccountId32::from([0u8; 32]);
 		assert_eq!(Nft::owner((2, 9)).unwrap_or(random_account.clone()), random_account);
 
 		// transfer class id=2 token id=8 to account #0
@@ -710,7 +733,7 @@ fn test_merged_token_process() {
 			(2, 8)
 		));
 		assert_eq!(
-			events_filter::<crate::Event::<Test>>()[12],
+			events_filter::<crate::Event::<Test>>()[14],
 			Event::Nft(crate::Event::TransferredToken(
 				bob_account.clone(),
 				random_account.clone(),
