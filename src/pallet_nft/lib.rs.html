@@ -604,6 +604,9 @@
 <span id="602">602</span>
 <span id="603">603</span>
 <span id="604">604</span>
+<span id="605">605</span>
+<span id="606">606</span>
+<span id="607">607</span>
 </pre><pre class="rust">
 <span class="doccomment">//! # NFT Pallet</span>
 <span class="doccomment">//!</span>
@@ -948,7 +951,8 @@
 
 			<span class="comment">// TODO: adjustible rarity</span>
 			<span class="kw">let</span> <span class="ident">data</span> <span class="op">=</span> <span class="ident">TokenData</span> { <span class="ident">used</span>: <span class="bool-val">false</span>, <span class="ident">rarity</span>: <span class="number">0</span> };
-			<span class="kw">let</span> <span class="ident">start_token_id</span> <span class="op">=</span> <span class="ident">orml_nft::Pallet</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::mint</span>(<span class="kw-2">&amp;</span><span class="ident">to</span>, <span class="ident">class_id</span>, <span class="ident">metadata</span>.<span class="ident">clone</span>(), <span class="ident">data</span>.<span class="ident">clone</span>())<span class="question-mark">?</span>;
+			<span class="kw">let</span> <span class="ident">start_token_id</span> <span class="op">=</span>
+				<span class="ident">orml_nft::Pallet</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::mint</span>(<span class="kw-2">&amp;</span><span class="ident">to</span>, <span class="ident">class_id</span>, <span class="ident">metadata</span>.<span class="ident">clone</span>(), <span class="ident">data</span>.<span class="ident">clone</span>())<span class="question-mark">?</span>;
 			<span class="kw">for</span> <span class="kw">_</span> <span class="kw">in</span> <span class="number">1</span>..<span class="ident">quantity</span> {
 				<span class="ident">orml_nft::Pallet</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::mint</span>(<span class="kw-2">&amp;</span><span class="ident">to</span>, <span class="ident">class_id</span>, <span class="ident">metadata</span>.<span class="ident">clone</span>(), <span class="ident">data</span>.<span class="ident">clone</span>())<span class="question-mark">?</span>;
 			}
@@ -1017,7 +1021,8 @@
 			<span class="comment">// TODO: if metadata can change?</span>
 			<span class="kw">let</span> <span class="ident">metadata</span> <span class="op">=</span> <span class="ident">class_info</span>.<span class="ident">metadata</span>;
 
-			<span class="kw">let</span> <span class="ident">next_token_id</span> <span class="op">=</span> <span class="ident">orml_nft::Pallet</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::mint</span>(<span class="kw-2">&amp;</span><span class="ident">who</span>, <span class="ident">class_id</span>, <span class="ident">metadata</span>.<span class="ident">to_vec</span>(), <span class="ident">data</span>)<span class="question-mark">?</span>;
+			<span class="kw">let</span> <span class="ident">next_token_id</span> <span class="op">=</span>
+				<span class="ident">orml_nft::Pallet</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::mint</span>(<span class="kw-2">&amp;</span><span class="ident">who</span>, <span class="ident">class_id</span>, <span class="ident">metadata</span>.<span class="ident">to_vec</span>(), <span class="ident">data</span>)<span class="question-mark">?</span>;
 			<span class="self">Self</span><span class="ident">::deposit_event</span>(<span class="ident">Event::ClaimedToken</span>(<span class="ident">who</span>, <span class="ident">class_id</span>, <span class="ident">next_token_id</span>));
 			<span class="prelude-val">Ok</span>(().<span class="ident">into</span>())
 		}
@@ -1083,7 +1088,8 @@
 			<span class="comment">// TODO: if metadata can change?</span>
 			<span class="kw">let</span> <span class="ident">metadata</span> <span class="op">=</span> <span class="ident">merged_class_info</span>.<span class="ident">metadata</span>;
 
-			<span class="kw">let</span> <span class="ident">next_token_id</span> <span class="op">=</span> <span class="ident">orml_nft::Pallet</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::mint</span>(<span class="kw-2">&amp;</span><span class="ident">who</span>, <span class="ident">class_id</span>, <span class="ident">metadata</span>.<span class="ident">to_vec</span>(), <span class="ident">data</span>)<span class="question-mark">?</span>;
+			<span class="kw">let</span> <span class="ident">next_token_id</span> <span class="op">=</span>
+				<span class="ident">orml_nft::Pallet</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::mint</span>(<span class="kw-2">&amp;</span><span class="ident">who</span>, <span class="ident">class_id</span>, <span class="ident">metadata</span>.<span class="ident">to_vec</span>(), <span class="ident">data</span>)<span class="question-mark">?</span>;
 			<span class="self">Self</span><span class="ident">::deposit_event</span>(<span class="ident">Event::MergedToken</span>(<span class="ident">who</span>, <span class="ident">class_id</span>, <span class="ident">next_token_id</span>));
 
 			<span class="prelude-val">Ok</span>(().<span class="ident">into</span>())
@@ -1123,7 +1129,6 @@
 		) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">DispatchResultWithPostInfo</span> {
 			<span class="kw">let</span> <span class="ident">who</span> <span class="op">=</span> <span class="ident">ensure_signed</span>(<span class="ident">origin</span>)<span class="question-mark">?</span>;
 			<span class="self">Self</span><span class="ident">::do_burn</span>(<span class="kw-2">&amp;</span><span class="ident">who</span>, <span class="ident">token</span>)<span class="question-mark">?</span>;
-			<span class="self">Self</span><span class="ident">::deposit_event</span>(<span class="ident">Event::BurnedToken</span>(<span class="ident">who</span>, <span class="ident">token</span>.<span class="number">0</span>, <span class="ident">token</span>.<span class="number">1</span>));
 			<span class="prelude-val">Ok</span>(().<span class="ident">into</span>())
 		}
 	}
@@ -1165,6 +1170,7 @@
 
 		<span class="ident">orml_nft::Pallet</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::burn</span>(<span class="kw-2">&amp;</span><span class="ident">who</span>, <span class="ident">token</span>)<span class="question-mark">?</span>;
 
+		<span class="self">Self</span><span class="ident">::deposit_event</span>(<span class="ident">Event::BurnedToken</span>(<span class="ident">who</span>.<span class="ident">clone</span>(), <span class="ident">token</span>.<span class="number">0</span>, <span class="ident">token</span>.<span class="number">1</span>));
 		<span class="prelude-val">Ok</span>(())
 	}
 }
