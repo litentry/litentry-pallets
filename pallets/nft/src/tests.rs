@@ -694,12 +694,22 @@ fn test_merged_token_process() {
 		//---------------------//
 		//---burn merge NFT--------------------------//
 		assert_ok!(Nft::merge(Origin::signed(bob_account.clone()), 5, (2, 9), (3, 9),));
+
+		// merge will generate burn event
 		assert_eq!(
 			events_filter::<crate::Event::<Test>>()[11],
+			Event::Nft(crate::Event::BurnedToken(bob_account.clone(), 2, 9)),
+		);
+		assert_eq!(
+			events_filter::<crate::Event::<Test>>()[12],
+			Event::Nft(crate::Event::BurnedToken(bob_account.clone(), 3, 9)),
+		);
+		// merge event
+		assert_eq!(
+			events_filter::<crate::Event::<Test>>()[13],
 			Event::Nft(crate::Event::MergedToken(bob_account.clone(), 5, 0))
 		);
 
-		// merge will not generate burn event, more implement here
 		// check the owner of burned token is account #0
 		let random_account: AccountId32 = AccountId32::from([0u8; 32]);
 		assert_eq!(Nft::owner((2, 9)).unwrap_or(random_account.clone()), random_account);
@@ -711,7 +721,7 @@ fn test_merged_token_process() {
 			(2, 8)
 		));
 		assert_eq!(
-			events_filter::<crate::Event::<Test>>()[12],
+			events_filter::<crate::Event::<Test>>()[14],
 			Event::Nft(crate::Event::TransferredToken(
 				bob_account.clone(),
 				random_account.clone(),
