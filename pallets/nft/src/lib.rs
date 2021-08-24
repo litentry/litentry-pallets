@@ -202,12 +202,12 @@ pub mod pallet {
 	pub enum Event<T: Config> {
 		/// Created NFT class. \[owner, class_id\]
 		CreatedClass(T::AccountId, ClassIdOf<T>),
-		/// Minted NFT token. \[from, to, class_id, quantity\]
-		MintedToken(T::AccountId, T::AccountId, ClassIdOf<T>, u32),
-		/// Claimed NFT token. \[claimer, class_id\]
-		ClaimedToken(T::AccountId, ClassIdOf<T>),
-		/// Merged NFT token. \[owner, class_id\]
-		MergedToken(T::AccountId, ClassIdOf<T>),
+		/// Minted NFT token. \[from, to, class_id, start_token_id, quantity\]
+		MintedToken(T::AccountId, T::AccountId, ClassIdOf<T>, TokenIdOf<T>, u32),
+		/// Claimed NFT token. \[claimer, class_id, token_id\]
+		ClaimedToken(T::AccountId, ClassIdOf<T>, TokenIdOf<T>),
+		/// Merged NFT token. \[owner, class_id, token_id\]
+		MergedToken(T::AccountId, ClassIdOf<T>, TokenIdOf<T>),
 		/// Transferred NFT token. \[from, to, class_id, token_id\]
 		TransferredToken(T::AccountId, T::AccountId, ClassIdOf<T>, TokenIdOf<T>),
 		/// Burned NFT token. \[owner, class_id, token_id\]
@@ -341,11 +341,13 @@ pub mod pallet {
 
 			// TODO: adjustible rarity
 			let data = TokenData { used: false, rarity: 0 };
-			for _ in 0..quantity {
+			let start_token_id =
+				orml_nft::Pallet::<T>::mint(&to, class_id, metadata.clone(), data.clone())?;
+			for _ in 1..quantity {
 				orml_nft::Pallet::<T>::mint(&to, class_id, metadata.clone(), data.clone())?;
 			}
 
-			Self::deposit_event(Event::MintedToken(who, to, class_id, quantity));
+			Self::deposit_event(Event::MintedToken(who, to, class_id, start_token_id, quantity));
 			Ok(().into())
 		}
 
@@ -409,8 +411,9 @@ pub mod pallet {
 			// TODO: if metadata can change?
 			let metadata = class_info.metadata;
 
-			orml_nft::Pallet::<T>::mint(&who, class_id, metadata.to_vec(), data)?;
-			Self::deposit_event(Event::ClaimedToken(who, class_id));
+			let next_token_id =
+				orml_nft::Pallet::<T>::mint(&who, class_id, metadata.to_vec(), data)?;
+			Self::deposit_event(Event::ClaimedToken(who, class_id, next_token_id));
 			Ok(().into())
 		}
 
@@ -475,8 +478,9 @@ pub mod pallet {
 			// TODO: if metadata can change?
 			let metadata = merged_class_info.metadata;
 
-			orml_nft::Pallet::<T>::mint(&who, class_id, metadata.to_vec(), data)?;
-			Self::deposit_event(Event::MergedToken(who, class_id));
+			let next_token_id =
+				orml_nft::Pallet::<T>::mint(&who, class_id, metadata.to_vec(), data)?;
+			Self::deposit_event(Event::MergedToken(who, class_id, next_token_id));
 
 			Ok(().into())
 		}
@@ -515,7 +519,6 @@ pub mod pallet {
 		) -> DispatchResultWithPostInfo {
 			let who = ensure_signed(origin)?;
 			Self::do_burn(&who, token)?;
-			Self::deposit_event(Event::BurnedToken(who, token.0, token.1));
 			Ok(().into())
 		}
 	}
@@ -557,6 +560,7 @@ impl<T: Config> Pallet<T> {
 
 		orml_nft::Pallet::<T>::burn(&who, token)?;
 
+		Self::deposit_event(Event::BurnedToken(who.clone(), token.0, token.1));
 		Ok(())
 	}
 }
