@@ -212,6 +212,8 @@ pub mod pallet {
 		TransferredToken(T::AccountId, T::AccountId, ClassIdOf<T>, TokenIdOf<T>),
 		/// Burned NFT token. \[owner, class_id, token_id\]
 		BurnedToken(T::AccountId, ClassIdOf<T>, TokenIdOf<T>),
+		/// Token Used (For Merge Type). \[owner, class_id, token_id\]
+		TokenUsed(T::AccountId, ClassIdOf<T>, TokenIdOf<T>)
 	}
 
 	#[pallet::pallet]
@@ -469,6 +471,9 @@ pub mod pallet {
 				token_info2.data.used = true;
 				orml_nft::Tokens::<T>::insert(token1.0, token1.1, token_info1);
 				orml_nft::Tokens::<T>::insert(token2.0, token2.1, token_info2);
+
+				Self::deposit_event(Event::TokenUsed(who.clone(), token1.0, token1.1));
+				Self::deposit_event(Event::TokenUsed(who.clone(), token2.0, token2.1));
 			}
 
 			// mint new token

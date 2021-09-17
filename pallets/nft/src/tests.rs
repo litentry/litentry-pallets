@@ -682,6 +682,16 @@ fn test_merged_token_process() {
 		assert_ok!(Nft::merge(Origin::signed(bob_account.clone()), 4, (2, 9), (3, 9),));
 		assert_eq!(
 			events_filter::<crate::Event::<Test>>()[10],
+			Event::Nft(crate::Event::TokenUsed(bob_account.clone(), 2, 9))
+		);
+		assert_eq!(
+			events_filter::<crate::Event::<Test>>()[11],
+			Event::Nft(crate::Event::TokenUsed(bob_account.clone(), 3, 9))
+		);
+		
+		
+		assert_eq!(
+			events_filter::<crate::Event::<Test>>()[12],
 			Event::Nft(crate::Event::MergedToken(bob_account.clone(), 4, 0))
 		);
 
@@ -697,16 +707,16 @@ fn test_merged_token_process() {
 
 		// merge will generate burn event
 		assert_eq!(
-			events_filter::<crate::Event::<Test>>()[11],
+			events_filter::<crate::Event::<Test>>()[13],
 			Event::Nft(crate::Event::BurnedToken(bob_account.clone(), 2, 9)),
 		);
 		assert_eq!(
-			events_filter::<crate::Event::<Test>>()[12],
+			events_filter::<crate::Event::<Test>>()[14],
 			Event::Nft(crate::Event::BurnedToken(bob_account.clone(), 3, 9)),
 		);
 		// merge event
 		assert_eq!(
-			events_filter::<crate::Event::<Test>>()[13],
+			events_filter::<crate::Event::<Test>>()[15],
 			Event::Nft(crate::Event::MergedToken(bob_account.clone(), 5, 0))
 		);
 
@@ -721,7 +731,7 @@ fn test_merged_token_process() {
 			(2, 8)
 		));
 		assert_eq!(
-			events_filter::<crate::Event::<Test>>()[14],
+			events_filter::<crate::Event::<Test>>()[16],
 			Event::Nft(crate::Event::TransferredToken(
 				bob_account.clone(),
 				random_account.clone(),
