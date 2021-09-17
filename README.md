@@ -4,7 +4,6 @@
 This repository collets all Litentry pallets. Currently it includes:
 
 * account-linker
-* identity
 * nft
 * offchain-worker
 

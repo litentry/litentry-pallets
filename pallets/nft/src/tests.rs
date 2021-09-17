@@ -732,6 +732,7 @@ fn test_merged_token_process() {
 		));
 		assert_eq!(
 			events_filter::<crate::Event::<Test>>()[16],
+
 			Event::Nft(crate::Event::TransferredToken(
 				bob_account.clone(),
 				random_account.clone(),
