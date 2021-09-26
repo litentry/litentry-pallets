@@ -62,6 +62,7 @@ version = '4.0.0-dev'
 log = { version = "0.4.14", default-features = false }
 sha2 = { default-features = false, version = "0.9.5" }
 ripemd160 = {default-features = false, version = "0.9.1" }
+scale-info = { version = "1.0", default-features = false, features = ["derive"] }
 
 [dev-dependencies]
 
@@ -81,4 +82,5 @@ std = [
     "sha2/std",
     "ripemd160/std",
     "log/std",
+    "scale-info/std",
 ]

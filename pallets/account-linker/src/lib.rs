@@ -75,7 +75,6 @@ pub mod pallet {
 
 	#[pallet::event]
 	#[pallet::generate_deposit(pub(super) fn deposit_event)]
-	#[pallet::metadata(T::AccountId = "AccountId", T::BlockNumber = "BlockNumber")]
 	pub enum Event<T: Config> {
 		/// Ethereum address successfully linked. \[Lintentry account, Ethereum account\]
 		EthAddressLinked(T::AccountId, Vec<u8>),
