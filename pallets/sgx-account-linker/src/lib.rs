@@ -140,6 +140,8 @@ pub mod pallet {
 			let _ = ensure_signed(origin)?;
 
 			// get the layer one block number from storage
+			// it is a temporary solution, will sync up the better approach from upstream repo
+			// the issue as integritee-network/sgx-runtime#27
 			let key = Self::storage_value_key("System", "LayerOneNumber");
 			let layer_one_blocknumber = if let Some(infovec) = sp_io::storage::get(&key) {
 				if let Ok(number) = T::BlockNumber::decode(&mut infovec.as_slice()) {
