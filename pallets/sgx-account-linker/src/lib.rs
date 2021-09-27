@@ -82,6 +82,8 @@ pub mod pallet {
 		InvalidExpiringBlockNumber,
 		// Try to resolve a wrong link_polkadot request
 		WrongPendingRequest,
+		// Can't get layer one block number
+		LayerOneBlockNumberNotAvailable,
 	}
 
 	#[pallet::hooks]
@@ -137,9 +139,22 @@ pub mod pallet {
 
 			let _ = ensure_signed(origin)?;
 
-			let current_block_number = <frame_system::Pallet<T>>::block_number();
-			ensure!(expiring_block_number > current_block_number, Error::<T>::LinkRequestExpired);
-			ensure!((expiring_block_number - current_block_number) < T::BlockNumber::from(EXPIRING_BLOCK_NUMBER_MAX),
+			// get the layer one block number from storage
+			// it is a temporary solution, will sync up the better approach from upstream repo
+			// the issue as integritee-network/sgx-runtime#27
+			let key = Self::storage_value_key("System", "LayerOneNumber");
+			let layer_one_blocknumber = if let Some(infovec) = sp_io::storage::get(&key) {
+				if let Ok(number) = T::BlockNumber::decode(&mut infovec.as_slice()) {
+					Some(number)
+				} else {
+					None
+				}
+			} else {
+				None
+			}.ok_or(Error::<T>::LayerOneBlockNumberNotAvailable)?;
+
+			ensure!(expiring_block_number > layer_one_blocknumber, Error::<T>::LinkRequestExpired);
+			ensure!((expiring_block_number - layer_one_blocknumber) < T::BlockNumber::from(EXPIRING_BLOCK_NUMBER_MAX),
 				Error::<T>::InvalidExpiringBlockNumber);
 
 			let bytes = Self::generate_raw_message(&account, expiring_block_number);
@@ -182,6 +197,12 @@ pub mod pallet {
 			
 			bytes.append(&mut account_vec);
 			bytes.append(&mut expiring_block_number_vec);
+			bytes
+		}
+
+		fn storage_value_key(module_prefix: &str, storage_prefix: &str) -> Vec<u8> {
+			let mut bytes = sp_core::twox_128(module_prefix.as_bytes()).to_vec();
+			bytes.extend(&sp_core::twox_128(storage_prefix.as_bytes())[..]);
 			bytes
 		}
 	}
