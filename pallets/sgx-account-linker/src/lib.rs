@@ -159,6 +159,42 @@ pub mod pallet {
 				None
 			}.ok_or(Error::<T>::LayerOneBlockNumberNotAvailable)?;
 
+			Self::do_link_eth(account,
+				index,
+				addr_expected,
+				expiring_block_number,
+				layer_one_blocknumber,
+				sig)
+		}
+	}
+
+	impl<T:Config> Pallet<T> {
+		/// Assemble the message that the user has signed 
+		/// Format: "Link Litentry: " + Litentry account + expiring block number
+		fn generate_raw_message(account: &T::AccountId, expiring_block_number: T::BlockNumber) -> Vec<u8> {
+			let mut bytes = b"Link Litentry: ".encode();
+			let mut account_vec = account.encode();
+			let mut expiring_block_number_vec = expiring_block_number.encode();
+			
+			bytes.append(&mut account_vec);
+			bytes.append(&mut expiring_block_number_vec);
+			bytes
+		}
+
+		fn storage_value_key(module_prefix: &str, storage_prefix: &str) -> Vec<u8> {
+			let mut bytes = sp_core::twox_128(module_prefix.as_bytes()).to_vec();
+			bytes.extend(&sp_core::twox_128(storage_prefix.as_bytes())[..]);
+			bytes
+		}
+
+		pub fn do_link_eth(
+			account: T::AccountId,
+			index: u32,
+			addr_expected: EthAddress,
+			expiring_block_number: T::BlockNumber,
+			layer_one_blocknumber: T::BlockNumber,
+			sig: Signature,
+		) -> DispatchResultWithPostInfo {
 			ensure!(expiring_block_number > layer_one_blocknumber, Error::<T>::LinkRequestExpired);
 			ensure!((expiring_block_number - layer_one_blocknumber) < T::BlockNumber::from(EXPIRING_BLOCK_NUMBER_MAX),
 				Error::<T>::InvalidExpiringBlockNumber);
@@ -190,26 +226,6 @@ pub mod pallet {
 
 			Ok(().into())
 
-		}
-	}
-
-	impl<T:Config> Pallet<T> {
-		/// Assemble the message that the user has signed 
-		/// Format: "Link Litentry: " + Litentry account + expiring block number
-		fn generate_raw_message(account: &T::AccountId, expiring_block_number: T::BlockNumber) -> Vec<u8> {
-			let mut bytes = b"Link Litentry: ".encode();
-			let mut account_vec = account.encode();
-			let mut expiring_block_number_vec = expiring_block_number.encode();
-			
-			bytes.append(&mut account_vec);
-			bytes.append(&mut expiring_block_number_vec);
-			bytes
-		}
-
-		pub fn storage_value_key(module_prefix: &str, storage_prefix: &str) -> Vec<u8> {
-			let mut bytes = sp_core::twox_128(module_prefix.as_bytes()).to_vec();
-			bytes.extend(&sp_core::twox_128(storage_prefix.as_bytes())[..]);
-			bytes
 		}
 	}
 }

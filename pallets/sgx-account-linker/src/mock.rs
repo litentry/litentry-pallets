@@ -4,7 +4,7 @@ use frame_support::{
 };
 use frame_system as system;
 use crate as sgx_account_linker;
-use sp_core::{H256, traits::Externalities};
+use sp_core::H256;
 use sp_runtime::{
 	traits::{BlakeTwo256, IdentityLookup},
 	AccountId32,
@@ -68,12 +68,10 @@ pub type SgxAccountLinkerError = sgx_account_linker::Error<Test>;
 
 // Build genesis storage according to the mock runtime.
 pub fn new_test_ext() -> sp_io::TestExternalities {
-	let mut ext: sp_io::TestExternalities = system::GenesisConfig::default()
+	system::GenesisConfig::default()
 		.build_storage::<Test>()
 		.unwrap()
-		.into();
-    ext.insert(SgxAccountLinker::storage_value_key("System", "LayerOneNumber"), vec![0_u8, 1_u8]);
-    ext
+		.into()
 }
 
 pub fn run_to_block(n: u32) {

@@ -26,7 +26,8 @@ fn generate_sig(key_pair: &KeyPair, msg: &Message) -> [u8; 65] {
 fn test_expired_block_number_eth() {
 	new_test_ext().execute_with(|| {		
 		let account: AccountId32 = AccountId32::from([0u8; 32]);
-		let block_number: u32 = 0;
+		let block_number: u32 = 100;
+		let layer_one_blocknumber: u32 = 1000;
 
 		let mut gen = Random{};
 		let key_pair = gen.generate();
@@ -35,12 +36,12 @@ fn test_expired_block_number_eth() {
 		let sig = generate_sig(&key_pair, &msg);
 
 		assert_noop!(
-			SgxAccountLinker::link_eth(
-				Origin::signed(account.clone()),
+			SgxAccountLinker::do_link_eth(
 				account.clone(),
 				0,
 				key_pair.address().to_fixed_bytes(),
 				block_number,
+				layer_one_blocknumber,
 				sig),
 			SgxAccountLinkerError::LinkRequestExpired
 		);
@@ -52,7 +53,8 @@ fn test_invalid_expiring_block_number_eth() {
 	new_test_ext().execute_with(|| {
 
 		let account: AccountId32 = AccountId32::from([0u8; 32]);
-		let block_number: u32 = crate::EXPIRING_BLOCK_NUMBER_MAX + 1;
+		let block_number: u32 = crate::EXPIRING_BLOCK_NUMBER_MAX + 10;
+		let layer_one_blocknumber: u32 = 1;
 
 		let mut gen = Random{};
 		let key_pair = gen.generate();
@@ -61,12 +63,12 @@ fn test_invalid_expiring_block_number_eth() {
 		let sig = generate_sig(&key_pair, &msg);
 
 		assert_noop!(
-			SgxAccountLinker::link_eth(
-				Origin::signed(account.clone()),
+			SgxAccountLinker::do_link_eth(
 				account.clone(),
 				0,
 				key_pair.address().to_fixed_bytes(),
 				block_number,
+				layer_one_blocknumber,
 				sig),
 			SgxAccountLinkerError::InvalidExpiringBlockNumber
 		);
@@ -79,6 +81,7 @@ fn test_unexpected_address_eth() {
 
 		let account: AccountId32 = AccountId32::from([72u8; 32]);
 		let block_number: u32 = 99999;
+		let layer_one_blocknumber: u32 = 10;
 
 		let mut gen = Random{};
 		let key_pair = gen.generate();
@@ -87,12 +90,12 @@ fn test_unexpected_address_eth() {
 		let sig = generate_sig(&key_pair, &msg);
 
 		assert_noop!(
-			SgxAccountLinker::link_eth(
-				Origin::signed(account.clone()),
+			SgxAccountLinker::do_link_eth(
 				account.clone(),
 				0,
 				gen.generate().address().to_fixed_bytes(),
 				block_number,
+				layer_one_blocknumber,
 				sig),
 			SgxAccountLinkerError::UnexpectedAddress
 		);
@@ -107,6 +110,7 @@ fn test_insert_eth_address() {
 
 		let account: AccountId32 = AccountId32::from([5u8; 32]);
 		let block_number: u32 = 99999;
+		let layer_one_blocknumber: u32 = 10;
 
 		let mut gen = Random{};
 		let mut expected_vec = Vec::new();
@@ -118,12 +122,12 @@ fn test_insert_eth_address() {
 			let msg = generate_msg(&account, block_number + i as u32);
 			let sig = generate_sig(&key_pair, &msg);
 
-			assert_ok!(SgxAccountLinker::link_eth(
-				Origin::signed(account.clone()),
+			assert_ok!(SgxAccountLinker::do_link_eth(
 				account.clone(),
 				i as u32,
 				key_pair.address().to_fixed_bytes(),
 				block_number + i as u32,
+				layer_one_blocknumber,
 				sig
 			));
 
@@ -146,6 +150,7 @@ fn test_update_eth_address() {
 
 		let account: AccountId32 = AccountId32::from([40u8; 32]);
 		let block_number: u32 = 99999;
+		let layer_one_blocknumber: u32 = 10;
 
 		let mut gen = Random{};
 		for i in 0..(MAX_ETH_LINKS) {
@@ -153,12 +158,12 @@ fn test_update_eth_address() {
 			let msg = generate_msg(&account, block_number + i as u32);
 			let sig = generate_sig(&key_pair, &msg);
 
-			assert_ok!(SgxAccountLinker::link_eth(
-				Origin::signed(account.clone()),
+			assert_ok!(SgxAccountLinker::do_link_eth(
 				account.clone(),
 				i as u32,
 				key_pair.address().to_fixed_bytes(),
 				block_number + i as u32,
+				layer_one_blocknumber,
 				sig
 			));
 		}
@@ -172,12 +177,12 @@ fn test_update_eth_address() {
 		let msg = generate_msg(&account, block_number);
 		let sig = generate_sig(&key_pair, &msg);
 
-		assert_ok!(SgxAccountLinker::link_eth(
-			Origin::signed(account.clone()),
+		assert_ok!(SgxAccountLinker::do_link_eth(
 			account.clone(),
 			index,
 			key_pair.address().to_fixed_bytes(),
 			block_number,
+			layer_one_blocknumber,
 			sig
 		));
 
@@ -194,6 +199,7 @@ fn test_eth_address_pool_overflow() {
 
 		let account: AccountId32 = AccountId32::from([113u8; 32]);
 		let block_number: u32 = 99999;
+		let layer_one_blocknumber: u32 = 10;
 
 		let mut gen = Random{};
 		let mut expected_vec = Vec::new();
@@ -204,12 +210,12 @@ fn test_eth_address_pool_overflow() {
 			let msg = generate_msg(&account, block_number);
 			let sig = generate_sig(&key_pair, &msg);
 
-			assert_ok!(SgxAccountLinker::link_eth(
-				Origin::signed(account.clone()),
+			assert_ok!(SgxAccountLinker::do_link_eth(
 				account.clone(),
 				index as u32,
 				key_pair.address().to_fixed_bytes(),
 				block_number,
+				layer_one_blocknumber,
 				sig
 			));
 
