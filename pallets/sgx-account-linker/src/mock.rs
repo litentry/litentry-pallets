@@ -3,8 +3,8 @@ use frame_support::{
 	traits::{OnFinalize, OnInitialize, Everything},
 };
 use frame_system as system;
-use crate as account_linker;
-use sp_core::H256;
+use crate as sgx_account_linker;
+use sp_core::{H256, traits::Externalities};
 use sp_runtime::{
 	traits::{BlakeTwo256, IdentityLookup},
 	AccountId32,
@@ -24,7 +24,7 @@ frame_support::construct_runtime!(
 		UncheckedExtrinsic = UncheckedExtrinsic,
 	{
 		System: frame_system::{Pallet, Call, Config, Storage, Event<T>},
-		AccountLinker: account_linker::{Pallet, Call, Storage, Event<T>},
+		SgxAccountLinker: sgx_account_linker::{Pallet, Call, Storage, Event<T>},
 	}
 );
 
@@ -34,7 +34,7 @@ parameter_types! {
 }
 
 impl system::Config for Test {
-	type BaseCallFilter = Everything;
+    type BaseCallFilter = Everything;
 	type Origin = Origin;
 	type BlockWeights = ();
 	type BlockLength = ();
@@ -59,28 +59,30 @@ impl system::Config for Test {
 	type OnSetCode = ();
 }
 
-impl account_linker::Config for Test {
+impl sgx_account_linker::Config for Test {
 	type Event = Event;
 	type WeightInfo = ();
 }
 
-pub type AccountLinkerError = account_linker::Error<Test>;
+pub type SgxAccountLinkerError = sgx_account_linker::Error<Test>;
 
 // Build genesis storage according to the mock runtime.
 pub fn new_test_ext() -> sp_io::TestExternalities {
-	system::GenesisConfig::default()
+	let mut ext: sp_io::TestExternalities = system::GenesisConfig::default()
 		.build_storage::<Test>()
 		.unwrap()
-		.into()
+		.into();
+    ext.insert(SgxAccountLinker::storage_value_key("System", "LayerOneNumber"), vec![0_u8, 1_u8]);
+    ext
 }
 
 pub fn run_to_block(n: u32) {
     while System::block_number() < n {
-        AccountLinker::on_finalize(System::block_number());
+        SgxAccountLinker::on_finalize(System::block_number());
         System::on_finalize(System::block_number());
         System::set_block_number(System::block_number() + 1);
         System::on_initialize(System::block_number());
-        AccountLinker::on_initialize(System::block_number());
+        SgxAccountLinker::on_initialize(System::block_number());
     }
 }
 

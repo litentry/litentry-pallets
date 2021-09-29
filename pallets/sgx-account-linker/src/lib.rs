@@ -26,6 +26,12 @@
 
 #![cfg_attr(not(feature = "std"), no_std)]
 
+#[cfg(test)]
+mod mock;
+
+#[cfg(test)]
+mod tests;
+
 pub use pallet::*;
 
 mod util_eth;
@@ -200,7 +206,7 @@ pub mod pallet {
 			bytes
 		}
 
-		fn storage_value_key(module_prefix: &str, storage_prefix: &str) -> Vec<u8> {
+		pub fn storage_value_key(module_prefix: &str, storage_prefix: &str) -> Vec<u8> {
 			let mut bytes = sp_core::twox_128(module_prefix.as_bytes()).to_vec();
 			bytes.extend(&sp_core::twox_128(storage_prefix.as_bytes())[..]);
 			bytes
