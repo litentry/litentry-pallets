@@ -62,6 +62,7 @@ pub type HashByte32 = [u8; 32];
 #[derive(Encode, Decode, Clone, Copy, BitFlags, RuntimeDebug, PartialEq, Eq)]
 pub enum ClassProperty {
 	/// Token can be transferred
+/// SBPM2 Any specific reason to use specific values?
 	Transferable = 0b00000001,
 	/// Token can be burned
 	Burnable = 0b00000010,
@@ -73,6 +74,7 @@ pub struct Properties(pub BitFlags<ClassProperty>);
 
 impl Eq for Properties {}
 impl Encode for Properties {
+// SBPM2 ??
 	fn using_encoded<R, F: FnOnce(&[u8]) -> R>(&self, f: F) -> R {
 		self.0.bits().using_encoded(f)
 	}
@@ -105,6 +107,7 @@ pub struct TokenData {
 	/// if token is used to generate an advanced nft
 	pub used: bool,
 	/// 0 = common, otherwise say 1 = rare, 2 = super rare
+/// SBPM2 Use an enum would be clearer?
 	pub rarity: u8,
 }
 
@@ -231,6 +234,7 @@ pub mod pallet {
 		/// Emits `CreatedClass` event when successful.
 		#[pallet::weight(<T as Config>::WeightInfo::create_class())]
 		#[transactional]
+/// SBPM2 Still considered alpha, maybe do not rely on it too much
 		pub fn create_class(
 			origin: OriginFor<T>,
 			metadata: CID,
@@ -243,6 +247,7 @@ pub mod pallet {
 			let next_id = orml_nft::Pallet::<T>::next_class_id();
 
 			// TODO charge
+			/// SBMM2 charge what? :)
 
 			match class_type {
 				ClassType::Merge(id1, id2, burn) => {
@@ -311,6 +316,7 @@ pub mod pallet {
 		) -> DispatchResultWithPostInfo {
 			let who = ensure_signed(origin)?;
 			let to = T::Lookup::lookup(to)?;
+/// SBPM2 consider having a max for quantity?
 			ensure!(quantity >= 1, Error::<T>::InvalidQuantity);
 			let class_info =
 				orml_nft::Pallet::<T>::classes(class_id).ok_or(Error::<T>::ClassIdNotFound)?;
@@ -324,6 +330,7 @@ pub mod pallet {
 				ClassType::Simple(max_num) => {
 					let issued = class_info.total_issuance;
 					if TokenIdOf::<T>::from(quantity) + issued > TokenIdOf::<T>::from(max_num) {
+/// SBPM2 no risk of overflow?
 						Err(Error::<T>::QuantityOverflow)?
 					}
 				}
@@ -393,6 +400,7 @@ pub mod pallet {
 					bytes.append(&mut who.encode());
 					let computed_hash = keccak_256(&bytes);
 
+/// SBPM2 Can this be done before the mutate call?
 					// verify the proof
 					ensure!(
 						merkle_proof::proof_verify(&computed_hash, &proof, &merkle_root),
