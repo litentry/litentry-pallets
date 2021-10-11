@@ -385,11 +385,6 @@ pub mod pallet {
 						Error::<T>::TokenAlreadyClaimed
 					);
 
-					// push this user's index into already claimed list
-					ClaimedList::<T>::mutate(class_id, |claimed_vec| {
-						claimed_vec.push(index);
-					});
-
 					// calculate hash for this user
 					let mut bytes = index.encode();
 					bytes.append(&mut who.encode());
@@ -400,6 +395,11 @@ pub mod pallet {
 						merkle_proof::proof_verify(&computed_hash, &proof, &merkle_root),
 						Error::<T>::UserNotInClaimList
 					);
+
+					// push this user's index into already claimed list
+					ClaimedList::<T>::mutate(class_id, |claimed_vec| {
+						claimed_vec.push(index);
+					});
 				}
 
 				_ => Err(Error::<T>::WrongClassType)?,
