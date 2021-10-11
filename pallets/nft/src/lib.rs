@@ -332,7 +332,7 @@ pub mod pallet {
 			match class_info.data.class_type {
 				ClassType::Simple(max_num) => {
 					let issued = class_info.total_issuance;
-					if TokenIdOf::<T>::from(quantity) > TokenIdOf::<T>::from(max_num) - issued {
+					if TokenIdOf::<T>::from(quantity) > (TokenIdOf::<T>::from(max_num) - issued) {
 						Err(Error::<T>::QuantityOverflow)?
 					}
 				}
