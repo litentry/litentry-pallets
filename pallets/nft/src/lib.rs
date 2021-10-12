@@ -332,7 +332,7 @@ pub mod pallet {
 			match class_info.data.class_type {
 				ClassType::Simple(max_num) => {
 					let issued = class_info.total_issuance;
-					if TokenIdOf::<T>::from(quantity) + issued > TokenIdOf::<T>::from(max_num) {
+					if TokenIdOf::<T>::from(quantity) > (TokenIdOf::<T>::from(max_num) - issued) {
 						Err(Error::<T>::QuantityOverflow)?
 					}
 				}
@@ -385,11 +385,6 @@ pub mod pallet {
 						Error::<T>::TokenAlreadyClaimed
 					);
 
-					// push this user's index into already claimed list
-					ClaimedList::<T>::mutate(class_id, |claimed_vec| {
-						claimed_vec.push(index);
-					});
-
 					// calculate hash for this user
 					let mut bytes = index.encode();
 					bytes.append(&mut who.encode());
@@ -400,6 +395,11 @@ pub mod pallet {
 						merkle_proof::proof_verify(&computed_hash, &proof, &merkle_root),
 						Error::<T>::UserNotInClaimList
 					);
+
+					// push this user's index into already claimed list
+					ClaimedList::<T>::mutate(class_id, |claimed_vec| {
+						claimed_vec.push(index);
+					});
 				}
 
 				_ => Err(Error::<T>::WrongClassType)?,
