@@ -128,7 +128,7 @@ pub mod pallet {
 
 	#[pallet::call]
 	impl<T: Config> Pallet<T> {
-		/// Link an Ethereum address to a Litentry account providing a proof signature from the private key
+		/// Link an Ethereum address to the origin Litentry account providing a proof signature from the private key
 		/// of that Ethereum address.
 		///
 		/// The runtime needs to ensure that a malicious index can be handled correctly.
@@ -136,7 +136,6 @@ pub mod pallet {
 		/// Otherwise it will use the next new slot unless index is valid against a currently available slot.
 		///
 		/// Parameters:
-		/// - `account`: The Litentry address that is to be linked
 		/// - `index`: The index of the linked Ethereum address that the user wants to replace with.
 		/// - `addr_expected`: The intended Ethereum address to link to the origin's Litentry address
 		/// - `expiring_block_number`: The block number after which this link request will expire
@@ -146,13 +145,12 @@ pub mod pallet {
 		#[pallet::weight(T::WeightInfo::link_eth())]
 		pub fn link_eth(
 			origin: OriginFor<T>,
-			account: T::AccountId,
 			index: u32,
 			addr_expected: EthAddress,
 			expiring_block_number: T::BlockNumber,
 			sig: Signature,
 		) -> DispatchResultWithPostInfo {
-			let _ = ensure_signed(origin)?;
+			let account = ensure_signed(origin)?;
 
 			let current_block_number = <frame_system::Pallet<T>>::block_number();
 			ensure!(expiring_block_number > current_block_number, Error::<T>::LinkRequestExpired);
