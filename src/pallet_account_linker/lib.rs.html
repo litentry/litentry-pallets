@@ -364,8 +364,6 @@
 <span id="364">364</span>
 <span id="365">365</span>
 <span id="366">366</span>
-<span id="367">367</span>
-<span id="368">368</span>
 </pre><pre class="rust">
 <span class="doccomment">//! # AccountLinker Pallet</span>
 <span class="doccomment">//!</span>
@@ -497,7 +495,7 @@
 
 	<span class="attribute">#[<span class="ident">pallet::call</span>]</span>
 	<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Config</span><span class="op">&gt;</span> <span class="ident">Pallet</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
-		<span class="doccomment">/// Link an Ethereum address to a Litentry account providing a proof signature from the private key</span>
+		<span class="doccomment">/// Link an Ethereum address to the origin Litentry account providing a proof signature from the private key</span>
 		<span class="doccomment">/// of that Ethereum address.</span>
 		<span class="doccomment">///</span>
 		<span class="doccomment">/// The runtime needs to ensure that a malicious index can be handled correctly.</span>
@@ -505,7 +503,6 @@
 		<span class="doccomment">/// Otherwise it will use the next new slot unless index is valid against a currently available slot.</span>
 		<span class="doccomment">///</span>
 		<span class="doccomment">/// Parameters:</span>
-		<span class="doccomment">/// - `account`: The Litentry address that is to be linked</span>
 		<span class="doccomment">/// - `index`: The index of the linked Ethereum address that the user wants to replace with.</span>
 		<span class="doccomment">/// - `addr_expected`: The intended Ethereum address to link to the origin&#39;s Litentry address</span>
 		<span class="doccomment">/// - `expiring_block_number`: The block number after which this link request will expire</span>
@@ -515,13 +512,12 @@
 		<span class="attribute">#[<span class="ident">pallet::weight</span>(<span class="ident">T::WeightInfo::link_eth</span>())]</span>
 		<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">link_eth</span>(
 			<span class="ident">origin</span>: <span class="ident">OriginFor</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>,
-			<span class="ident">account</span>: <span class="ident">T::AccountId</span>,
 			<span class="ident">index</span>: <span class="ident">u32</span>,
 			<span class="ident">addr_expected</span>: <span class="ident">EthAddress</span>,
 			<span class="ident">expiring_block_number</span>: <span class="ident">T::BlockNumber</span>,
 			<span class="ident">sig</span>: <span class="ident">Signature</span>,
 		) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">DispatchResultWithPostInfo</span> {
-			<span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="ident">ensure_signed</span>(<span class="ident">origin</span>)<span class="question-mark">?</span>;
+			<span class="kw">let</span> <span class="ident">account</span> <span class="op">=</span> <span class="ident">ensure_signed</span>(<span class="ident">origin</span>)<span class="question-mark">?</span>;
 
 			<span class="kw">let</span> <span class="ident">current_block_number</span> <span class="op">=</span> <span class="op">&lt;</span><span class="ident">frame_system::Pallet</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::block_number</span>();
 			<span class="macro">ensure!</span>(<span class="ident">expiring_block_number</span> <span class="op">&gt;</span> <span class="ident">current_block_number</span>, <span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::LinkRequestExpired</span>);
