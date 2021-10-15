@@ -38,7 +38,6 @@ fn test_expired_block_number_eth() {
 		assert_noop!(
 			AccountLinker::link_eth(
 				Origin::signed(account.clone()),
-				account.clone(),
 				0,
 				key_pair.address().to_fixed_bytes(),
 				block_number,
@@ -64,7 +63,6 @@ fn test_invalid_expiring_block_number_eth() {
 		assert_noop!(
 			AccountLinker::link_eth(
 				Origin::signed(account.clone()),
-				account.clone(),
 				0,
 				key_pair.address().to_fixed_bytes(),
 				block_number,
@@ -90,7 +88,6 @@ fn test_unexpected_address_eth() {
 		assert_noop!(
 			AccountLinker::link_eth(
 				Origin::signed(account.clone()),
-				account.clone(),
 				0,
 				gen.generate().address().to_fixed_bytes(),
 				block_number,
@@ -120,7 +117,6 @@ fn test_insert_eth_address() {
 
 			assert_ok!(AccountLinker::link_eth(
 				Origin::signed(account.clone()),
-				account.clone(),
 				i as u32,
 				key_pair.address().to_fixed_bytes(),
 				block_number + i as u32,
@@ -155,7 +151,6 @@ fn test_update_eth_address() {
 
 			assert_ok!(AccountLinker::link_eth(
 				Origin::signed(account.clone()),
-				account.clone(),
 				i as u32,
 				key_pair.address().to_fixed_bytes(),
 				block_number + i as u32,
@@ -174,7 +169,6 @@ fn test_update_eth_address() {
 
 		assert_ok!(AccountLinker::link_eth(
 			Origin::signed(account.clone()),
-			account.clone(),
 			index,
 			key_pair.address().to_fixed_bytes(),
 			block_number,
@@ -204,7 +198,6 @@ fn test_eth_address_pool_overflow() {
 
 			assert_ok!(AccountLinker::link_eth(
 				Origin::signed(account.clone()),
-				account.clone(),
 				index as u32,
 				key_pair.address().to_fixed_bytes(),
 				block_number,
