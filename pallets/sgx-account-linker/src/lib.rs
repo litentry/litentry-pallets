@@ -137,6 +137,7 @@ pub mod pallet {
 		#[pallet::weight(T::WeightInfo::link_eth())]
 		pub fn link_eth(
 			origin: OriginFor<T>,
+			account: T::AccountId,
 			index: u32,
 			addr_expected: EthAddress,
 			layer_one_block_number: T::BlockNumber,
@@ -144,8 +145,10 @@ pub mod pallet {
 			sig: Signature,
 		) -> DispatchResultWithPostInfo {
 
-			let who = ensure_signed(origin)?;
-			Self::do_link_eth(who,
+			// in sgx runtime, the account who want to link ethereum address don't have the balance to
+			// submit extrinsic, the origin could be the root account
+			let _ = ensure_signed(origin)?;
+			Self::do_link_eth(account,
 				index,
 				addr_expected,
 				expiring_block_number,
@@ -164,12 +167,6 @@ pub mod pallet {
 			
 			bytes.append(&mut account_vec);
 			bytes.append(&mut expiring_block_number_vec);
-			bytes
-		}
-
-		fn storage_value_key(module_prefix: &str, storage_prefix: &str) -> Vec<u8> {
-			let mut bytes = sp_core::twox_128(module_prefix.as_bytes()).to_vec();
-			bytes.extend(&sp_core::twox_128(storage_prefix.as_bytes())[..]);
 			bytes
 		}
 
