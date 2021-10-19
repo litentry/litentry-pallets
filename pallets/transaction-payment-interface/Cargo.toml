@@ -8,10 +8,13 @@ name = 'pallet-transaction-payment-interface'
 repository = 'https://github.com/litentry/litentry-pallets'
 version = '0.0.1'
 
+[package.metadata.docs.rs]
+targets = ["x86_64-unknown-linux-gnu"]
+
 [dependencies]
-codec = { package = "parity-scale-codec", version = "2.3.0", default-features = false, features = ["derive", "max-encoded-len"] }
-serde = { version = "1.0.130", optional = true, features = ["derive"] }
-scale-info = { version = "1.0.0", default-features = false, features = ["derive"] }
+codec = { package = "parity-scale-codec", version = "2.0.0", default-features = false, features = ["derive", "max-encoded-len"] }
+serde = { version = "1.0.126", optional = true, features = ["derive"] }
+scale-info = { version = "1.0", default-features = false, features = ["derive"] }
 
 sp-std = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.11", default-features = false }
 sp-core = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.11", default-features = false }
