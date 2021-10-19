@@ -1,3 +1,5 @@
+#![cfg_attr(not(feature = "std"), no_std)]
+
 use frame_support::pallet_prelude::*;
 use frame_system::pallet_prelude::*;
 use frame_support::traits::{Currency, Imbalance, OnUnbalanced};
@@ -22,7 +24,7 @@ pub mod pallet {
 
     #[pallet::type_value]
 	pub fn RatioOnEmpty() -> (u32, u32, u32) {
-		(0, 0, 1)
+		(50, 30, 1)
 	}
 
     #[pallet::storage]
