@@ -32,6 +32,8 @@ pallet-treasury = { git = "https://github.com/paritytech/substrate", branch = "p
 pallet-authorship = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.11", default-features = false }
 pallet-balances = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.11", default-features = false }
 
+[dev-dependencies]
+smallvec = "1.7.0"
 
 [features]
 default = ["std"]
