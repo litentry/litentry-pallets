@@ -1,21 +1,26 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 
 use codec::{Decode, Encode};
-use frame_support::traits::{Currency, Imbalance, OnUnbalanced};
+use frame_support::traits::{Currency, ReservableCurrency, Imbalance, OnUnbalanced};
 
 pub type NegativeImbalance<T> = <pallet_balances::Pallet<T> as Currency<
 	<T as frame_system::Config>::AccountId,
 >>::NegativeImbalance;
 
+type BalanceOf<T> =
+	<<T as Config>::Currency as Currency<<T as frame_system::Config>::AccountId>>::Balance;
+
 pub use pallet::*;
 
 #[frame_support::pallet]
 pub mod pallet {
+	use super::*;
     use frame_support::pallet_prelude::*;
     use frame_system::pallet_prelude::*;
     #[pallet::config]
 	pub trait Config: frame_system::Config {
         type Event: From<Event<Self>> + IsType<<Self as frame_system::Config>::Event>;
+		type Currency: Currency<Self::AccountId>;
     }
 
     #[pallet::pallet]
@@ -24,7 +29,7 @@ pub mod pallet {
 
     #[pallet::type_value]
 	pub fn RatioOnEmpty() -> (u32, u32, u32) {
-		(50, 30, 1)
+		(50, 30, 20)
 	}
 
     #[pallet::storage]
@@ -32,15 +37,27 @@ pub mod pallet {
 	pub type Ratio<T: Config> =
 		StorageValue<_, (u32, u32, u32), ValueQuery, RatioOnEmpty>;
 
+	#[pallet::type_value]
+	pub fn FixBlockRewardOnEmpty<T: Config>() ->u32 {
+		0
+	}
+
+	#[pallet::storage]
+	#[pallet::getter(fn fix_block_reward)]
+	pub type FixBlockReward<T: Config> =
+		StorageValue<_, u32, ValueQuery>;
+
     #[pallet::event]
     #[pallet::generate_deposit(pub(super) fn deposit_event)]
     pub enum Event<T: Config> {
-        RatioChanged(u32, u32, u32),
+        SetRatio(u32, u32, u32),
+		SetFixBlockReward(u32),
     }
 
     #[pallet::error]
 	pub enum Error<T> {
         RatioOverflow,
+		BlockRewardTooLow,
     }
 
     
@@ -59,12 +76,30 @@ pub mod pallet {
             ensure_root(origin)?;
             if treasury_ratio + author_ratio + burned_ratio > 0 {
                 <Ratio<T>>::put((treasury_ratio, author_ratio, burned_ratio));
-                Self::deposit_event(Event::<T>::RatioChanged(treasury_ratio, author_ratio, burned_ratio));
+                Self::deposit_event(Event::<T>::SetRatio(treasury_ratio, author_ratio, burned_ratio));
                 Ok(())
             } else {
                 Err(Error::<T>::RatioOverflow.into())
             }
         }
+
+		#[pallet::weight(10)]
+		pub fn set_fix_block_reward(
+			origin: OriginFor<T>,
+			// block_reward: <T::Currency as Currency<T::AccountId>>::Balance,
+			block_reward: u32,
+		) -> DispatchResult {
+			ensure_root(origin)?;
+			
+			// Reward meet minimum_balance requirement of account existence
+			if BalanceOf::<T>::from(block_reward) < <T::Currency as Currency<T::AccountId>>::minimum_balance() {
+				return Err(Error::<T>::BlockRewardTooLow.into());
+			}
+
+			<FixBlockReward<T>>::put(block_reward);
+            Self::deposit_event(Event::<T>::SetFixBlockReward(block_reward));
+            Ok(())
+		}
 
     }
 
@@ -303,6 +338,7 @@ mod tests {
 
     impl pallet_transaction_payment_interface::Config for Runtime {
         type Event = Event;
+		type Currency = Balances;
     }
 
     parameter_types! {

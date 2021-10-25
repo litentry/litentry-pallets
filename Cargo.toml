@@ -1,6 +1,7 @@
 [workspace]
 members = [
     'pallets/transaction-payment-interface',
+    'pallets/collator-selection',
 ]
 
 [profile.dev]
