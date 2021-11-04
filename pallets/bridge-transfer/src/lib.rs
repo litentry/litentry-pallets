@@ -23,34 +23,21 @@ mod mock;
 mod tests;
 
 pub use pallet::*;
+
 #[frame_support::pallet]
 pub mod pallet {
-	use scale_info::TypeInfo;
-	use codec::{Decode, Encode};
 	use frame_support::{
 		fail,
 		pallet_prelude::*,
-		traits::{Currency, ExistenceRequirement, OnUnbalanced, StorageVersion},
+		traits::{Currency, ExistenceRequirement, StorageVersion},
 	};
 	use frame_system::pallet_prelude::*;
 	pub use pallet_bridge as bridge;
-	// use sp_core::U256;
-	use sp_std::prelude::*;
 
 	type ResourceId = bridge::ResourceId;
 
 	type BalanceOf<T> =
 		<<T as Config>::Currency as Currency<<T as frame_system::Config>::AccountId>>::Balance;
-
-	type NegativeImbalanceOf<T> = <<T as Config>::Currency as Currency<
-		<T as frame_system::Config>::AccountId,
-	>>::NegativeImbalance;
-
-	#[derive(PartialEq, Eq, Clone, Encode, Decode, RuntimeDebug, TypeInfo)]
-	pub struct AssetInfo {
-		pub dest_id: bridge::BridgeChainId,
-		pub asset_identity: Vec<u8>,
-	}
 
 	const STORAGE_VERSION: StorageVersion = StorageVersion::new(1);
 
@@ -71,9 +58,6 @@ pub mod pallet {
 
 		#[pallet::constant]
 		type NativeTokenResourceId: Get<ResourceId>;
-
-		/// The handler to absorb the fee.
-		type OnFeePay: OnUnbalanced<NegativeImbalanceOf<Self>>;
 	}
 
 	#[pallet::event]
@@ -85,17 +69,8 @@ pub mod pallet {
 	#[pallet::error]
 	pub enum Error<T> {
 		InvalidCommand,
-		InsufficientBalance,
+		InvalidResourceId,
 	}
-
-	#[pallet::storage]
-	#[pallet::getter(fn bridge_fee)]
-	pub type BridgeFee<T: Config> =
-		StorageMap<_, Twox64Concat, bridge::BridgeChainId, (BalanceOf<T>, u32), ValueQuery>;
-
-	#[pallet::storage]
-	#[pallet::getter(fn bridge_assets)]
-	pub type BridgeAssets<T: Config> = StorageMap<_, Twox64Concat, bridge::ResourceId, AssetInfo>;
 
 	#[pallet::storage]
 	#[pallet::getter(fn bridge_balances)]
@@ -132,6 +107,9 @@ pub mod pallet {
 					amount,
 					ExistenceRequirement::AllowDeath,
 				)?;
+			} else {
+				return Err(Error::<T>::InvalidResourceId.into())
+				
 			}
 
 			Ok(())
@@ -139,8 +117,6 @@ pub mod pallet {
 	}
 
 	impl<T: Config> Pallet<T> {
-		// pub fn asset_balance(asset: &bridge::ResourceId, who: &T::AccountId) -> BalanceOf<T> {
-		// 	BridgeBalances::<T>::get(asset, who).unwrap_or_default()
-		// }
+		
 	}
 }

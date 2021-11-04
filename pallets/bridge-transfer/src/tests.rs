@@ -108,20 +108,8 @@ fn transfer_to_regular_account() {
 				amount,
 				asset,
 			),
-			Error::<Test>::InsufficientBalance
+			Error::<Test>::InvalidResourceId
 		);
-
-		// transfer to regular account, would withdraw from holding account then deposit to
-		// the regular account
-		assert_ok!(BridgeTransfer::transfer(
-			Origin::signed(Bridge::account_id()),
-			RELAYER_A,
-			amount,
-			asset,
-		));
-
-		// assert_eq!(BridgeTransfer::asset_balance(&asset, &bridge_id), amount);
-		// assert_eq!(BridgeTransfer::asset_balance(&asset, &RELAYER_A), amount);
 	})
 }
 

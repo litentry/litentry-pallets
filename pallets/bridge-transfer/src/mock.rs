@@ -119,7 +119,7 @@ impl bridge::Config for Test {
 
 parameter_types! {
 	// bridge::derive_resource_id(1, &bridge::hashing::blake2_128(b"LIT"));
-	pub const NativeTokenResourceId: [u8; 32] = hex!("00000000000000000000000000000063a7e2be78898ba83824b0c0cc8dfb6001");
+	pub const NativeTokenResourceId: [u8; 32] = hex!("0000000000000000000000000000000a21dfe87028f214dd976be8479f5af001");
 }
 
 impl Config for Test {
@@ -127,7 +127,6 @@ impl Config for Test {
 	type BridgeOrigin = bridge::EnsureBridge<Test>;
 	type Currency = Balances;
 	type NativeTokenResourceId = NativeTokenResourceId;
-	type OnFeePay = ();
 }
 
 parameter_types! {
@@ -148,7 +147,7 @@ pub const RELAYER_C: u64 = 0x4;
 pub const ENDOWED_BALANCE: u64 = 100_000_000;
 
 pub fn new_test_ext() -> sp_io::TestExternalities {
-	let bridge_id = PalletId(*b"phala/bg").into_account();
+	let bridge_id = PalletId(*b"litry/bg").into_account();
 	let mut t = frame_system::GenesisConfig::default()
 		.build_storage::<Test>()
 		.unwrap();

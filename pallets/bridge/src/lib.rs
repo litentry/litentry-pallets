@@ -28,7 +28,6 @@ pub use pallet::*;
 #[frame_support::pallet]
 pub mod pallet {
 	use scale_info::TypeInfo;
-	use super::*;
 	use frame_support::pallet_prelude::*;
 	use frame_system::pallet_prelude::*;
 
@@ -466,11 +465,11 @@ pub mod pallet {
 		}
 
 		/// Increments the deposit nonce for the specified chain ID
-		fn bump_nonce(id: BridgeChainId) -> DepositNonce {
-			let nonce = Self::chains(id).unwrap_or_default() + 1;
-			ChainNonces::<T>::insert(id, nonce);
-			nonce
-		}
+		// fn bump_nonce(id: BridgeChainId) -> DepositNonce {
+		// 	let nonce = Self::chains(id).unwrap_or_default() + 1;
+		// 	ChainNonces::<T>::insert(id, nonce);
+		// 	nonce
+		// }
 
 		// *** Admin methods ***
 
