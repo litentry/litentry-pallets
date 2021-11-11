@@ -1,27 +1,30 @@
 // Copyright 2020-2021 Litentry Technologies GmbH.
 // This file is part of Litentry.
-// 
+//
 // Litentry is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-// 
+//
 // Litentry is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with Litentry.  If not, see <https://www.gnu.org/licenses/>.
 
 #![cfg(test)]
 
-use super::mock::{
-	assert_events, new_test_ext, new_test_ext_initialized, Balances, Bridge, Call, Event, Origin,
-	ProposalLifetime, System, Test, TestChainId, ENDOWED_BALANCE, RELAYER_A, RELAYER_B, RELAYER_C,
-	TEST_THRESHOLD,
+use super::{
+	mock::{
+		assert_events, new_test_ext, new_test_ext_initialized, Balances, Bridge, Call, Event,
+		Origin, ProposalLifetime, System, Test, TestChainId, ENDOWED_BALANCE, RELAYER_A, RELAYER_B,
+		RELAYER_C, TEST_THRESHOLD,
+	},
+	pallet::Event as PalletEvent,
+	*,
 };
-use super::{pallet::Event as PalletEvent, *};
 use frame_support::{assert_noop, assert_ok};
 use frame_system as system;
 
@@ -140,7 +143,6 @@ fn set_get_threshold() {
 	})
 }
 
-
 #[test]
 fn add_remove_relayer() {
 	new_test_ext().execute_with(|| {
@@ -177,7 +179,7 @@ fn add_remove_relayer() {
 }
 
 fn make_proposal(remark: Vec<u8>) -> Call {
-	Call::System(system::Call::remark{remark})
+	Call::System(system::Call::remark { remark })
 }
 
 #[test]
@@ -311,10 +313,7 @@ fn create_unsucessful_proposal() {
 		assert_eq!(prop, expected);
 
 		assert_eq!(Balances::free_balance(RELAYER_B), 0);
-		assert_eq!(
-			Balances::free_balance(Bridge::account_id()),
-			ENDOWED_BALANCE
-		);
+		assert_eq!(Balances::free_balance(Bridge::account_id()), ENDOWED_BALANCE);
 
 		assert_events(vec![
 			Event::Bridge(PalletEvent::VoteFor(src_id, prop_id, RELAYER_A)),
@@ -372,10 +371,7 @@ fn execute_after_threshold_change() {
 		assert_eq!(prop, expected);
 
 		assert_eq!(Balances::free_balance(RELAYER_B), 0);
-		assert_eq!(
-			Balances::free_balance(Bridge::account_id()),
-			ENDOWED_BALANCE
-		);
+		assert_eq!(Balances::free_balance(Bridge::account_id()), ENDOWED_BALANCE);
 
 		assert_events(vec![
 			Event::Bridge(PalletEvent::VoteFor(src_id, prop_id, RELAYER_A)),
@@ -456,8 +452,6 @@ fn proposal_expires() {
 		};
 		assert_eq!(prop, expected);
 
-		assert_events(vec![Event::Bridge(PalletEvent::VoteFor(
-			src_id, prop_id, RELAYER_A,
-		))]);
+		assert_events(vec![Event::Bridge(PalletEvent::VoteFor(src_id, prop_id, RELAYER_A))]);
 	})
 }

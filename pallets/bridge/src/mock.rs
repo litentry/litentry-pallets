@@ -1,16 +1,16 @@
 // Copyright 2020-2021 Litentry Technologies GmbH.
 // This file is part of Litentry.
-// 
+//
 // Litentry is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-// 
+//
 // Litentry is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with Litentry.  If not, see <https://www.gnu.org/licenses/>.
 
@@ -122,14 +122,10 @@ pub const TEST_THRESHOLD: u32 = 2;
 
 pub fn new_test_ext() -> sp_io::TestExternalities {
 	let bridge_id = PalletId(*b"litry/bg").into_account();
-	let mut t = frame_system::GenesisConfig::default()
-		.build_storage::<Test>()
+	let mut t = frame_system::GenesisConfig::default().build_storage::<Test>().unwrap();
+	pallet_balances::GenesisConfig::<Test> { balances: vec![(bridge_id, ENDOWED_BALANCE)] }
+		.assimilate_storage(&mut t)
 		.unwrap();
-	pallet_balances::GenesisConfig::<Test> {
-		balances: vec![(bridge_id, ENDOWED_BALANCE)],
-	}
-	.assimilate_storage(&mut t)
-	.unwrap();
 	let mut ext = sp_io::TestExternalities::new(t);
 	ext.execute_with(|| System::set_block_number(1));
 	ext
@@ -161,10 +157,8 @@ pub fn new_test_ext_initialized(
 // Checks events against the latest. A contiguous set of events must be provided. They must
 // include the most recent event, but do not have to include every past event.
 pub fn assert_events(mut expected: Vec<Event>) {
-	let mut actual: Vec<Event> = system::Pallet::<Test>::events()
-		.iter()
-		.map(|e| e.event.clone())
-		.collect();
+	let mut actual: Vec<Event> =
+		system::Pallet::<Test>::events().iter().map(|e| e.event.clone()).collect();
 
 	expected.reverse();
 

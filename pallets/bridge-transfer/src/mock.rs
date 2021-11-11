@@ -1,16 +1,16 @@
 // Copyright 2020-2021 Litentry Technologies GmbH.
 // This file is part of Litentry.
-// 
+//
 // Litentry is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-// 
+//
 // Litentry is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with Litentry.  If not, see <https://www.gnu.org/licenses/>.
 
@@ -148,9 +148,7 @@ pub const ENDOWED_BALANCE: u64 = 100_000_000;
 
 pub fn new_test_ext() -> sp_io::TestExternalities {
 	let bridge_id = PalletId(*b"litry/bg").into_account();
-	let mut t = frame_system::GenesisConfig::default()
-		.build_storage::<Test>()
-		.unwrap();
+	let mut t = frame_system::GenesisConfig::default().build_storage::<Test>().unwrap();
 	pallet_balances::GenesisConfig::<Test> {
 		balances: vec![(bridge_id, ENDOWED_BALANCE), (RELAYER_A, ENDOWED_BALANCE)],
 	}
@@ -162,10 +160,7 @@ pub fn new_test_ext() -> sp_io::TestExternalities {
 }
 
 fn last_event() -> Event {
-	system::Pallet::<Test>::events()
-		.pop()
-		.map(|e| e.event)
-		.expect("Event expected")
+	system::Pallet::<Test>::events().pop().map(|e| e.event).expect("Event expected")
 }
 
 pub fn expect_event<E: Into<Event>>(e: E) {
@@ -174,16 +169,14 @@ pub fn expect_event<E: Into<Event>>(e: E) {
 
 // Asserts that the event was emitted at some point.
 pub fn event_exists<E: Into<Event>>(e: E) {
-	let actual: Vec<Event> = system::Pallet::<Test>::events()
-		.iter()
-		.map(|e| e.event.clone())
-		.collect();
+	let actual: Vec<Event> =
+		system::Pallet::<Test>::events().iter().map(|e| e.event.clone()).collect();
 	let e: Event = e.into();
 	let mut exists = false;
 	for evt in actual {
 		if evt == e {
 			exists = true;
-			break;
+			break
 		}
 	}
 	assert!(exists);
@@ -192,10 +185,8 @@ pub fn event_exists<E: Into<Event>>(e: E) {
 // Checks events against the latest. A contiguous set of events must be provided. They must
 // include the most recent event, but do not have to include every past event.
 pub fn assert_events(mut expected: Vec<Event>) {
-	let mut actual: Vec<Event> = system::Pallet::<Test>::events()
-		.iter()
-		.map(|e| e.event.clone())
-		.collect();
+	let mut actual: Vec<Event> =
+		system::Pallet::<Test>::events().iter().map(|e| e.event.clone()).collect();
 
 	expected.reverse();
 

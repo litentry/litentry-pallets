@@ -1,16 +1,16 @@
 // Copyright 2020-2021 Litentry Technologies GmbH.
 // This file is part of Litentry.
-// 
+//
 // Litentry is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-// 
+//
 // Litentry is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with Litentry.  If not, see <https://www.gnu.org/licenses/>.
 
@@ -27,9 +27,9 @@ pub use pallet::*;
 
 #[frame_support::pallet]
 pub mod pallet {
-	use scale_info::TypeInfo;
 	use frame_support::pallet_prelude::*;
 	use frame_system::pallet_prelude::*;
+	use scale_info::TypeInfo;
 
 	use codec::{Decode, Encode, EncodeLike};
 	pub use frame_support::{
@@ -37,8 +37,10 @@ pub mod pallet {
 	};
 	use frame_system::{self as system, pallet_prelude::*};
 	pub use sp_core::U256;
-	use sp_runtime::traits::{AccountIdConversion, Dispatchable};
-	use sp_runtime::RuntimeDebug;
+	use sp_runtime::{
+		traits::{AccountIdConversion, Dispatchable},
+		RuntimeDebug,
+	};
 	use sp_std::prelude::*;
 
 	const DEFAULT_RELAYER_THRESHOLD: u32 = 1;
@@ -78,14 +80,7 @@ pub mod pallet {
 	#[derive(PartialEq, Eq, Clone, Encode, Decode, RuntimeDebug, TypeInfo)]
 	pub enum BridgeEvent {
 		FungibleTransfer(BridgeChainId, DepositNonce, ResourceId, U256, Vec<u8>),
-		NonFungibleTransfer(
-			BridgeChainId,
-			DepositNonce,
-			ResourceId,
-			Vec<u8>,
-			Vec<u8>,
-			Vec<u8>,
-		),
+		NonFungibleTransfer(BridgeChainId, DepositNonce, ResourceId, Vec<u8>, Vec<u8>, Vec<u8>),
 		GenericTransfer(BridgeChainId, DepositNonce, ResourceId, Vec<u8>),
 	}
 
@@ -171,14 +166,7 @@ pub mod pallet {
 		/// FungibleTransfer is for relaying fungibles (dest_id, nonce, resource_id, amount, recipient)
 		FungibleTransfer(BridgeChainId, DepositNonce, ResourceId, U256, Vec<u8>),
 		/// NonFungibleTransfer is for relaying NFTs (dest_id, nonce, resource_id, token_id, recipient, metadata)
-		NonFungibleTransfer(
-			BridgeChainId,
-			DepositNonce,
-			ResourceId,
-			Vec<u8>,
-			Vec<u8>,
-			Vec<u8>,
-		),
+		NonFungibleTransfer(BridgeChainId, DepositNonce, ResourceId, Vec<u8>, Vec<u8>, Vec<u8>),
 		/// GenericTransfer is for a generic data payload (dest_id, nonce, resource_id, metadata)
 		GenericTransfer(BridgeChainId, DepositNonce, ResourceId, Vec<u8>),
 		/// Vote submitted in favour of proposal
@@ -377,14 +365,8 @@ pub mod pallet {
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?;
 			ensure!(Self::is_relayer(&who), Error::<T>::MustBeRelayer);
-			ensure!(
-				Self::chain_whitelisted(src_id),
-				Error::<T>::ChainNotWhitelisted
-			);
-			ensure!(
-				Self::resource_exists(r_id),
-				Error::<T>::ResourceDoesNotExist
-			);
+			ensure!(Self::chain_whitelisted(src_id), Error::<T>::ChainNotWhitelisted);
+			ensure!(Self::resource_exists(r_id), Error::<T>::ResourceDoesNotExist);
 
 			Self::vote_for(who, nonce, src_id, call)
 		}
@@ -404,14 +386,8 @@ pub mod pallet {
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?;
 			ensure!(Self::is_relayer(&who), Error::<T>::MustBeRelayer);
-			ensure!(
-				Self::chain_whitelisted(src_id),
-				Error::<T>::ChainNotWhitelisted
-			);
-			ensure!(
-				Self::resource_exists(r_id),
-				Error::<T>::ResourceDoesNotExist
-			);
+			ensure!(Self::chain_whitelisted(src_id), Error::<T>::ChainNotWhitelisted);
+			ensure!(Self::resource_exists(r_id), Error::<T>::ResourceDoesNotExist);
 
 			Self::vote_against(who, nonce, src_id, call)
 		}
@@ -464,13 +440,6 @@ pub mod pallet {
 			Self::chains(id).is_some()
 		}
 
-		/// Increments the deposit nonce for the specified chain ID
-		// fn bump_nonce(id: BridgeChainId) -> DepositNonce {
-		// 	let nonce = Self::chains(id).unwrap_or_default() + 1;
-		// 	ChainNonces::<T>::insert(id, nonce);
-		// 	nonce
-		// }
-
 		// *** Admin methods ***
 
 		/// Set a new voting threshold
@@ -498,10 +467,7 @@ pub mod pallet {
 			// Cannot whitelist this chain
 			ensure!(id != T::BridgeChainId::get(), Error::<T>::InvalidChainId);
 			// Cannot whitelist with an existing entry
-			ensure!(
-				!Self::chain_whitelisted(id),
-				Error::<T>::ChainAlreadyWhitelisted
-			);
+			ensure!(!Self::chain_whitelisted(id), Error::<T>::ChainAlreadyWhitelisted);
 			ChainNonces::<T>::insert(&id, 0);
 			Self::deposit_event(Event::ChainWhitelisted(id));
 			Ok(())
@@ -509,10 +475,7 @@ pub mod pallet {
 
 		/// Adds a new relayer to the set
 		pub fn register_relayer(relayer: T::AccountId) -> DispatchResult {
-			ensure!(
-				!Self::is_relayer(&relayer),
-				Error::<T>::RelayerAlreadyExists
-			);
+			ensure!(!Self::is_relayer(&relayer), Error::<T>::RelayerAlreadyExists);
 			Relayers::<T>::insert(&relayer, true);
 			RelayerCount::<T>::mutate(|i| *i += 1);
 
@@ -542,12 +505,8 @@ pub mod pallet {
 			let now = <frame_system::Pallet<T>>::block_number();
 			let mut votes = match Votes::<T>::get(src_id, (nonce, prop.clone())) {
 				Some(v) => v,
-				None => {
-					ProposalVotes {
-						expiry: now + T::ProposalLifetime::get(),
-						..Default::default()
-					}
-				}
+				None =>
+					ProposalVotes { expiry: now + T::ProposalLifetime::get(), ..Default::default() },
 			};
 
 			// Ensure the proposal isn't complete and relayer hasn't already voted
