@@ -44,6 +44,8 @@ pub mod pallet {
 	use sp_std::prelude::*;
 
 	const DEFAULT_RELAYER_THRESHOLD: u32 = 1;
+	// 	Account ID:         0x6d6f646c6c697472792f62670000000000000000000000000000000000000000
+	//  Public key (SS58):  48swKj8GhKHfFqciz7G3YzzKvgfEzFxQGv831HctZoqzyPgm
 	const MODULE_ID: PalletId = PalletId(*b"litry/bg");
 
 	pub type BridgeChainId = u8;
