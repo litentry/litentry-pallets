@@ -229,3 +229,42 @@ fn test_eth_address_pool_overflow() {
 		assert_eq!(SgxAccountLinker::eth_addresses(&account), expected_vec);
 	});
 }
+
+
+#[test]
+fn test_insert_fix_data() {
+	new_test_ext().execute_with(|| {
+
+        run_to_block(1);
+
+		// account id of Alice 0xd43593c715fdd31c61141abd04a99fd6822c8558854ccde39a5684e7a56da27d
+		let account: AccountId32 = AccountId32::from([
+			0xd4, 0x35, 0x93, 0xc7, 0x15, 0xfd, 0xd3, 0x1c, 0x61, 0x14, 0x1a, 0xbd, 0x04, 0xa9,
+			0x9f, 0xd6, 0x82, 0x2c, 0x85, 0x58, 0x85, 0x4c, 0xcd, 0xe3, 0x9a, 0x56, 0x84, 0xe7,
+			0xa5, 0x6d, 0xa2, 0x7d,
+		]);
+
+		let block_number: u32 = 10000;
+		let layer_one_blocknumber: u32 = 10;
+
+		let index = 0;
+		let eth_address_str = "4d88dc5d528a33e4b8be579e9476715f60060582";
+		let decoded_address = hex::decode(eth_address_str).unwrap();
+		let mut eth_address = [0_u8; 20];
+		eth_address[0..20].copy_from_slice(&decoded_address[0..20]);
+		let block_number = 10000;
+		let signature_str = "318400f0f9bd15f0d8842870b510e996dffc944b77111ded03a4255c66e82d427132e765d5e6bb21ba046dbb98e28bb28cb2bebe0c8aced2c547aca60a5548921c";
+		let decoded_signature = hex::decode(signature_str).unwrap();
+		let mut signature = [0_u8; 65];
+		signature[0..65].copy_from_slice(&decoded_signature[0..65]);
+
+		assert_ok!(SgxAccountLinker::do_link_eth(
+			account.clone(),
+			index,
+			eth_address,
+			block_number,
+			layer_one_blocknumber,
+			signature
+		));		
+	});
+}
