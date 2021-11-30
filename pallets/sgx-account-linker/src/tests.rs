@@ -252,7 +252,6 @@ fn test_insert_fix_data() {
 		let decoded_address = hex::decode(eth_address_str).unwrap();
 		let mut eth_address = [0_u8; 20];
 		eth_address[0..20].copy_from_slice(&decoded_address[0..20]);
-		let block_number = 10000;
 		let signature_str = "318400f0f9bd15f0d8842870b510e996dffc944b77111ded03a4255c66e82d427132e765d5e6bb21ba046dbb98e28bb28cb2bebe0c8aced2c547aca60a5548921c";
 		let decoded_signature = hex::decode(signature_str).unwrap();
 		let mut signature = [0_u8; 65];
