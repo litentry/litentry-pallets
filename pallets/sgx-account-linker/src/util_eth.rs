@@ -1,47 +1,9 @@
-use codec::{Encode, Decode};
+use codec::Encode;
 use sp_std::prelude::*;
-use tiny_keccak::{Hasher, Keccak};
 
-#[derive(Encode, Decode)]
-pub enum EcdsaVerifyError {
-	/// Incorrect value of R or S
-	BadRS,
-	/// Incorrect value of V
-	BadV,
-	/// Invalid signature
-	BadSignature,
-}
-
-// copy the same code from substrate, since sp_io in sgx not support it
-fn secp256k1_ecdsa_recover(
-	sig: &[u8; 65],
-	msg: &[u8; 32],
-) -> Result<[u8; 64], EcdsaVerifyError> {
-	let rs = libsecp256k1::Signature::parse_standard_slice(&sig[0..64])
-		.map_err(|_| EcdsaVerifyError::BadRS)?;
-	let v = libsecp256k1::RecoveryId::parse(
-		if sig[64] > 26 { sig[64] - 27 } else { sig[64] } as u8
-	)
-	.map_err(|_| EcdsaVerifyError::BadV)?;
-	let pubkey = libsecp256k1::recover(&libsecp256k1::Message::parse(msg), &rs, &v)
-		.map_err(|_| EcdsaVerifyError::BadSignature)?;
-	let mut res = [0u8; 64];
-	res.copy_from_slice(&pubkey.serialize()[1..65]);
-	Ok(res)
-}
-
-/// Do a keccak 256-bit hash and return result.
-pub fn keccak_256(data: &[u8]) -> [u8; 32] {
-	let mut keccak = Keccak::v256();
-	keccak.update(data);
-	let mut output = [0u8; 32];
-	keccak.finalize(&mut output);
-	output
-}
-
-pub fn addr_from_sig(msg: [u8; 32], sig: [u8; 65]) -> Result<[u8; 20], EcdsaVerifyError> {
-	let pubkey = secp256k1_ecdsa_recover(&sig, &msg)?;
-	let hashed_pk = keccak_256(&pubkey);
+pub fn addr_from_sig(msg: [u8; 32], sig: [u8; 65]) -> Result<[u8; 20], sp_io::EcdsaVerifyError> {
+	let pubkey = sp_io::crypto::secp256k1_ecdsa_recover(&sig, &msg)?;
+	let hashed_pk = sp_io::hashing::keccak_256(&pubkey);
 
 	let mut addr = [0u8; 20];
 	addr[..20].copy_from_slice(&hashed_pk[12..32]);
@@ -61,7 +23,7 @@ pub fn eth_data_hash(mut data: Vec<u8>) -> Result<[u8; 32], &'static str> {
 	let mut eth_data = b"\x19Ethereum Signed Message:\n".encode();
 	eth_data.append(&mut length_bytes);
 	eth_data.append(&mut data);
-	Ok(keccak_256(&eth_data))
+	Ok(sp_io::hashing::keccak_256(&eth_data))
 }
 
 /// Convert a usize type to a u8 array.
@@ -95,7 +57,7 @@ mod tests {
 	pub fn eth_data_hash_test_helper(mut data: Vec<u8>) -> [u8; 32] {
 		let mut message_data = format!("\x19Ethereum Signed Message:\n{}", data.len()).into_bytes();
 		message_data.append(&mut data);
-		keccak_256(&message_data)
+		sp_io::hashing::keccak_256(&message_data)
 	}
 
 	#[test]
