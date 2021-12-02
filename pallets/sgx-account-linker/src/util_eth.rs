@@ -1,6 +1,6 @@
 use codec::{Encode, Decode};
 use sp_std::prelude::*;
-// use tiny_keccak::{Hasher, Keccak};
+use tiny_keccak::{Hasher, Keccak};
 
 #[derive(Encode, Decode)]
 pub enum EcdsaVerifyError {
@@ -31,13 +31,12 @@ fn secp256k1_ecdsa_recover(
 }
 
 /// Do a keccak 256-bit hash and return result.
-pub fn keccak_256(_data: &[u8]) -> [u8; 32] {
-	[0_u8; 32]
-	// let mut keccak = Keccak::v256();
-	// keccak.update(data);
-	// let mut output = [0u8; 32];
-	// keccak.finalize(&mut output);
-	// output
+pub fn keccak_256(data: &[u8]) -> [u8; 32] {
+	let mut keccak = Keccak::v256();
+	keccak.update(data);
+	let mut output = [0u8; 32];
+	keccak.finalize(&mut output);
+	output
 }
 
 pub fn addr_from_sig(msg: [u8; 32], sig: [u8; 65]) -> Result<[u8; 20], EcdsaVerifyError> {
@@ -62,7 +61,7 @@ pub fn eth_data_hash(mut data: Vec<u8>) -> Result<[u8; 32], &'static str> {
 	let mut eth_data = b"\x19Ethereum Signed Message:\n".encode();
 	eth_data.append(&mut length_bytes);
 	eth_data.append(&mut data);
-	Ok(sp_io::hashing::keccak_256(&eth_data))
+	Ok(keccak_256(&eth_data))
 }
 
 /// Convert a usize type to a u8 array.
