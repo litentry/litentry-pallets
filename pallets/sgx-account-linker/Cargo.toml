@@ -68,8 +68,8 @@ log = { version = "0.4.14", default-features = false }
 sha2 = { default-features = false, version = "0.9.5" }
 ripemd160 = {default-features = false, version = "0.9.1" }
 scale-info = { version = "1.0", default-features = false, features = ["derive"] }
-libsecp256k1 = { version = "0.6", optional = true }
-tiny-keccak = { version = "2.0.1", features = ["keccak"], optional = true }
+libsecp256k1 = { version = "0.6" }
+tiny-keccak = { version = "2.0.1", features = ["keccak"] }
 
 [dev-dependencies]
 
@@ -91,6 +91,5 @@ std = [
     "ripemd160/std",
     "log/std",
     "scale-info/std",
-    "libsecp256k1",
-    "tiny-keccak",
+    "libsecp256k1/std",
 ]

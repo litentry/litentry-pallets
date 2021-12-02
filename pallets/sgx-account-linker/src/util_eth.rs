@@ -95,7 +95,7 @@ mod tests {
 	pub fn eth_data_hash_test_helper(mut data: Vec<u8>) -> [u8; 32] {
 		let mut message_data = format!("\x19Ethereum Signed Message:\n{}", data.len()).into_bytes();
 		message_data.append(&mut data);
-		sp_io::hashing::keccak_256(&message_data)
+		keccak_256(&message_data)
 	}
 
 	#[test]
