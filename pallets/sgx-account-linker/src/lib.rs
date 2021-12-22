@@ -112,6 +112,10 @@ pub mod pallet {
         WrongPendingRequest,
         // Can't get layer one block number
         LayerOneBlockNumberNotAvailable,
+        // Signature is wrong
+        WrongSignature,
+        // Expected AccountId is [u8; 32]
+        UnexpectedAccountId,
     }
 
     #[pallet::hooks]
@@ -182,7 +186,18 @@ pub mod pallet {
             )
         }
 
-		// TODO will update weight when do the benchmark testing
+        /// Accept a pending `link_polkadot` request to link a Litentry address (= any account in Polkadot ecosystem)
+        /// to another Litentry address (= any account in Polkadot ecosystem).
+        ///
+        /// The runtime needs to ensure that a malicious index can be handled correctly.
+        /// Currently, when vec.len > MAX_ETH_LINKS, replacement will always happen at the final index.
+        /// Otherwise it will use the next new slot unless index is valid against a currently available slot.
+        ///
+        /// Parameters:
+        /// - `account`: The Litentry address that is to be linked
+        ///
+        /// Emits `PolkadotAddressLinked` event when successful.
+        // TODO will update weight when do the benchmark testing
         #[pallet::weight(T::WeightInfo::link_eth())]
         pub fn link_sub(
             origin: OriginFor<T>,
@@ -322,13 +337,15 @@ pub mod pallet {
                 expiring_block_number,
             );
 
+            // get the public key
             let msg = sp_io::hashing::keccak_256(&bytes);
             let account_vec = linked_account.encode();
-            ensure!(account_vec.len() == 32, Error::<T>::UnexpectedAddress);
+            ensure!(account_vec.len() == 32, Error::<T>::UnexpectedAccountId);
 
             let mut public_key = [0u8; 32];
             public_key[..32].copy_from_slice(&account_vec[..32]);
 
+            // verify signature according to encryption type
             match multi_sig {
                 MultiSignature::Sr25519Signature(sig) => {
                     ensure!(
@@ -337,7 +354,7 @@ pub mod pallet {
                             &msg,
                             &sr25519::Public(public_key)
                         ),
-                        Error::<T>::UnexpectedAddress
+                        Error::<T>::WrongSignature
                     );
                 }
                 MultiSignature::Ed25519Signature(sig) => {
@@ -347,7 +364,7 @@ pub mod pallet {
                             &msg,
                             &ed25519::Public(public_key)
                         ),
-                        Error::<T>::UnexpectedAddress
+                        Error::<T>::WrongSignature
                     );
                 }
                 MultiSignature::EthereumSignature(sig) => {
@@ -355,27 +372,27 @@ pub mod pallet {
                         .map_err(|_| Error::<T>::UnexpectedAddress)?;
                     let hashed_pk = sp_io::hashing::keccak_256(&recovered_public_key);
 
-                    ensure!(public_key == hashed_pk, Error::<T>::UnexpectedAddress);
-                    
+                    ensure!(public_key == hashed_pk, Error::<T>::WrongSignature);
                 }
             }
 
-			let new_address = LinkedSubAccount {
-				network_type: network_type,
-				parachain_id: parachain_id,
-				account_id: linked_account,
-			};
+            let new_address = LinkedSubAccount {
+                network_type: network_type,
+                parachain_id: parachain_id,
+                account_id: linked_account,
+            };
 
-			PolkadotLink::<T>::mutate(&account, |addrs| {
-				let index = index as usize;
-				if (index >= addrs.len()) && (addrs.len() != MAX_POLKADOT_LINKS) {
-					addrs.push(new_address.clone());
-				} else if (index >= addrs.len()) && (addrs.len() == MAX_POLKADOT_LINKS) {
-					addrs[MAX_POLKADOT_LINKS - 1] = new_address.clone();
-				} else {
-					addrs[index] = new_address.clone();
-				}
-			});
+            // insert new linked account into storage
+            PolkadotLink::<T>::mutate(&account, |addrs| {
+                let index = index as usize;
+                if (index >= addrs.len()) && (addrs.len() != MAX_POLKADOT_LINKS) {
+                    addrs.push(new_address.clone());
+                } else if (index >= addrs.len()) && (addrs.len() == MAX_POLKADOT_LINKS) {
+                    addrs[MAX_POLKADOT_LINKS - 1] = new_address.clone();
+                } else {
+                    addrs[index] = new_address.clone();
+                }
+            });
 
             Self::deposit_event(Event::PolkadotAddressLinked(account, new_address));
 
