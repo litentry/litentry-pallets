@@ -17,9 +17,7 @@
 //! from the private key of that Ethereum address.
 //! * `link_btc` - Link an BTC address to a Litentry account providing a proof signature
 //! from the private key of that BTC address.
-//! * `link_polkadot` - Initiate a link request to link a Litentry address to another Litentry address
-//! * `accept_polkadot` - Accept a pending `link_polkadot` request to link a Litentry address
-//! to another Litentry address.
+//! * `link_sub` - Initiate a link request to link a substrate based address to Litentry address
 //!
 //! [`Call`]: ./enum.Call.html
 //! [`Config`]: ./trait.Config.html
@@ -55,12 +53,14 @@ pub mod pallet {
     pub const EXPIRING_BLOCK_NUMBER_MAX: u32 = 10 * 60 * 24 * 30; // 30 days for 6s per block
     pub const MAX_ETH_LINKS: usize = 3;
     pub const MAX_BTC_LINKS: usize = 3;
-    pub const MAX_POLKADOT_LINKS: usize = 3;
+    pub const MAX_SUB_LINKS: usize = 3;
 
     #[derive(Encode, Decode, Clone, Debug, Copy, Eq, PartialEq, TypeInfo)]
     pub enum PolkaNetType {
         Kusama,
         Polkadot,
+        KusamaParachain(i32),
+        PolkadotParachain(i32),
     }
 
     #[derive(Encode, Decode, Clone, Debug, Eq, PartialEq, TypeInfo)]
@@ -73,7 +73,6 @@ pub mod pallet {
     #[derive(Encode, Decode, Clone, Debug, Eq, PartialEq, TypeInfo)]
     pub struct LinkedSubAccount<AccountId> {
         network_type: PolkaNetType,
-        parachain_id: u32,
         account_id: AccountId,
     }
 
@@ -90,8 +89,8 @@ pub mod pallet {
         EthAddressLinked(T::AccountId, Vec<u8>),
         /// BTC address successfully linked. \[Lintentry account, BTC account\]
         BtcAddressLinked(T::AccountId, Vec<u8>),
-        /// Polkadot address successfully linked. \[Lintentry account, Polkadot account\]
-        PolkadotAddressLinked(T::AccountId, LinkedSubAccount<T::AccountId>),
+        /// Substrate based address successfully linked. \[Lintentry account, Polkadot account\]
+        SubAddressLinked(T::AccountId, LinkedSubAccount<T::AccountId>),
     }
 
     #[pallet::error]
@@ -137,7 +136,7 @@ pub mod pallet {
 
     #[pallet::storage]
     #[pallet::getter(fn polkadot_addresses)]
-    pub(super) type PolkadotLink<T: Config> = StorageMap<
+    pub(super) type SubLink<T: Config> = StorageMap<
         _,
         Blake2_128Concat,
         T::AccountId,
@@ -204,7 +203,6 @@ pub mod pallet {
             account: T::AccountId,
             index: u32,
             network_type: PolkaNetType,
-            parachain_id: u32,
             linked_account: T::AccountId,
             layer_one_block_number: T::BlockNumber,
             expiring_block_number: T::BlockNumber,
@@ -217,7 +215,6 @@ pub mod pallet {
                 account,
                 index,
                 network_type,
-                parachain_id,
                 linked_account,
                 expiring_block_number,
                 layer_one_block_number,
@@ -229,7 +226,7 @@ pub mod pallet {
     impl<T: Config> Pallet<T> {
         /// Assemble the message that the user has signed
         /// Format: "Link Litentry: " + Litentry account + expiring block number
-        fn generate_raw_message(
+        fn generate_eth_raw_message(
             account: &T::AccountId,
             expiring_block_number: T::BlockNumber,
         ) -> Vec<u8> {
@@ -243,21 +240,18 @@ pub mod pallet {
         }
 
         /// Assemble the message that the user has signed
-        /// Format: "Link Litentry: " + network_type + parachain_id + Litentry account + expiring block number
+        /// Format: "Link Litentry: " + network_type + Litentry account + expiring block number
         fn generate_sub_raw_message(
             account: &T::AccountId,
             network_type: PolkaNetType,
-            parachain_id: u32,
             expiring_block_number: T::BlockNumber,
         ) -> Vec<u8> {
             let mut bytes = b"Link Litentry: ".encode();
             let mut network_type_vec = network_type.encode();
-            let mut parachain_id_vec = parachain_id.encode();
             let mut account_vec = account.encode();
             let mut expiring_block_number_vec = expiring_block_number.encode();
 
             bytes.append(&mut network_type_vec);
-            bytes.append(&mut parachain_id_vec);
             bytes.append(&mut account_vec);
             bytes.append(&mut expiring_block_number_vec);
             bytes
@@ -281,7 +275,7 @@ pub mod pallet {
                 Error::<T>::InvalidExpiringBlockNumber
             );
 
-            let bytes = Self::generate_raw_message(&account, expiring_block_number);
+            let bytes = Self::generate_eth_raw_message(&account, expiring_block_number);
 
             let hash =
                 util_eth::eth_data_hash(bytes).map_err(|_| Error::<T>::UnexpectedEthMsgLength)?;
@@ -314,7 +308,6 @@ pub mod pallet {
             account: T::AccountId,
             index: u32,
             network_type: PolkaNetType,
-            parachain_id: u32,
             linked_account: T::AccountId,
             expiring_block_number: T::BlockNumber,
             layer_one_blocknumber: T::BlockNumber,
@@ -333,7 +326,6 @@ pub mod pallet {
             let bytes = Self::generate_sub_raw_message(
                 &linked_account,
                 network_type,
-                parachain_id,
                 expiring_block_number,
             );
 
@@ -384,23 +376,22 @@ pub mod pallet {
 
             let new_address = LinkedSubAccount {
                 network_type: network_type,
-                parachain_id: parachain_id,
                 account_id: linked_account,
             };
 
             // insert new linked account into storage
-            PolkadotLink::<T>::mutate(&account, |addrs| {
+            SubLink::<T>::mutate(&account, |addrs| {
                 let index = index as usize;
-                if (index >= addrs.len()) && (addrs.len() != MAX_POLKADOT_LINKS) {
+                if (index >= addrs.len()) && (addrs.len() != MAX_SUB_LINKS) {
                     addrs.push(new_address.clone());
-                } else if (index >= addrs.len()) && (addrs.len() == MAX_POLKADOT_LINKS) {
-                    addrs[MAX_POLKADOT_LINKS - 1] = new_address.clone();
+                } else if (index >= addrs.len()) && (addrs.len() == MAX_SUB_LINKS) {
+                    addrs[MAX_SUB_LINKS - 1] = new_address.clone();
                 } else {
                     addrs[index] = new_address.clone();
                 }
             });
 
-            Self::deposit_event(Event::PolkadotAddressLinked(account, new_address));
+            Self::deposit_event(Event::SubAddressLinked(account, new_address));
 
             Ok(().into())
         }

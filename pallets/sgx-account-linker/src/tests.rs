@@ -9,7 +9,7 @@ use sp_runtime::AccountId32;
 use sp_core::crypto::Pair;
 use sp_core::{ecdsa, ed25519, sr25519};
 
-fn generate_msg(account: &AccountId32, block_number: u32) -> Message {
+fn generate_eth_raw_message(account: &AccountId32, block_number: u32) -> Message {
     let mut bytes = b"\x19Ethereum Signed Message:\n51Link Litentry: ".encode();
     let mut account_vec = account.encode();
     let mut expiring_block_number_vec = block_number.encode();
@@ -23,17 +23,14 @@ fn generate_msg(account: &AccountId32, block_number: u32) -> Message {
 fn generate_sub_raw_message(
     account: &AccountId32,
     network_type: crate::PolkaNetType,
-    parachain_id: u32,
     expiring_block_number: u32,
 ) -> Vec<u8> {
     let mut bytes = b"Link Litentry: ".encode();
     let mut network_type_vec = network_type.encode();
-    let mut parachain_id_vec = parachain_id.encode();
     let mut account_vec = account.encode();
     let mut expiring_block_number_vec = expiring_block_number.encode();
 
     bytes.append(&mut network_type_vec);
-    bytes.append(&mut parachain_id_vec);
     bytes.append(&mut account_vec);
     bytes.append(&mut expiring_block_number_vec);
     bytes
@@ -95,7 +92,7 @@ fn test_expired_block_number_eth() {
         let mut gen = Random {};
         let key_pair = gen.generate();
 
-        let msg = generate_msg(&account, block_number);
+        let msg = generate_eth_raw_message(&account, block_number);
         let sig = generate_sig(&key_pair, &msg);
 
         assert_noop!(
@@ -122,7 +119,7 @@ fn test_invalid_expiring_block_number_eth() {
         let mut gen = Random {};
         let key_pair = gen.generate();
 
-        let msg = generate_msg(&account, block_number);
+        let msg = generate_eth_raw_message(&account, block_number);
         let sig = generate_sig(&key_pair, &msg);
 
         assert_noop!(
@@ -149,7 +146,7 @@ fn test_unexpected_address_eth() {
         let mut gen = Random {};
         let key_pair = gen.generate();
 
-        let msg = generate_msg(&account, block_number);
+        let msg = generate_eth_raw_message(&account, block_number);
         let sig = generate_sig(&key_pair, &msg);
 
         assert_noop!(
@@ -181,7 +178,7 @@ fn test_insert_eth_address() {
         for i in 0..(MAX_ETH_LINKS) {
             let key_pair = gen.generate();
 
-            let msg = generate_msg(&account, block_number + i as u32);
+            let msg = generate_eth_raw_message(&account, block_number + i as u32);
             let sig = generate_sig(&key_pair, &msg);
 
             assert_ok!(SgxAccountLinker::do_link_eth(
@@ -217,7 +214,7 @@ fn test_update_eth_address() {
         let mut gen = Random {};
         for i in 0..(MAX_ETH_LINKS) {
             let key_pair = gen.generate();
-            let msg = generate_msg(&account, block_number + i as u32);
+            let msg = generate_eth_raw_message(&account, block_number + i as u32);
             let sig = generate_sig(&key_pair, &msg);
 
             assert_ok!(SgxAccountLinker::do_link_eth(
@@ -236,7 +233,7 @@ fn test_update_eth_address() {
         // Update addr at slot `index`
         let key_pair = gen.generate();
         let block_number = block_number + 9 as u32;
-        let msg = generate_msg(&account, block_number);
+        let msg = generate_eth_raw_message(&account, block_number);
         let sig = generate_sig(&key_pair, &msg);
 
         assert_ok!(SgxAccountLinker::do_link_eth(
@@ -267,7 +264,7 @@ fn test_eth_address_pool_overflow() {
         for index in 0..(MAX_ETH_LINKS * 2) {
             let key_pair = gen.generate();
 
-            let msg = generate_msg(&account, block_number);
+            let msg = generate_eth_raw_message(&account, block_number);
             let sig = generate_sig(&key_pair, &msg);
 
             assert_ok!(SgxAccountLinker::do_link_eth(
@@ -347,10 +344,8 @@ fn test_link_polkadot_sr25519_address() {
 
         let index = 0_u32;
         let network_type = crate::PolkaNetType::Kusama;
-        let parachain_id = 2000_u32;
 
-        let bytes =
-            generate_sub_raw_message(&account.clone(), network_type, parachain_id, block_number);
+        let bytes = generate_sub_raw_message(&account.clone(), network_type, block_number);
         let msg = sp_io::hashing::keccak_256(&bytes);
         let signature_raw = generate_sr25519_sig(msg);
 
@@ -361,7 +356,6 @@ fn test_link_polkadot_sr25519_address() {
             account.clone(),
             index,
             network_type,
-            parachain_id,
             account.clone(),
             block_number,
             layer_one_blocknumber,
@@ -386,10 +380,8 @@ fn test_link_polkadot_ed25519_address() {
 
         let index = 0_u32;
         let network_type = crate::PolkaNetType::Kusama;
-        let parachain_id = 2000_u32;
 
-        let bytes =
-            generate_sub_raw_message(&account.clone(), network_type, parachain_id, block_number);
+        let bytes = generate_sub_raw_message(&account.clone(), network_type, block_number);
         let msg = sp_io::hashing::keccak_256(&bytes);
 
         // signature is 0x08b1284cdaf008c80740d52be923cf24d45f8ba6e009bfd61a0a364c23df98c268dff3a8baabb47c8011ba39f76729aeab3c0281bfa45ef9389162fd78c18b08
@@ -401,7 +393,6 @@ fn test_link_polkadot_ed25519_address() {
             account.clone(),
             index,
             network_type,
-            parachain_id,
             account.clone(),
             block_number,
             layer_one_blocknumber,
@@ -425,11 +416,9 @@ fn test_link_polkadot_ecdsa_address() {
         let layer_one_blocknumber: u32 = 10;
 
         let index = 0_u32;
-        let network_type = crate::PolkaNetType::Kusama;
-        let parachain_id = 2000_u32;
+        let network_type = crate::PolkaNetType::KusamaParachain(1);
 
-        let bytes =
-            generate_sub_raw_message(&account.clone(), network_type, parachain_id, block_number);
+        let bytes = generate_sub_raw_message(&account.clone(), network_type, block_number);
 
         // signature is 0xbf9484a706e5fadbd9ae8fd2e61f58c8aea387816903ef5b549af19cbf8c4fd831782058ea8f7acddc0e024f4d1ca155052fb04ad4115eeed75fefd6a7a6764301
         let signature_raw = generate_ecdsa_sig(&bytes[..]);
@@ -440,7 +429,6 @@ fn test_link_polkadot_ecdsa_address() {
             account.clone(),
             index,
             network_type,
-            parachain_id,
             account.clone(),
             block_number,
             layer_one_blocknumber,
