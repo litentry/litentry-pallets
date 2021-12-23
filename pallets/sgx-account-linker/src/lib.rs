@@ -67,7 +67,7 @@ pub mod pallet {
     pub enum MultiSignature {
         Sr25519Signature([u8; 64]),
         Ed25519Signature([u8; 64]),
-        EthereumSignature([u8; 65]),
+        EcdsaSignature([u8; 65]),
     }
 
     #[derive(Encode, Decode, Clone, Debug, Eq, PartialEq, TypeInfo)]
@@ -338,7 +338,6 @@ pub mod pallet {
             );
 
             // get the public key
-            let msg = sp_io::hashing::keccak_256(&bytes);
             let account_vec = linked_account.encode();
             ensure!(account_vec.len() == 32, Error::<T>::UnexpectedAccountId);
 
@@ -348,6 +347,8 @@ pub mod pallet {
             // verify signature according to encryption type
             match multi_sig {
                 MultiSignature::Sr25519Signature(sig) => {
+                    let msg = sp_io::hashing::keccak_256(&bytes);
+
                     ensure!(
                         sp_io::crypto::sr25519_verify(
                             &sr25519::Signature(sig),
@@ -358,6 +359,8 @@ pub mod pallet {
                     );
                 }
                 MultiSignature::Ed25519Signature(sig) => {
+                    let msg = sp_io::hashing::keccak_256(&bytes);
+
                     ensure!(
                         sp_io::crypto::ed25519_verify(
                             &ed25519::Signature(sig),
@@ -367,10 +370,13 @@ pub mod pallet {
                         Error::<T>::WrongSignature
                     );
                 }
-                MultiSignature::EthereumSignature(sig) => {
-                    let recovered_public_key = sp_io::crypto::secp256k1_ecdsa_recover(&sig, &msg)
-                        .map_err(|_| Error::<T>::UnexpectedAddress)?;
-                    let hashed_pk = sp_io::hashing::keccak_256(&recovered_public_key);
+                MultiSignature::EcdsaSignature(sig) => {
+                    let msg = sp_io::hashing::blake2_256(&bytes);
+
+                    let recovered_public_key =
+                        sp_io::crypto::secp256k1_ecdsa_recover_compressed(&sig, &msg)
+                            .map_err(|_| Error::<T>::UnexpectedAddress)?;
+                    let hashed_pk = sp_io::hashing::blake2_256(&recovered_public_key);
 
                     ensure!(public_key == hashed_pk, Error::<T>::WrongSignature);
                 }

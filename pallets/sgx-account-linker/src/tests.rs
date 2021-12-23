@@ -6,6 +6,9 @@ use parity_crypto::publickey::{sign, Generator, KeyPair, Message, Random};
 use parity_crypto::Keccak256;
 use sp_runtime::AccountId32;
 
+use sp_core::crypto::Pair;
+use sp_core::{ecdsa, ed25519, sr25519};
+
 fn generate_msg(account: &AccountId32, block_number: u32) -> Message {
     let mut bytes = b"\x19Ethereum Signed Message:\n51Link Litentry: ".encode();
     let mut account_vec = account.encode();
@@ -17,8 +20,69 @@ fn generate_msg(account: &AccountId32, block_number: u32) -> Message {
     Message::from(bytes.keccak256())
 }
 
+fn generate_sub_raw_message(
+    account: &AccountId32,
+    network_type: crate::PolkaNetType,
+    parachain_id: u32,
+    expiring_block_number: u32,
+) -> Vec<u8> {
+    let mut bytes = b"Link Litentry: ".encode();
+    let mut network_type_vec = network_type.encode();
+    let mut parachain_id_vec = parachain_id.encode();
+    let mut account_vec = account.encode();
+    let mut expiring_block_number_vec = expiring_block_number.encode();
+
+    bytes.append(&mut network_type_vec);
+    bytes.append(&mut parachain_id_vec);
+    bytes.append(&mut account_vec);
+    bytes.append(&mut expiring_block_number_vec);
+    bytes
+}
+
 fn generate_sig(key_pair: &KeyPair, msg: &Message) -> [u8; 65] {
     sign(key_pair.secret(), &msg).unwrap().into_electrum()
+}
+
+fn generate_sr25519_sig(msg: [u8; 32]) -> sr25519::Signature {
+    // serect seed for Alice 0xe5be9a5092b81bca64be81d212e7f2f9eba183bb7a90954f7b76361f6edb5c0a
+    let alice_seed_str = "e5be9a5092b81bca64be81d212e7f2f9eba183bb7a90954f7b76361f6edb5c0a";
+    let decoded_seed = hex::decode(alice_seed_str).unwrap();
+    let mut alice_seed = [0_u8; 32];
+    alice_seed[0..32].copy_from_slice(&decoded_seed[0..32]);
+    let pair = sr25519::Pair::from_seed(&alice_seed);
+    pair.sign(&msg)
+}
+
+fn generate_ed25519_sig(msg: [u8; 32]) -> ed25519::Signature {
+    //  bash-5.0$ target/release/subkey inspect //Alice --scheme Ed25519
+    // Secret Key URI `//Alice` is account:
+    //   Secret seed:       0xabf8e5bdbe30c65656c0a3cbd181ff8a56294a69dfedd27982aace4a76909115
+    //   Public key (hex):  0x88dc3417d5058ec4b4503e0c12ea1a0a89be200fe98922423d4334014fa6b0ee
+    //   Account ID:        0x88dc3417d5058ec4b4503e0c12ea1a0a89be200fe98922423d4334014fa6b0ee
+    //   Public key (SS58): 5FA9nQDVg267DEd8m1ZypXLBnvN7SFxYwV7ndqSYGiN9TTpu
+    //   SS58 Address:      5FA9nQDVg267DEd8m1ZypXLBnvN7SFxYwV7ndqSYGiN9TTpu
+    let alice_seed_str = "abf8e5bdbe30c65656c0a3cbd181ff8a56294a69dfedd27982aace4a76909115";
+    let decoded_seed = hex::decode(alice_seed_str).unwrap();
+    let mut alice_seed = [0_u8; 32];
+    alice_seed[0..32].copy_from_slice(&decoded_seed[0..32]);
+    let pair = ed25519::Pair::from_seed(&alice_seed);
+    pair.sign(&msg)
+}
+
+fn generate_ecdsa_sig(msg: &[u8]) -> ecdsa::Signature {
+    // bash-5.0$ target/release/subkey inspect //Alice --scheme Ecdsa
+    // Secret Key URI `//Alice` is account:
+    //   Secret seed:       0xcb6df9de1efca7a3998a8ead4e02159d5fa99c3e0d4fd6432667390bb4726854
+    //   Public key (hex):  0x020a1091341fe5664bfa1782d5e04779689068c916b04cb365ec3153755684d9a1
+    //   Account ID:        0x01e552298e47454041ea31273b4b630c64c104e4514aa3643490b8aaca9cf8ed
+    //   Public key (SS58): KW39r9CJjAVzmkf9zQ4YDb2hqfAVGdRqn53eRqyruqpxAP5YL
+    //   SS58 Address:      5C7C2Z5sWbytvHpuLTvzKunnnRwQxft1jiqrLD5rhucQ5S9X
+    let alice_seed_str = "cb6df9de1efca7a3998a8ead4e02159d5fa99c3e0d4fd6432667390bb4726854";
+    let decoded_seed = hex::decode(alice_seed_str).unwrap();
+    let mut alice_seed = [0_u8; 32];
+    alice_seed[0..32].copy_from_slice(&decoded_seed[0..32]);
+    let pair = ecdsa::Pair::from_seed(&alice_seed);
+    pair.sign(&msg)
 }
 
 #[test]
@@ -264,4 +328,125 @@ fn test_insert_fix_data() {
 			signature
 		));
 	});
+}
+
+#[test]
+fn test_link_polkadot_sr25519_address() {
+    new_test_ext().execute_with(|| {
+        run_to_block(1);
+
+        // account id of Alice 0xd43593c715fdd31c61141abd04a99fd6822c8558854ccde39a5684e7a56da27d
+        let account: AccountId32 = AccountId32::from([
+            0xd4, 0x35, 0x93, 0xc7, 0x15, 0xfd, 0xd3, 0x1c, 0x61, 0x14, 0x1a, 0xbd, 0x04, 0xa9,
+            0x9f, 0xd6, 0x82, 0x2c, 0x85, 0x58, 0x85, 0x4c, 0xcd, 0xe3, 0x9a, 0x56, 0x84, 0xe7,
+            0xa5, 0x6d, 0xa2, 0x7d,
+        ]);
+
+        let block_number: u32 = 10000;
+        let layer_one_blocknumber: u32 = 10;
+
+        let index = 0_u32;
+        let network_type = crate::PolkaNetType::Kusama;
+        let parachain_id = 2000_u32;
+
+        let bytes =
+            generate_sub_raw_message(&account.clone(), network_type, parachain_id, block_number);
+        let msg = sp_io::hashing::keccak_256(&bytes);
+        let signature_raw = generate_sr25519_sig(msg);
+
+        //signature is 4cdfda29585e33fe1969ee67bab9d29e440973b8cfde47346043c91d6d763c317659686089c2642e9a64fa28a00b1767fd134484fc0146de6d9eefdf366d2c81
+        let signature = crate::MultiSignature::Sr25519Signature(signature_raw.0);
+
+        assert_ok!(SgxAccountLinker::do_link_sub(
+            account.clone(),
+            index,
+            network_type,
+            parachain_id,
+            account.clone(),
+            block_number,
+            layer_one_blocknumber,
+            signature
+        ));
+    });
+}
+
+#[test]
+fn test_link_polkadot_ed25519_address() {
+    new_test_ext().execute_with(|| {
+        run_to_block(1);
+
+        // account id of Alice 0x88dc3417d5058ec4b4503e0c12ea1a0a89be200fe98922423d4334014fa6b0ee
+        let account: AccountId32 = AccountId32::from([
+            136, 220, 52, 23, 213, 5, 142, 196, 180, 80, 62, 12, 18, 234, 26, 10, 137, 190, 32, 15,
+            233, 137, 34, 66, 61, 67, 52, 1, 79, 166, 176, 238,
+        ]);
+
+        let block_number: u32 = 10000;
+        let layer_one_blocknumber: u32 = 10;
+
+        let index = 0_u32;
+        let network_type = crate::PolkaNetType::Kusama;
+        let parachain_id = 2000_u32;
+
+        let bytes =
+            generate_sub_raw_message(&account.clone(), network_type, parachain_id, block_number);
+        let msg = sp_io::hashing::keccak_256(&bytes);
+
+        // signature is 0x08b1284cdaf008c80740d52be923cf24d45f8ba6e009bfd61a0a364c23df98c268dff3a8baabb47c8011ba39f76729aeab3c0281bfa45ef9389162fd78c18b08
+        let signature_raw = generate_ed25519_sig(msg);
+
+        let signature = crate::MultiSignature::Ed25519Signature(signature_raw.0);
+
+        assert_ok!(SgxAccountLinker::do_link_sub(
+            account.clone(),
+            index,
+            network_type,
+            parachain_id,
+            account.clone(),
+            block_number,
+            layer_one_blocknumber,
+            signature
+        ));
+    });
+}
+
+#[test]
+fn test_link_polkadot_ecdsa_address() {
+    new_test_ext().execute_with(|| {
+        run_to_block(1);
+
+        // account id of Alice 0x01e552298e47454041ea31273b4b630c64c104e4514aa3643490b8aaca9cf8ed
+        let account: AccountId32 = AccountId32::from([
+            1, 229, 82, 41, 142, 71, 69, 64, 65, 234, 49, 39, 59, 75, 99, 12, 100, 193, 4, 228, 81,
+            74, 163, 100, 52, 144, 184, 170, 202, 156, 248, 237,
+        ]);
+
+        let block_number: u32 = 10000;
+        let layer_one_blocknumber: u32 = 10;
+
+        let index = 0_u32;
+        let network_type = crate::PolkaNetType::Kusama;
+        let parachain_id = 2000_u32;
+
+        let bytes =
+            generate_sub_raw_message(&account.clone(), network_type, parachain_id, block_number);
+
+        // signature is 0xbf9484a706e5fadbd9ae8fd2e61f58c8aea387816903ef5b549af19cbf8c4fd831782058ea8f7acddc0e024f4d1ca155052fb04ad4115eeed75fefd6a7a6764301
+        let signature_raw = generate_ecdsa_sig(&bytes[..]);
+
+        let signature = crate::MultiSignature::EcdsaSignature(signature_raw.0);
+
+        assert_ok!(SgxAccountLinker::do_link_sub(
+            account.clone(),
+            index,
+            network_type,
+            parachain_id,
+            account.clone(),
+            block_number,
+            layer_one_blocknumber,
+            signature
+        ));
+
+        // assert_eq!(true, false);
+    });
 }
