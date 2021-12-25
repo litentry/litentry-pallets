@@ -1,7 +1,7 @@
 //! # AccountLinker Pallet
 //!
 //! The AccountLinker pallet provides functionality for linking a Litentry account to account at
-//! other networks. (currently support Ethereum (BSC), BTC and Polkadot ecosystem)
+//! other networks. (currently support Ethereum (BSC), BTC and Substrate based address)
 //!
 //! ## Overview
 //!
@@ -89,7 +89,7 @@ pub mod pallet {
         EthAddressLinked(T::AccountId, Vec<u8>),
         /// BTC address successfully linked. \[Lintentry account, BTC account\]
         BtcAddressLinked(T::AccountId, Vec<u8>),
-        /// Substrate based address successfully linked. \[Lintentry account, Polkadot account\]
+        /// Substrate based address successfully linked. \[Lintentry account, substrate account\]
         SubAddressLinked(T::AccountId, LinkedSubAccount<T::AccountId>),
     }
 
