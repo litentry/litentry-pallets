@@ -56,11 +56,11 @@ pub mod pallet {
     pub const MAX_SUB_LINKS: usize = 3;
 
     #[derive(Encode, Decode, Clone, Debug, Copy, Eq, PartialEq, TypeInfo)]
-    pub enum PolkaNetType {
+    pub enum NetworkType {
         Kusama,
         Polkadot,
-        KusamaParachain(i32),
-        PolkadotParachain(i32),
+        KusamaParachain(u32),
+        PolkadotParachain(u32),
     }
 
     #[derive(Encode, Decode, Clone, Debug, Eq, PartialEq, TypeInfo)]
@@ -72,7 +72,7 @@ pub mod pallet {
 
     #[derive(Encode, Decode, Clone, Debug, Eq, PartialEq, TypeInfo)]
     pub struct LinkedSubAccount<AccountId> {
-        network_type: PolkaNetType,
+        network_type: NetworkType,
         account_id: AccountId,
     }
 
@@ -107,8 +107,6 @@ pub mod pallet {
         InvalidBTCAddress,
         // Expiration block number is too far away from now
         InvalidExpiringBlockNumber,
-        // Try to resolve a wrong link_polkadot request
-        WrongPendingRequest,
         // Can't get layer one block number
         LayerOneBlockNumberNotAvailable,
         // Signature is wrong
@@ -135,7 +133,7 @@ pub mod pallet {
         StorageMap<_, Blake2_128Concat, T::AccountId, Vec<Vec<u8>>, ValueQuery>;
 
     #[pallet::storage]
-    #[pallet::getter(fn polkadot_addresses)]
+    #[pallet::getter(fn sub_addresses)]
     pub(super) type SubLink<T: Config> = StorageMap<
         _,
         Blake2_128Concat,
@@ -185,8 +183,7 @@ pub mod pallet {
             )
         }
 
-        /// Accept a pending `link_polkadot` request to link a Litentry address (= any account in Polkadot ecosystem)
-        /// to another Litentry address (= any account in Polkadot ecosystem).
+        /// Link a substrate based address to a Litentry address
         ///
         /// The runtime needs to ensure that a malicious index can be handled correctly.
         /// Currently, when vec.len > MAX_ETH_LINKS, replacement will always happen at the final index.
@@ -195,14 +192,14 @@ pub mod pallet {
         /// Parameters:
         /// - `account`: The Litentry address that is to be linked
         ///
-        /// Emits `PolkadotAddressLinked` event when successful.
+        /// Emits `SubAddressLinked` event when successful.
         // TODO will update weight when do the benchmark testing
         #[pallet::weight(T::WeightInfo::link_eth())]
         pub fn link_sub(
             origin: OriginFor<T>,
             account: T::AccountId,
             index: u32,
-            network_type: PolkaNetType,
+            network_type: NetworkType,
             linked_account: T::AccountId,
             layer_one_block_number: T::BlockNumber,
             expiring_block_number: T::BlockNumber,
@@ -243,7 +240,7 @@ pub mod pallet {
         /// Format: "Link Litentry: " + network_type + Litentry account + expiring block number
         fn generate_sub_raw_message(
             account: &T::AccountId,
-            network_type: PolkaNetType,
+            network_type: NetworkType,
             expiring_block_number: T::BlockNumber,
         ) -> Vec<u8> {
             let mut bytes = b"Link Litentry: ".encode();
@@ -307,7 +304,7 @@ pub mod pallet {
         pub fn do_link_sub(
             account: T::AccountId,
             index: u32,
-            network_type: PolkaNetType,
+            network_type: NetworkType,
             linked_account: T::AccountId,
             expiring_block_number: T::BlockNumber,
             layer_one_blocknumber: T::BlockNumber,

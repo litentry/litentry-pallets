@@ -22,7 +22,7 @@ fn generate_eth_raw_message(account: &AccountId32, block_number: u32) -> Message
 
 fn generate_sub_raw_message(
     account: &AccountId32,
-    network_type: crate::PolkaNetType,
+    network_type: crate::NetworkType,
     expiring_block_number: u32,
 ) -> Vec<u8> {
     let mut bytes = b"Link Litentry: ".encode();
@@ -328,7 +328,7 @@ fn test_insert_fix_data() {
 }
 
 #[test]
-fn test_link_polkadot_sr25519_address() {
+fn test_link_sub_sr25519_address() {
     new_test_ext().execute_with(|| {
         run_to_block(1);
 
@@ -343,7 +343,7 @@ fn test_link_polkadot_sr25519_address() {
         let layer_one_blocknumber: u32 = 10;
 
         let index = 0_u32;
-        let network_type = crate::PolkaNetType::Kusama;
+        let network_type = crate::NetworkType::Kusama;
 
         let bytes = generate_sub_raw_message(&account.clone(), network_type, block_number);
         let msg = sp_io::hashing::keccak_256(&bytes);
@@ -365,7 +365,7 @@ fn test_link_polkadot_sr25519_address() {
 }
 
 #[test]
-fn test_link_polkadot_ed25519_address() {
+fn test_link_sub_ed25519_address() {
     new_test_ext().execute_with(|| {
         run_to_block(1);
 
@@ -379,7 +379,7 @@ fn test_link_polkadot_ed25519_address() {
         let layer_one_blocknumber: u32 = 10;
 
         let index = 0_u32;
-        let network_type = crate::PolkaNetType::Kusama;
+        let network_type = crate::NetworkType::Kusama;
 
         let bytes = generate_sub_raw_message(&account.clone(), network_type, block_number);
         let msg = sp_io::hashing::keccak_256(&bytes);
@@ -402,7 +402,7 @@ fn test_link_polkadot_ed25519_address() {
 }
 
 #[test]
-fn test_link_polkadot_ecdsa_address() {
+fn test_link_sub_ecdsa_address() {
     new_test_ext().execute_with(|| {
         run_to_block(1);
 
@@ -416,7 +416,7 @@ fn test_link_polkadot_ecdsa_address() {
         let layer_one_blocknumber: u32 = 10;
 
         let index = 0_u32;
-        let network_type = crate::PolkaNetType::KusamaParachain(1);
+        let network_type = crate::NetworkType::KusamaParachain(1);
 
         let bytes = generate_sub_raw_message(&account.clone(), network_type, block_number);
 
